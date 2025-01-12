@@ -12,10 +12,6 @@ interface Planet {
   color: string;
   size: number;
   position: [number, number, number];
-  surfaceDetail?: number; // 0-1 scale for bumpiness
-  emissiveIntensity?: number; // For glowing planets like the sun
-  roughness?: number; // For metallic/shiny surfaces
-  metalness?: number; // For metallic surfaces
 }
 
 const generateRandomPosition = (): [number, number, number] => {
@@ -42,79 +38,40 @@ const CRYPTO_NAMES = [
 
 const SAMPLE_PLANETS: Planet[] = [
   {
-    id: "sun",
-    name: "Solar",
-    value: 50000,
-    color: "#FFA500",
-    size: 3,
+    id: "btc",
+    name: "Bitcoin",
+    value: 45000,
+    color: "#F7931A",
+    size: 2,
     position: [0, 0, 0],
-    emissiveIntensity: 0.8,
-    roughness: 1,
-    metalness: 0,
-    surfaceDetail: 0.2
   },
   {
-    id: "mercury",
-    name: "Mercury",
-    value: 2000,
-    color: "#A0522D",
-    size: 0.8,
-    position: [8, 0, 0],
-    roughness: 0.8,
-    metalness: 0.2,
-    surfaceDetail: 0.6
-  },
-  {
-    id: "venus",
-    name: "Venus",
-    value: 3000,
-    color: "#DEB887",
-    size: 1.2,
-    position: [-10, 2, 5],
-    roughness: 0.7,
-    metalness: 0.3,
-    surfaceDetail: 0.4
-  },
-  {
-    id: "earth",
-    name: "Earth",
-    value: 5000,
-    color: "#4169E1",
-    size: 1.3,
-    position: [15, -3, -8],
-    roughness: 0.6,
-    metalness: 0.1,
-    surfaceDetail: 0.5
-  },
-  {
-    id: "mars",
-    name: "Mars",
+    id: "eth",
+    name: "Ethereum",
     value: 2500,
-    color: "#CD853F",
+    color: "#627EEA",
+    size: 1.5,
+    position: [5, 2, -3],
+  },
+  {
+    id: "sol",
+    name: "Solana",
+    value: 100,
+    color: "#00FFA3",
     size: 1,
-    position: [-18, 5, 12],
-    roughness: 0.9,
-    metalness: 0.1,
-    surfaceDetail: 0.7
-  }
+    position: [-4, -1, 4],
+  },
 ];
 
-// Generate additional planets with more realistic properties
+// Generate 100 additional planets
 for (let i = 0; i < 100; i++) {
-  const randomRoughness = 0.3 + Math.random() * 0.7;
-  const randomMetalness = Math.random() * 0.5;
-  const randomSurfaceDetail = Math.random() * 0.8;
-  
   SAMPLE_PLANETS.push({
     id: `planet-${i}`,
     name: `${CRYPTO_NAMES[i % CRYPTO_NAMES.length]} ${Math.floor(i / CRYPTO_NAMES.length) + 1}`,
     value: Math.random() * 1000,
     color: generateRandomColor(),
-    size: 0.3 + Math.random() * 1.2,
+    size: 0.3 + Math.random() * 1.2, // Random size between 0.3 and 1.5
     position: generateRandomPosition(),
-    roughness: randomRoughness,
-    metalness: randomMetalness,
-    surfaceDetail: randomSurfaceDetail
   });
 }
 
@@ -202,72 +159,59 @@ const Universe = () => {
     const stars = new THREE.Points(starsGeometry, starsMaterial);
     scene.add(stars);
 
-    // Add planets with enhanced materials
+    // Add planets
     SAMPLE_PLANETS.forEach((planet) => {
-      const geometry = new THREE.SphereGeometry(planet.size, 64, 64); // Increased segments for more detail
-      
-      // Create displacement map for surface detail
-      const displacementMap = new THREE.TextureLoader().load(
-        `data:image/png;base64,${generateNoiseTexture(256, planet.surfaceDetail || 0)}`
-      );
-
-      const material = new THREE.MeshStandardMaterial({
+      const geometry = new THREE.SphereGeometry(planet.size, 32, 32);
+      const material = new THREE.MeshPhongMaterial({
         color: planet.color,
-        roughness: planet.roughness || 0.7,
-        metalness: planet.metalness || 0.3,
-        displacementMap: displacementMap,
-        displacementScale: 0.1,
         emissive: planet.color,
-        emissiveIntensity: planet.emissiveIntensity || 0,
+        emissiveIntensity: 0.2,
       });
-
       const mesh = new THREE.Mesh(geometry, material);
       mesh.position.set(...planet.position);
       scene.add(mesh);
       planetsRef.current[planet.id] = mesh;
 
-      // Enhanced glow effect
-      if (planet.emissiveIntensity && planet.emissiveIntensity > 0) {
-        const glowGeometry = new THREE.SphereGeometry(planet.size * 1.2, 64, 64);
-        const glowMaterial = new THREE.ShaderMaterial({
-          uniforms: {
-            c: { value: 0.2 },
-            p: { value: 4.5 },
-            glowColor: { value: new THREE.Color(planet.color) },
-          },
-          vertexShader: `
-            varying vec3 vNormal;
-            void main() {
-              vNormal = normalize(normalMatrix * normal);
-              gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-            }
-          `,
-          fragmentShader: `
-            uniform vec3 glowColor;
-            uniform float c;
-            uniform float p;
-            varying vec3 vNormal;
-            void main() {
-              float intensity = pow(c - dot(vNormal, vec3(0.0, 0.0, 1.0)), p);
-              gl_FragColor = vec4(glowColor, intensity);
-            }
-          `,
-          side: THREE.BackSide,
-          blending: THREE.AdditiveBlending,
-          transparent: true,
-        });
+      // Add glow effect
+      const glowGeometry = new THREE.SphereGeometry(planet.size * 1.2, 32, 32);
+      const glowMaterial = new THREE.ShaderMaterial({
+        uniforms: {
+          c: { value: 0.5 },
+          p: { value: 4.5 },
+          glowColor: { value: new THREE.Color(planet.color) },
+        },
+        vertexShader: `
+          varying vec3 vNormal;
+          void main() {
+            vNormal = normalize(normalMatrix * normal);
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          uniform vec3 glowColor;
+          uniform float c;
+          uniform float p;
+          varying vec3 vNormal;
+          void main() {
+            float intensity = pow(c - dot(vNormal, vec3(0.0, 0.0, 1.0)), p);
+            gl_FragColor = vec4(glowColor, intensity);
+          }
+        `,
+        side: THREE.BackSide,
+        blending: THREE.AdditiveBlending,
+        transparent: true,
+      });
 
-        const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
-        glowMesh.position.set(...planet.position);
-        scene.add(glowMesh);
-      }
+      const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
+      glowMesh.position.set(...planet.position);
+      scene.add(glowMesh);
     });
 
     // Add lighting
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+    const ambientLight = new THREE.AmbientLight(0x404040);
     scene.add(ambientLight);
 
-    const pointLight = new THREE.PointLight(0xFFFFFF, 1.5);
+    const pointLight = new THREE.PointLight(0xFFFFFF, 1);
     pointLight.position.set(10, 10, 10);
     scene.add(pointLight);
 
@@ -354,26 +298,6 @@ const Universe = () => {
       renderer.dispose();
     };
   }, []);
-
-  // Helper function to generate noise texture
-  const generateNoiseTexture = (size: number, intensity: number): string => {
-    const canvas = document.createElement('canvas');
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext('2d')!;
-    const imageData = ctx.createImageData(size, size);
-    
-    for (let i = 0; i < imageData.data.length; i += 4) {
-      const value = Math.floor(128 + (Math.random() - 0.5) * 255 * intensity);
-      imageData.data[i] = value;
-      imageData.data[i + 1] = value;
-      imageData.data[i + 2] = value;
-      imageData.data[i + 3] = 255;
-    }
-    
-    ctx.putImageData(imageData, 0, 0);
-    return canvas.toDataURL().split(',')[1];
-  };
 
   return (
     <div className="relative w-full h-screen">
