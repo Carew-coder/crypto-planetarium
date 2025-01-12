@@ -1,7 +1,9 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { useToast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 interface Planet {
   id: string;
@@ -47,6 +49,29 @@ const Universe = () => {
   const controlsRef = useRef<OrbitControls | null>(null);
   const planetsRef = useRef<{ [key: string]: THREE.Mesh }>({});
   const { toast } = useToast();
+  const [isZoomedIn, setIsZoomedIn] = useState(false);
+  const [initialCameraPosition] = useState(new THREE.Vector3(0, 0, 10));
+
+  const handleBackToOverview = () => {
+    if (!cameraRef.current || !controlsRef.current) return;
+    
+    setIsZoomedIn(false);
+    
+    let progress = 0;
+    const animate = () => {
+      progress += 0.02;
+      if (progress > 1) return;
+
+      const newPos = cameraRef.current!.position.clone().lerp(initialCameraPosition, progress);
+      cameraRef.current!.position.copy(newPos);
+      controlsRef.current!.target.copy(new THREE.Vector3(0, 0, 0));
+      controlsRef.current!.update();
+
+      requestAnimationFrame(animate);
+    };
+
+    animate();
+  };
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -201,14 +226,11 @@ const Universe = () => {
         );
 
         if (clickedPlanet) {
-          // Zoom to planet
+          setIsZoomedIn(true);
           const position = new THREE.Vector3(...clickedPlanet.position);
           position.z += 5;
 
           const currentPos = cameraRef.current.position.clone();
-          const distance = currentPos.distanceTo(position);
-
-          // Animate camera movement
           let progress = 0;
           const animate = () => {
             progress += 0.02;
@@ -243,7 +265,22 @@ const Universe = () => {
     };
   }, []);
 
-  return <div ref={containerRef} className="w-full h-screen" />;
+  return (
+    <div className="relative w-full h-screen">
+      <div ref={containerRef} className="w-full h-screen" />
+      {isZoomedIn && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="absolute top-4 left-4 bg-space-lighter text-white hover:bg-space-accent/20"
+          onClick={handleBackToOverview}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Overview
+        </Button>
+      )}
+    </div>
+  );
 };
 
 export default Universe;
