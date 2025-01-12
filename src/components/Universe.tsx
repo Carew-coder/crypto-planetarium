@@ -141,7 +141,7 @@ const Universe = () => {
     // Add sun in the center
     const textureLoader = new THREE.TextureLoader();
     const planetTexture = textureLoader.load('/lovable-uploads/a678dcac-8167-4e40-88b9-d955af93e403.png');
-    const sunTexture = textureLoader.load('/lovable-uploads/23b2bc40-66dc-4b5a-9b64-3d91755cea67.png');
+    const sunTexture = textureLoader.load('/lovable-uploads/74d9ee71-8684-4b15-9d2f-6111aa04dfb9.png');
     
     const sunGeometry = new THREE.SphereGeometry(5, 32, 32);
     const sunMaterial = new THREE.MeshStandardMaterial({
