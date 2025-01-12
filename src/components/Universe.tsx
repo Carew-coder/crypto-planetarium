@@ -138,17 +138,18 @@ const Universe = () => {
     controls.dampingFactor = 0.05;
     controlsRef.current = controls;
 
-    // Add sun in the center with mars texture
+    // Add sun in the center
     const textureLoader = new THREE.TextureLoader();
+    const planetTexture = textureLoader.load('/lovable-uploads/a678dcac-8167-4e40-88b9-d955af93e403.png');
+    
     const sunGeometry = new THREE.SphereGeometry(5, 32, 32);
-    const sunTexture = textureLoader.load('/lovable-uploads/7a729622-03c1-4d48-b0ba-696fa61a8850.png');
     const sunMaterial = new THREE.MeshPhongMaterial({
-      map: sunTexture,
+      map: planetTexture,
       emissive: 0xffffff,
       emissiveIntensity: 0.2,
-      color: 0xffffff, // Set base color to white to show true texture colors
-      shininess: 0, // Reduce shininess to minimize specular highlights
-      specular: 0x000000 // Remove specular highlights that might wash out texture
+      color: 0xffffff,
+      shininess: 0,
+      specular: 0x000000
     });
     const sun = new THREE.Mesh(sunGeometry, sunMaterial);
     sun.position.set(0, 0, 0);
@@ -176,13 +177,16 @@ const Universe = () => {
     const stars = new THREE.Points(starsGeometry, starsMaterial);
     scene.add(stars);
 
-    // Add planets
+    // Add planets with the Mars texture
     SAMPLE_PLANETS.forEach((planet) => {
       const geometry = new THREE.SphereGeometry(planet.size, 32, 32);
       const material = new THREE.MeshPhongMaterial({
-        color: planet.color,
+        map: planetTexture,
         emissive: planet.color,
         emissiveIntensity: 0.2,
+        color: 0xffffff,
+        shininess: 0,
+        specular: 0x000000
       });
       const mesh = new THREE.Mesh(geometry, material);
       mesh.position.set(...planet.position);
