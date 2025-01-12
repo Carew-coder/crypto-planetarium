@@ -13,9 +13,9 @@ const Index = () => {
         <h1 className="text-xl font-semibold text-white">Crypto Universe</h1>
       </div>
       
-      {/* Visit Universes Table */}
+      {/* Visit Planets Table */}
       <div className="absolute right-4 top-4 glass-panel p-4 w-80">
-        <h2 className="text-lg font-semibold text-white mb-4">Visit Universes</h2>
+        <h2 className="text-lg font-semibold text-white mb-4">Visit Planets</h2>
         <Input
           type="text"
           placeholder="Search wallet address..."
