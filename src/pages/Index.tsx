@@ -10,7 +10,7 @@ const Index = () => {
     <div className="relative w-full h-screen overflow-hidden">
       <Universe />
       <div className="absolute top-4 left-1/2 -translate-x-1/2 glass-panel px-6 py-3">
-        <h1 className="text-xl font-semibold text-white">Crypto Universe</h1>
+        <h1 className="text-xl font-semibold text-white">Solar</h1>
       </div>
       
       {/* Visit Planets Table */}
