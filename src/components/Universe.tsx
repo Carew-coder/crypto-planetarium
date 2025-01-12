@@ -43,7 +43,7 @@ const SAMPLE_PLANETS: Planet[] = [
     value: 45000,
     color: "#F7931A",
     size: 2,
-    position: [0, 0, 0],
+    position: [-15, 5, -10], // Moved away from center
   },
   {
     id: "eth",
@@ -51,7 +51,7 @@ const SAMPLE_PLANETS: Planet[] = [
     value: 2500,
     color: "#627EEA",
     size: 1.5,
-    position: [5, 2, -3],
+    position: [20, -8, 15], // Moved away from center
   },
   {
     id: "sol",
@@ -59,7 +59,7 @@ const SAMPLE_PLANETS: Planet[] = [
     value: 100,
     color: "#00FFA3",
     size: 1,
-    position: [-4, -1, 4],
+    position: [12, 15, -18], // Moved away from center
   },
 ];
 
@@ -84,7 +84,7 @@ const Universe = () => {
   const planetsRef = useRef<{ [key: string]: THREE.Mesh }>({});
   const { toast } = useToast();
   const [isZoomedIn, setIsZoomedIn] = useState(false);
-  const [initialCameraPosition] = useState(new THREE.Vector3(0, 0, 10));
+  const [initialCameraPosition] = useState(new THREE.Vector3(0, 0, 100)); // Increased initial zoom distance
 
   const handleBackToOverview = () => {
     if (!cameraRef.current || !controlsRef.current) return;
@@ -121,7 +121,7 @@ const Universe = () => {
       0.1,
       1000
     );
-    camera.position.z = 10;
+    camera.position.z = 100; // Set initial camera position further out
     cameraRef.current = camera;
 
     // Renderer setup
