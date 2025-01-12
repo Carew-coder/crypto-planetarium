@@ -154,16 +154,22 @@ const Universe = () => {
 
     // Load Jupiter texture
     const textureLoader = new THREE.TextureLoader();
-    const jupiterTexture = textureLoader.load('/lovable-uploads/f5985c99-70ee-49d1-9514-9603df2873e7.png');
+    const jupiterTexture = textureLoader.load('/lovable-uploads/eddcaeca-ba28-40d5-8c3e-606c226caaea.png', (texture) => {
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(1, 1);
+      texture.mapping = THREE.EquirectangularMapping;
+    });
 
     // Add planets
     SAMPLE_PLANETS.forEach((planet) => {
-      const geometry = new THREE.SphereGeometry(planet.size, 32, 32);
+      const geometry = new THREE.SphereGeometry(planet.size, 64, 64); // Increased segments for better texture mapping
       let material;
       
       if (planet.useTexture) {
         material = new THREE.MeshPhongMaterial({
           map: jupiterTexture,
+          bumpScale: 0.05,
         });
       } else {
         material = new THREE.MeshPhongMaterial({
