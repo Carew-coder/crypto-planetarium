@@ -161,18 +161,19 @@ const Universe = () => {
     scene.add(sun);
     sunRef.current = sun;
 
-    // Updated planet textures array with the cosmic images and new orange-red texture
+    // Updated planet textures array with all cosmic images including the new one
     const planetTextures = [
       '/lovable-uploads/d52d6aed-09d3-4a04-914d-e441bfa55b1d.png',  // Blue swirl texture
       '/lovable-uploads/58193620-9e43-46df-aa87-78f9b0a3406e.png',  // Green nebula texture
       '/lovable-uploads/81b1a551-5518-4c9d-a0aa-a010fd945782.png',  // Red-orange texture
-      '/lovable-uploads/a477fbc9-e28e-4a05-b0d7-67b2d31460d3.png',  // New orange-red texture
+      '/lovable-uploads/a477fbc9-e28e-4a05-b0d7-67b2d31460d3.png',  // Orange-red texture
+      '/lovable-uploads/0052a47d-d440-437c-8f29-fb5b458cb642.png',  // New red neon texture
     ];
 
     // Add planets with weighted texture distribution
     SAMPLE_PLANETS.forEach((planet, index) => {
-      // Use orange-red texture for 25% of planets (every 4th planet)
-      const textureIndex = index % 4 === 3 ? 3 : index % 3;
+      // Use different textures in rotation (20% chance for each texture)
+      const textureIndex = index % 5;
       const planetTexture = textureLoader.load(planetTextures[textureIndex]);
       
       const geometry = new THREE.SphereGeometry(planet.size, 32, 32);
