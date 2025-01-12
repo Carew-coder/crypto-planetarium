@@ -145,7 +145,7 @@ const Universe = () => {
     const sunMaterial = new THREE.MeshPhongMaterial({
       map: sunTexture,
       emissive: 0xffffff,
-      emissiveIntensity: 0.5,
+      emissiveIntensity: 0.2,
     });
     const sun = new THREE.Mesh(sunGeometry, sunMaterial);
     sun.position.set(0, 0, 0);
