@@ -12,12 +12,13 @@ interface Planet {
   color: string;
   size: number;
   position: [number, number, number];
+  useTexture?: boolean;
 }
 
 const generateRandomPosition = (): [number, number, number] => {
-  const radius = 50; // Maximum radius from center
-  const theta = Math.random() * Math.PI * 2; // Random angle around Y axis
-  const phi = Math.acos((Math.random() * 2) - 1); // Random angle from Y axis
+  const radius = 50;
+  const theta = Math.random() * Math.PI * 2;
+  const phi = Math.acos((Math.random() * 2) - 1);
   
   const x = radius * Math.sin(phi) * Math.cos(theta);
   const y = radius * Math.sin(phi) * Math.sin(theta);
@@ -54,23 +55,24 @@ const SAMPLE_PLANETS: Planet[] = [
     position: [20, -8, 15],
   },
   {
-    id: "sol",
-    name: "Solana",
-    value: 100,
-    color: "#00FFA3",
-    size: 1,
+    id: "jupiter",
+    name: "Jupiter",
+    value: 1000,
+    color: "#ffffff",
+    size: 3,
     position: [12, 15, -18],
+    useTexture: true,
   },
 ];
 
-// Generate 2000 additional planets
-for (let i = 0; i < 2000; i++) {
+// Generate additional planets (total of 100)
+for (let i = 0; i < 97; i++) {
   SAMPLE_PLANETS.push({
     id: `planet-${i}`,
     name: `${CRYPTO_NAMES[i % CRYPTO_NAMES.length]} ${Math.floor(i / CRYPTO_NAMES.length) + 1}`,
     value: Math.random() * 1000,
     color: generateRandomColor(),
-    size: 0.3 + Math.random() * 1.2, // Random size between 0.3 and 1.5
+    size: 0.3 + Math.random() * 1.2,
     position: generateRandomPosition(),
   });
 }
@@ -122,7 +124,7 @@ const Universe = () => {
       0.1,
       1000
     );
-    camera.position.z = 100; // Set initial camera position further out
+    camera.position.z = 100;
     cameraRef.current = camera;
 
     // Renderer setup
@@ -150,36 +152,27 @@ const Universe = () => {
     scene.add(sun);
     sunRef.current = sun;
 
-    // Add stars
-    const starsGeometry = new THREE.BufferGeometry();
-    const starsMaterial = new THREE.PointsMaterial({
-      color: 0xFFFFFF,
-      size: 0.1,
-    });
-
-    const starsVertices = [];
-    for (let i = 0; i < 5000; i++) {
-      const x = (Math.random() - 0.5) * 2000;
-      const y = (Math.random() - 0.5) * 2000;
-      const z = (Math.random() - 0.5) * 2000;
-      starsVertices.push(x, y, z);
-    }
-
-    starsGeometry.setAttribute(
-      'position',
-      new THREE.Float32BufferAttribute(starsVertices, 3)
-    );
-    const stars = new THREE.Points(starsGeometry, starsMaterial);
-    scene.add(stars);
+    // Load Jupiter texture
+    const textureLoader = new THREE.TextureLoader();
+    const jupiterTexture = textureLoader.load('/lovable-uploads/f5985c99-70ee-49d1-9514-9603df2873e7.png');
 
     // Add planets
     SAMPLE_PLANETS.forEach((planet) => {
       const geometry = new THREE.SphereGeometry(planet.size, 32, 32);
-      const material = new THREE.MeshPhongMaterial({
-        color: planet.color,
-        emissive: planet.color,
-        emissiveIntensity: 0.2,
-      });
+      let material;
+      
+      if (planet.useTexture) {
+        material = new THREE.MeshPhongMaterial({
+          map: jupiterTexture,
+        });
+      } else {
+        material = new THREE.MeshPhongMaterial({
+          color: planet.color,
+          emissive: planet.color,
+          emissiveIntensity: 0.2,
+        });
+      }
+      
       const mesh = new THREE.Mesh(geometry, material);
       mesh.position.set(...planet.position);
       scene.add(mesh);
@@ -329,6 +322,7 @@ const Universe = () => {
       window.removeEventListener('click', handleClick);
       renderer.dispose();
     };
+
   }, []);
 
   return (
