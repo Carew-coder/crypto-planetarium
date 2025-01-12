@@ -161,20 +161,14 @@ const Universe = () => {
     scene.add(sun);
     sunRef.current = sun;
 
-    // Planet textures array - Updated with new images
+    // Updated planet textures array with only the three new images
     const planetTextures = [
-      '/lovable-uploads/8a88efed-b5a4-47df-b4d5-592db34a4354.png',  // New abstract texture 1
-      '/lovable-uploads/1ab07e73-40b1-45f0-970a-3a546f65c396.png',  // New abstract texture 2
-      '/lovable-uploads/a12a283d-40f9-4d2d-a910-ddef92f12933.png',  // New abstract texture 3
-      '/lovable-uploads/a347d8b1-3d2a-4005-8bd0-7f502e2757d9.png',  // Mars
-      '/lovable-uploads/143c45be-81e7-4bc9-8c02-5b5d749b901a.png',  // Blue planet
-      '/lovable-uploads/f10e0ae1-80f3-4282-bfd4-adf428c266c0.png',  // Venus
-      '/lovable-uploads/47867400-645f-4a61-adea-7da70fa41000.png',  // Mercury
-      '/lovable-uploads/2628cfea-a949-4819-adb1-c3c393bb68d4.png',  // Gas giant
-      '/lovable-uploads/fe74738f-e4cb-410c-bdc2-49e0c9f0e59d.png',  // Ice planet
+      '/lovable-uploads/d786a024-3e8e-4edc-9482-0a17ce5b5ed0.png',  // Purple nebula texture
+      '/lovable-uploads/4ee6bcef-6d35-40a4-bab2-b75ff5d3d846.png',  // Blue ice texture
+      '/lovable-uploads/5fce578c-7023-49ba-af59-3bfbf6e85dcd.png',  // Pink spiral texture
     ];
 
-    // Add planets with only textures
+    // Add planets with evenly distributed textures
     SAMPLE_PLANETS.forEach((planet, index) => {
       const textureIndex = index % planetTextures.length;
       const planetTexture = textureLoader.load(planetTextures[textureIndex]);
