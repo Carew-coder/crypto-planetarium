@@ -83,6 +83,18 @@ for (let i = 0; i < 500; i++) {
   });
 }
 
+const PLANET_TEXTURES = [
+  '/lovable-uploads/98244a61-a143-42a1-bc04-7400b789f28f.png',  // Red swirl
+  '/lovable-uploads/07940f47-fc24-4197-ba10-be4390f882b2.png',  // Red neon
+  '/lovable-uploads/f115cbf1-f4ec-4c06-9d95-2a208ce87fa6.png',  // Blue swirl
+  '/lovable-uploads/0a36d67b-b2b3-4558-aad4-6665abaca922.png',  // Blue neon
+  '/lovable-uploads/b6686ee5-c2dd-4297-8768-e92bc549f292.png',  // Purple swirl
+  '/lovable-uploads/49044724-9c56-41a2-b893-71327d58e78f.png',  // Earth-like
+  '/lovable-uploads/df9118f7-30aa-4077-ad6b-7e7d6ec1e835.png',  // Colorful terrain
+  '/lovable-uploads/454d5495-aee2-4eaa-b3a1-49e4cf51f279.png',  // Green waves
+  '/lovable-uploads/1a9e1fee-d80e-4855-86e9-9fe6b4a730db.png',  // Orange waves
+];
+
 const Universe = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -160,11 +172,15 @@ const Universe = () => {
     scene.add(sun);
     sunRef.current = sun;
 
-    // Add planets with basic materials
-    SAMPLE_PLANETS.forEach((planet) => {
+    // Add planets with textures
+    const textureLoader = new THREE.TextureLoader();
+    SAMPLE_PLANETS.forEach((planet, index) => {
+      const textureIndex = index % PLANET_TEXTURES.length;
+      const texture = textureLoader.load(PLANET_TEXTURES[textureIndex]);
+      
       const geometry = new THREE.SphereGeometry(planet.size, 32, 32);
       const material = new THREE.MeshStandardMaterial({
-        color: planet.color,
+        map: texture,
         metalness: 0.3,
         roughness: 0.4,
       });
