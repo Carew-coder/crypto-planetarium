@@ -154,10 +154,7 @@ const Universe = () => {
 
     // Load Jupiter texture
     const textureLoader = new THREE.TextureLoader();
-    const jupiterTexture = textureLoader.load('/lovable-uploads/dcbbe364-9639-4d24-a51e-23c05e37b38c.png');
-    jupiterTexture.wrapS = THREE.ClampToEdgeWrapping;
-    jupiterTexture.wrapT = THREE.ClampToEdgeWrapping;
-    jupiterTexture.repeat.set(1, 1);
+    const jupiterTexture = textureLoader.load('/lovable-uploads/f5985c99-70ee-49d1-9514-9603df2873e7.png');
 
     // Add planets
     SAMPLE_PLANETS.forEach((planet) => {
@@ -167,9 +164,6 @@ const Universe = () => {
       if (planet.useTexture) {
         material = new THREE.MeshPhongMaterial({
           map: jupiterTexture,
-          bumpScale: 0.02,
-          specular: new THREE.Color(0x222222),
-          shininess: 5,
         });
       } else {
         material = new THREE.MeshPhongMaterial({
