@@ -138,10 +138,10 @@ const Universe = () => {
     controls.dampingFactor = 0.05;
     controlsRef.current = controls;
 
-    // Add sun in the center with moon texture
+    // Add sun in the center with mars texture
     const textureLoader = new THREE.TextureLoader();
     const sunGeometry = new THREE.SphereGeometry(5, 32, 32);
-    const sunTexture = textureLoader.load('/lovable-uploads/6ebdf622-4e2a-4369-9612-ab8480f08333.png');
+    const sunTexture = textureLoader.load('/lovable-uploads/7a729622-03c1-4d48-b0ba-696fa61a8850.png');
     const sunMaterial = new THREE.MeshPhongMaterial({
       map: sunTexture,
       emissive: 0xffffff,
