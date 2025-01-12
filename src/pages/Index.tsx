@@ -28,18 +28,18 @@ const Index = () => {
             <TableHeader>
               <TableRow>
                 <TableHead className="text-white/80">Address</TableHead>
-                <TableHead className="text-white/80">Planets</TableHead>
+                <TableHead className="text-white/80">Holding %</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {/* Example rows - replace with actual data */}
               <TableRow>
                 <TableCell className="text-white/70">0x1234...5678</TableCell>
-                <TableCell className="text-white/70">42</TableCell>
+                <TableCell className="text-white/70">4.2%</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell className="text-white/70">0x8765...4321</TableCell>
-                <TableCell className="text-white/70">28</TableCell>
+                <TableCell className="text-white/70">2.8%</TableCell>
               </TableRow>
             </TableBody>
           </Table>
