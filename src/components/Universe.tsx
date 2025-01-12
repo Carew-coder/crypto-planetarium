@@ -144,8 +144,8 @@ const Universe = () => {
     const sunTexture = textureLoader.load('/lovable-uploads/6ebdf622-4e2a-4369-9612-ab8480f08333.png');
     const sunMaterial = new THREE.MeshPhongMaterial({
       map: sunTexture,
-      emissive: 0xaaaaaa,
-      emissiveIntensity: 0.2,
+      emissive: 0xffffff,
+      emissiveIntensity: 0.5,
     });
     const sun = new THREE.Mesh(sunGeometry, sunMaterial);
     sun.position.set(0, 0, 0);
