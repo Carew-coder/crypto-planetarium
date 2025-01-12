@@ -27,7 +27,16 @@ const generateRandomPosition = (): [number, number, number] => {
 };
 
 const generateRandomColor = () => {
-  return `#${Math.floor(Math.random()*16777215).toString(16)}`;
+  // Using a more vibrant color palette
+  const colors = [
+    '#8B5CF6', // Vivid Purple
+    '#D946EF', // Magenta Pink
+    '#F97316', // Bright Orange
+    '#0EA5E9', // Ocean Blue
+    '#10B981', // Emerald
+    '#EF4444', // Red
+  ];
+  return colors[Math.floor(Math.random() * colors.length)];
 };
 
 const CRYPTO_NAMES = [
@@ -188,8 +197,10 @@ const Universe = () => {
       const geometry = new THREE.SphereGeometry(planet.size, 32, 32);
       const material = new THREE.MeshStandardMaterial({
         map: planetTexture,
-        metalness: 0,
-        roughness: 0.5,
+        metalness: 0.3,
+        roughness: 0.4,
+        emissive: new THREE.Color(generateRandomColor()),
+        emissiveIntensity: 0.2,
       });
       const mesh = new THREE.Mesh(geometry, material);
       mesh.position.set(...planet.position);
@@ -371,3 +382,4 @@ const Universe = () => {
 };
 
 export default Universe;
+
