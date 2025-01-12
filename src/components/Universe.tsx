@@ -146,8 +146,6 @@ const Universe = () => {
     const sunGeometry = new THREE.SphereGeometry(5, 32, 32);
     const sunMaterial = new THREE.MeshStandardMaterial({
       map: sunTexture,
-      emissive: 0xffffff,
-      emissiveIntensity: 0.2,
       metalness: 0,
       roughness: 0.5,
     });
