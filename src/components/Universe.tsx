@@ -189,23 +189,41 @@ const Universe = () => {
       '/lovable-uploads/fe74738f-e4cb-410c-bdc2-49e0c9f0e59d.png',  // Ice planet
     ];
 
-    // Add planets with distributed textures
+    // Add planets with enhanced glow
     SAMPLE_PLANETS.forEach((planet, index) => {
-      const textureIndex = index % planetTextures.length; // Ensure even distribution
+      const textureIndex = index % planetTextures.length;
       const planetTexture = textureLoader.load(planetTextures[textureIndex]);
       
+      // Create the main planet mesh
       const geometry = new THREE.SphereGeometry(planet.size, 32, 32);
       const material = new THREE.MeshStandardMaterial({
         map: planetTexture,
         metalness: 0.3,
         roughness: 0.4,
         emissive: new THREE.Color(generateRandomColor()),
-        emissiveIntensity: 0.2,
+        emissiveIntensity: 0.4, // Increased from 0.2 for more glow
       });
       const mesh = new THREE.Mesh(geometry, material);
       mesh.position.set(...planet.position);
       scene.add(mesh);
       planetsRef.current[planet.id] = mesh;
+
+      // Add ambient glow to each planet
+      const glowGeometry = new THREE.SphereGeometry(planet.size * 1.2, 32, 32);
+      const glowMaterial = new THREE.MeshBasicMaterial({
+        color: new THREE.Color(generateRandomColor()),
+        transparent: true,
+        opacity: 0.15,
+        side: THREE.BackSide,
+      });
+      const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
+      glowMesh.position.copy(mesh.position);
+      scene.add(glowMesh);
+
+      // Add point light for each planet
+      const planetLight = new THREE.PointLight(material.emissive.getHex(), 0.5, planet.size * 4);
+      planetLight.position.copy(mesh.position);
+      scene.add(planetLight);
     });
 
     const starsGeometry = new THREE.BufferGeometry();
@@ -245,9 +263,19 @@ const Universe = () => {
     const animate = () => {
       requestAnimationFrame(animate);
       
-      // Rotate planets
-      Object.values(planetsRef.current).forEach((planet) => {
+      // Rotate planets and their glow
+      Object.values(planetsRef.current).forEach((planet, index) => {
         planet.rotation.y += 0.005;
+        // Update glow position if needed
+        const glowMesh = scene.children.find(
+          child => child instanceof THREE.Mesh && 
+          child.material.transparent && 
+          child.position.equals(planet.position) &&
+          child !== planet
+        );
+        if (glowMesh) {
+          glowMesh.rotation.y += 0.005;
+        }
       });
 
       // Rotate sun and update glow
@@ -382,4 +410,3 @@ const Universe = () => {
 };
 
 export default Universe;
-
