@@ -27,7 +27,6 @@ const generateRandomPosition = (): [number, number, number] => {
 };
 
 const generateRandomColor = () => {
-  // Using a more vibrant color palette
   const colors = [
     '#8B5CF6', // Vivid Purple
     '#D946EF', // Magenta Pink
@@ -156,28 +155,11 @@ const Universe = () => {
       map: sunTexture,
       metalness: 0,
       roughness: 0.5,
-      emissive: new THREE.Color(0xff6b00),
-      emissiveIntensity: 0.5,
     });
     const sun = new THREE.Mesh(sunGeometry, sunMaterial);
     sun.position.set(0, 0, 0);
     scene.add(sun);
     sunRef.current = sun;
-
-    // Add sun glow effect using point light
-    const sunGlow = new THREE.PointLight(0xff6b00, 2, 50);
-    sunGlow.position.set(0, 0, 0);
-    scene.add(sunGlow);
-
-    // Add ambient glow using a larger sphere
-    const glowGeometry = new THREE.SphereGeometry(5.2, 32, 32);
-    const glowMaterial = new THREE.MeshBasicMaterial({
-      color: 0xff6b00,
-      transparent: true,
-      opacity: 0.15,
-    });
-    const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
-    scene.add(glowMesh);
 
     // Planet textures array
     const planetTextures = [
@@ -189,41 +171,21 @@ const Universe = () => {
       '/lovable-uploads/fe74738f-e4cb-410c-bdc2-49e0c9f0e59d.png',  // Ice planet
     ];
 
-    // Add planets with enhanced glow
+    // Add planets with only textures
     SAMPLE_PLANETS.forEach((planet, index) => {
       const textureIndex = index % planetTextures.length;
       const planetTexture = textureLoader.load(planetTextures[textureIndex]);
       
-      // Create the main planet mesh
       const geometry = new THREE.SphereGeometry(planet.size, 32, 32);
       const material = new THREE.MeshStandardMaterial({
         map: planetTexture,
         metalness: 0.3,
         roughness: 0.4,
-        emissive: new THREE.Color(generateRandomColor()),
-        emissiveIntensity: 0.4, // Increased from 0.2 for more glow
       });
       const mesh = new THREE.Mesh(geometry, material);
       mesh.position.set(...planet.position);
       scene.add(mesh);
       planetsRef.current[planet.id] = mesh;
-
-      // Add ambient glow to each planet
-      const glowGeometry = new THREE.SphereGeometry(planet.size * 1.2, 32, 32);
-      const glowMaterial = new THREE.MeshBasicMaterial({
-        color: new THREE.Color(generateRandomColor()),
-        transparent: true,
-        opacity: 0.15,
-        side: THREE.BackSide,
-      });
-      const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
-      glowMesh.position.copy(mesh.position);
-      scene.add(glowMesh);
-
-      // Add point light for each planet
-      const planetLight = new THREE.PointLight(material.emissive.getHex(), 0.5, planet.size * 4);
-      planetLight.position.copy(mesh.position);
-      scene.add(planetLight);
     });
 
     const starsGeometry = new THREE.BufferGeometry();
@@ -247,7 +209,7 @@ const Universe = () => {
     const stars = new THREE.Points(starsGeometry, starsMaterial);
     scene.add(stars);
 
-    // Enhanced lighting setup
+    // Basic lighting setup
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(ambientLight);
 
@@ -263,25 +225,14 @@ const Universe = () => {
     const animate = () => {
       requestAnimationFrame(animate);
       
-      // Rotate planets and their glow
-      Object.values(planetsRef.current).forEach((planet, index) => {
+      // Rotate planets
+      Object.values(planetsRef.current).forEach((planet) => {
         planet.rotation.y += 0.005;
-        // Update glow position if needed
-        const glowMesh = scene.children.find(
-          child => child instanceof THREE.Mesh && 
-          child.material.transparent && 
-          child.position.equals(planet.position) &&
-          child !== planet
-        );
-        if (glowMesh) {
-          glowMesh.rotation.y += 0.005;
-        }
       });
 
-      // Rotate sun and update glow
+      // Rotate sun
       if (sunRef.current) {
         sunRef.current.rotation.y += 0.001;
-        glowMesh.rotation.y += 0.001;
       }
 
       controls.update();
