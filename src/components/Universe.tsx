@@ -14,6 +14,28 @@ interface Planet {
   position: [number, number, number];
 }
 
+const generateRandomPosition = (): [number, number, number] => {
+  const radius = 50; // Maximum radius from center
+  const theta = Math.random() * Math.PI * 2; // Random angle around Y axis
+  const phi = Math.acos((Math.random() * 2) - 1); // Random angle from Y axis
+  
+  const x = radius * Math.sin(phi) * Math.cos(theta);
+  const y = radius * Math.sin(phi) * Math.sin(theta);
+  const z = radius * Math.cos(phi);
+  
+  return [x, y, z];
+};
+
+const generateRandomColor = () => {
+  return `#${Math.floor(Math.random()*16777215).toString(16)}`;
+};
+
+const CRYPTO_NAMES = [
+  "Bitcoin", "Ethereum", "Solana", "Cardano", "Polkadot", "Avalanche", "Chainlink",
+  "Polygon", "Cosmos", "Near", "Fantom", "Harmony", "Algorand", "Tezos", "VeChain",
+  "Hedera", "Elrond", "Zilliqa", "Icon", "Waves"
+];
+
 const SAMPLE_PLANETS: Planet[] = [
   {
     id: "btc",
@@ -40,6 +62,18 @@ const SAMPLE_PLANETS: Planet[] = [
     position: [-4, -1, 4],
   },
 ];
+
+// Generate 100 additional planets
+for (let i = 0; i < 100; i++) {
+  SAMPLE_PLANETS.push({
+    id: `planet-${i}`,
+    name: `${CRYPTO_NAMES[i % CRYPTO_NAMES.length]} ${Math.floor(i / CRYPTO_NAMES.length) + 1}`,
+    value: Math.random() * 1000,
+    color: generateRandomColor(),
+    size: 0.3 + Math.random() * 1.2, // Random size between 0.3 and 1.5
+    position: generateRandomPosition(),
+  });
+}
 
 const Universe = () => {
   const containerRef = useRef<HTMLDivElement>(null);
