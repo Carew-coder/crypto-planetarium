@@ -158,7 +158,7 @@ const Universe = () => {
       texture.wrapS = THREE.RepeatWrapping;
       texture.wrapT = THREE.RepeatWrapping;
       texture.repeat.set(1, 1);
-      texture.mapping = THREE.EquirectangularMapping;
+      texture.mapping = THREE.UVMapping;  // Changed from EquirectangularMapping to UVMapping
     });
 
     // Add planets
