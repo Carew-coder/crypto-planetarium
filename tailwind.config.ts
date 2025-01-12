@@ -68,6 +68,16 @@ export default {
           "0%": { transform: "rotate(0deg)" },
           "100%": { transform: "rotate(360deg)" },
         },
+        "pulse": {
+          "0%, 100%": { 
+            transform: "scale(0)",
+            opacity: "1"
+          },
+          "50%": { 
+            transform: "scale(1)",
+            opacity: "0.25"
+          },
+        },
       },
       animation: {
         "float": "float 6s ease-in-out infinite",
