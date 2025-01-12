@@ -159,39 +159,31 @@ const Universe = () => {
     const stars = new THREE.Points(starsGeometry, starsMaterial);
     scene.add(stars);
 
-    // Add planets with enhanced detail
+    // Add planets
     SAMPLE_PLANETS.forEach((planet) => {
-      const geometry = new THREE.SphereGeometry(planet.size, 64, 64); // Increased segments from 32 to 64
+      const geometry = new THREE.SphereGeometry(planet.size, 32, 32);
       const material = new THREE.MeshPhongMaterial({
         color: planet.color,
         emissive: planet.color,
         emissiveIntensity: 0.2,
-        shininess: 50, // Added shininess for better light reflection
-        flatShading: false, // Smooth shading
-        specular: new THREE.Color(0x444444), // Added specular highlights
       });
       const mesh = new THREE.Mesh(geometry, material);
       mesh.position.set(...planet.position);
       scene.add(mesh);
       planetsRef.current[planet.id] = mesh;
 
-      // Enhanced glow effect
-      const glowGeometry = new THREE.SphereGeometry(planet.size * 1.2, 64, 64);
+      // Add glow effect
+      const glowGeometry = new THREE.SphereGeometry(planet.size * 1.2, 32, 32);
       const glowMaterial = new THREE.ShaderMaterial({
         uniforms: {
           c: { value: 0.5 },
           p: { value: 4.5 },
           glowColor: { value: new THREE.Color(planet.color) },
-          viewVector: { value: camera.position },
         },
         vertexShader: `
-          uniform vec3 viewVector;
           varying vec3 vNormal;
-          varying vec3 vViewVector;
-          
           void main() {
             vNormal = normalize(normalMatrix * normal);
-            vViewVector = normalize(viewVector - (modelMatrix * vec4(position, 1.0)).xyz);
             gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
           }
         `,
@@ -200,10 +192,8 @@ const Universe = () => {
           uniform float c;
           uniform float p;
           varying vec3 vNormal;
-          varying vec3 vViewVector;
-          
           void main() {
-            float intensity = pow(c - dot(vNormal, vViewVector), p);
+            float intensity = pow(c - dot(vNormal, vec3(0.0, 0.0, 1.0)), p);
             gl_FragColor = vec4(glowColor, intensity);
           }
         `,
