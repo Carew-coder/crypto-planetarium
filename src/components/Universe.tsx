@@ -14,16 +14,47 @@ interface Planet {
   position: [number, number, number];
 }
 
-const generateRandomPosition = (): [number, number, number] => {
-  const radius = 50; // Maximum radius from center
-  const theta = Math.random() * Math.PI * 2; // Random angle around Y axis
-  const phi = Math.acos((Math.random() * 2) - 1); // Random angle from Y axis
+const generateRandomPosition = (existingPositions: [number, number, number][]): [number, number, number] => {
+  const MIN_DISTANCE = 5; // Minimum distance between planets
+  const MAX_ATTEMPTS = 50; // Maximum attempts to find a valid position
+  let attempts = 0;
+  while (attempts < MAX_ATTEMPTS) {
+    const radius = 50;
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos((Math.random() * 2) - 1);
+    
+    const x = radius * Math.sin(phi) * Math.cos(theta);
+    const y = radius * Math.sin(phi) * Math.sin(theta);
+    const z = radius * Math.cos(phi);
+    
+    const position: [number, number, number] = [x, y, z];
+    
+    // Check distance from all existing positions
+    const isTooClose = existingPositions.some(existingPos => {
+      const dx = existingPos[0] - x;
+      const dy = existingPos[1] - y;
+      const dz = existingPos[2] - z;
+      const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+      return distance < MIN_DISTANCE;
+    });
+    
+    if (!isTooClose || attempts === MAX_ATTEMPTS - 1) {
+      return position;
+    }
+    
+    attempts++;
+  }
   
-  const x = radius * Math.sin(phi) * Math.cos(theta);
-  const y = radius * Math.sin(phi) * Math.sin(theta);
-  const z = radius * Math.cos(phi);
+  // If we couldn't find a good position after MAX_ATTEMPTS, return a position further out
+  const fallbackRadius = 50 + Math.random() * 20;
+  const theta = Math.random() * Math.PI * 2;
+  const phi = Math.acos((Math.random() * 2) - 1);
   
-  return [x, y, z];
+  return [
+    fallbackRadius * Math.sin(phi) * Math.cos(theta),
+    fallbackRadius * Math.sin(phi) * Math.sin(theta),
+    fallbackRadius * Math.cos(phi)
+  ];
 };
 
 const generateRandomColor = () => {
@@ -71,15 +102,21 @@ const SAMPLE_PLANETS: Planet[] = [
   },
 ];
 
-// Generate 500 additional planets instead of 100
+// Keep track of existing positions
+const existingPositions: [number, number, number][] = SAMPLE_PLANETS.map(p => p.position);
+
+// Generate additional planets with collision detection
 for (let i = 0; i < 500; i++) {
+  const position = generateRandomPosition(existingPositions);
+  existingPositions.push(position);
+  
   SAMPLE_PLANETS.push({
     id: `planet-${i}`,
     name: `${CRYPTO_NAMES[i % CRYPTO_NAMES.length]} ${Math.floor(i / CRYPTO_NAMES.length) + 1}`,
     value: Math.random() * 1000,
     color: generateRandomColor(),
-    size: 0.3 + Math.random() * 1.2, // Random size between 0.3 and 1.5
-    position: generateRandomPosition(),
+    size: 0.3 + Math.random() * 1.2,
+    position: position,
   });
 }
 
