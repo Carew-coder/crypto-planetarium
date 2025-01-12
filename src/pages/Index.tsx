@@ -1,11 +1,14 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { Universe } from "@/components/Universe";
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
+    <div className="relative w-full h-screen overflow-hidden">
+      <Universe />
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 glass-panel px-6 py-3">
+        <h1 className="text-xl font-semibold text-white">Crypto Universe</h1>
+      </div>
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 glass-panel px-4 py-2">
+        <p className="text-sm text-white/80">Click on planets to explore token values</p>
       </div>
     </div>
   );

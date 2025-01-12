@@ -1,0 +1,249 @@
+import React, { useEffect, useRef } from 'react';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { useToast } from "@/components/ui/use-toast";
+
+interface Planet {
+  id: string;
+  name: string;
+  value: number;
+  color: string;
+  size: number;
+  position: [number, number, number];
+}
+
+const SAMPLE_PLANETS: Planet[] = [
+  {
+    id: "btc",
+    name: "Bitcoin",
+    value: 45000,
+    color: "#F7931A",
+    size: 2,
+    position: [0, 0, 0],
+  },
+  {
+    id: "eth",
+    name: "Ethereum",
+    value: 2500,
+    color: "#627EEA",
+    size: 1.5,
+    position: [5, 2, -3],
+  },
+  {
+    id: "sol",
+    name: "Solana",
+    value: 100,
+    color: "#00FFA3",
+    size: 1,
+    position: [-4, -1, 4],
+  },
+];
+
+const Universe = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const sceneRef = useRef<THREE.Scene | null>(null);
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const controlsRef = useRef<OrbitControls | null>(null);
+  const planetsRef = useRef<{ [key: string]: THREE.Mesh }>({});
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    // Scene setup
+    const scene = new THREE.Scene();
+    sceneRef.current = scene;
+
+    // Camera setup
+    const camera = new THREE.PerspectiveCamera(
+      75,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000
+    );
+    camera.position.z = 10;
+    cameraRef.current = camera;
+
+    // Renderer setup
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    containerRef.current.appendChild(renderer.domElement);
+    rendererRef.current = renderer;
+
+    // Controls setup
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controlsRef.current = controls;
+
+    // Add stars
+    const starsGeometry = new THREE.BufferGeometry();
+    const starsMaterial = new THREE.PointsMaterial({
+      color: 0xFFFFFF,
+      size: 0.1,
+    });
+
+    const starsVertices = [];
+    for (let i = 0; i < 5000; i++) {
+      const x = (Math.random() - 0.5) * 2000;
+      const y = (Math.random() - 0.5) * 2000;
+      const z = (Math.random() - 0.5) * 2000;
+      starsVertices.push(x, y, z);
+    }
+
+    starsGeometry.setAttribute(
+      'position',
+      new THREE.Float32BufferAttribute(starsVertices, 3)
+    );
+    const stars = new THREE.Points(starsGeometry, starsMaterial);
+    scene.add(stars);
+
+    // Add planets
+    SAMPLE_PLANETS.forEach((planet) => {
+      const geometry = new THREE.SphereGeometry(planet.size, 32, 32);
+      const material = new THREE.MeshPhongMaterial({
+        color: planet.color,
+        emissive: planet.color,
+        emissiveIntensity: 0.2,
+      });
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.set(...planet.position);
+      scene.add(mesh);
+      planetsRef.current[planet.id] = mesh;
+
+      // Add glow effect
+      const glowGeometry = new THREE.SphereGeometry(planet.size * 1.2, 32, 32);
+      const glowMaterial = new THREE.ShaderMaterial({
+        uniforms: {
+          c: { type: "f", value: 0.5 },
+          p: { type: "f", value: 4.5 },
+          glowColor: { type: "c", value: new THREE.Color(planet.color) },
+        },
+        vertexShader: `
+          varying vec3 vNormal;
+          void main() {
+            vNormal = normalize(normalMatrix * normal);
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          uniform vec3 glowColor;
+          uniform float c;
+          uniform float p;
+          varying vec3 vNormal;
+          void main() {
+            float intensity = pow(c - dot(vNormal, vec3(0.0, 0.0, 1.0)), p);
+            gl_FragColor = vec4(glowColor, intensity);
+          }
+        `,
+        side: THREE.BackSide,
+        blending: THREE.AdditiveBlending,
+        transparent: true,
+      });
+
+      const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
+      glowMesh.position.set(...planet.position);
+      scene.add(glowMesh);
+    });
+
+    // Add lighting
+    const ambientLight = new THREE.AmbientLight(0x404040);
+    scene.add(ambientLight);
+
+    const pointLight = new THREE.PointLight(0xFFFFFF, 1);
+    pointLight.position.set(10, 10, 10);
+    scene.add(pointLight);
+
+    // Animation loop
+    const animate = () => {
+      requestAnimationFrame(animate);
+      
+      // Rotate planets
+      Object.values(planetsRef.current).forEach((planet) => {
+        planet.rotation.y += 0.005;
+      });
+
+      controls.update();
+      renderer.render(scene, camera);
+    };
+
+    animate();
+
+    // Handle window resize
+    const handleResize = () => {
+      if (!cameraRef.current || !rendererRef.current) return;
+      
+      cameraRef.current.aspect = window.innerWidth / window.innerHeight;
+      cameraRef.current.updateProjectionMatrix();
+      rendererRef.current.setSize(window.innerWidth, window.innerHeight);
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    // Handle planet click
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    const handleClick = (event: MouseEvent) => {
+      if (!cameraRef.current || !sceneRef.current || !controlsRef.current) return;
+
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, cameraRef.current);
+      const intersects = raycaster.intersectObjects(Object.values(planetsRef.current));
+
+      if (intersects.length > 0) {
+        const clickedPlanet = SAMPLE_PLANETS.find(
+          (p) => planetsRef.current[p.id] === intersects[0].object
+        );
+
+        if (clickedPlanet) {
+          // Zoom to planet
+          const position = new THREE.Vector3(...clickedPlanet.position);
+          position.z += 5;
+
+          const currentPos = cameraRef.current.position.clone();
+          const distance = currentPos.distanceTo(position);
+
+          // Animate camera movement
+          let progress = 0;
+          const animate = () => {
+            progress += 0.02;
+            if (progress > 1) {
+              toast({
+                title: clickedPlanet.name,
+                description: `Current Value: $${clickedPlanet.value.toLocaleString()}`,
+              });
+              return;
+            }
+
+            const newPos = currentPos.clone().lerp(position, progress);
+            cameraRef.current!.position.copy(newPos);
+            controlsRef.current!.target.copy(new THREE.Vector3(...clickedPlanet.position));
+            controlsRef.current!.update();
+
+            requestAnimationFrame(animate);
+          };
+
+          animate();
+        }
+      }
+    };
+
+    window.addEventListener('click', handleClick);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('click', handleClick);
+      renderer.dispose();
+    };
+  }, []);
+
+  return <div ref={containerRef} className="w-full h-screen" />;
+};
+
+export default Universe;
