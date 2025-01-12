@@ -180,11 +180,10 @@ const Universe = () => {
     // Add planets with the Mars texture only
     SAMPLE_PLANETS.forEach((planet) => {
       const geometry = new THREE.SphereGeometry(planet.size, 32, 32);
-      const material = new THREE.MeshPhongMaterial({
+      const material = new THREE.MeshStandardMaterial({
         map: planetTexture,
-        color: 0xffffff,
-        shininess: 0,
-        specular: 0x000000
+        metalness: 0,
+        roughness: 0.5,
       });
       const mesh = new THREE.Mesh(geometry, material);
       mesh.position.set(...planet.position);
@@ -192,13 +191,17 @@ const Universe = () => {
       planetsRef.current[planet.id] = mesh;
     });
 
-    // Add lighting
-    const ambientLight = new THREE.AmbientLight(0x404040);
+    // Enhanced lighting setup
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(ambientLight);
 
-    const pointLight = new THREE.PointLight(0xFFFFFF, 2);
+    const pointLight = new THREE.PointLight(0xffffff, 2);
     pointLight.position.set(0, 0, 0);
     scene.add(pointLight);
+
+    // Add hemisphere light for better overall illumination
+    const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
+    scene.add(hemisphereLight);
 
     // Animation loop
     const animate = () => {
