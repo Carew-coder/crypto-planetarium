@@ -161,8 +161,11 @@ const Universe = () => {
     scene.add(sun);
     sunRef.current = sun;
 
-    // Planet textures array
+    // Planet textures array - Updated with new images
     const planetTextures = [
+      '/lovable-uploads/8a88efed-b5a4-47df-b4d5-592db34a4354.png',  // New abstract texture 1
+      '/lovable-uploads/1ab07e73-40b1-45f0-970a-3a546f65c396.png',  // New abstract texture 2
+      '/lovable-uploads/a12a283d-40f9-4d2d-a910-ddef92f12933.png',  // New abstract texture 3
       '/lovable-uploads/a347d8b1-3d2a-4005-8bd0-7f502e2757d9.png',  // Mars
       '/lovable-uploads/143c45be-81e7-4bc9-8c02-5b5d749b901a.png',  // Blue planet
       '/lovable-uploads/f10e0ae1-80f3-4282-bfd4-adf428c266c0.png',  // Venus
