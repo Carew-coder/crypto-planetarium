@@ -161,17 +161,17 @@ const Universe = () => {
     scene.add(sun);
     sunRef.current = sun;
 
-    // Updated planet textures array with the cosmic images and KFC
+    // Updated planet textures array with the cosmic images and new magenta texture
     const planetTextures = [
       '/lovable-uploads/d52d6aed-09d3-4a04-914d-e441bfa55b1d.png',  // Blue swirl texture
       '/lovable-uploads/58193620-9e43-46df-aa87-78f9b0a3406e.png',  // Green nebula texture
       '/lovable-uploads/81b1a551-5518-4c9d-a0aa-a010fd945782.png',  // Red-orange texture
-      '/lovable-uploads/7084ae8d-6c60-4a1b-826e-42d91aee91fb.png',  // KFC texture
+      '/lovable-uploads/c1fd5603-4afc-4fb3-b991-f4b75f042f0c.png',  // Magenta texture
     ];
 
     // Add planets with weighted texture distribution
     SAMPLE_PLANETS.forEach((planet, index) => {
-      // Use KFC texture for 25% of planets (every 4th planet)
+      // Use magenta texture for 25% of planets (every 4th planet)
       const textureIndex = index % 4 === 3 ? 3 : index % 3;
       const planetTexture = textureLoader.load(planetTextures[textureIndex]);
       
