@@ -146,13 +146,12 @@ const Universe = () => {
     controls.dampingFactor = 0.05;
     controlsRef.current = controls;
 
-    // Add sun in the center
-    const textureLoader = new THREE.TextureLoader();
-    const sunTexture = textureLoader.load('/lovable-uploads/74d9ee71-8684-4b15-9d2f-6111aa04dfb9.png');
-    
+    // Add sun in the center with basic material
     const sunGeometry = new THREE.SphereGeometry(5, 32, 32);
     const sunMaterial = new THREE.MeshStandardMaterial({
-      map: sunTexture,
+      color: 0xffff00,
+      emissive: 0xffff00,
+      emissiveIntensity: 0.5,
       metalness: 0,
       roughness: 0.5,
     });
@@ -161,24 +160,11 @@ const Universe = () => {
     scene.add(sun);
     sunRef.current = sun;
 
-    // Updated planet textures array with all cosmic images including the new one
-    const planetTextures = [
-      '/lovable-uploads/d52d6aed-09d3-4a04-914d-e441bfa55b1d.png',  // Blue swirl texture
-      '/lovable-uploads/58193620-9e43-46df-aa87-78f9b0a3406e.png',  // Green nebula texture
-      '/lovable-uploads/81b1a551-5518-4c9d-a0aa-a010fd945782.png',  // Red-orange texture
-      '/lovable-uploads/a477fbc9-e28e-4a05-b0d7-67b2d31460d3.png',  // Orange-red texture
-      '/lovable-uploads/0052a47d-d440-437c-8f29-fb5b458cb642.png',  // New red neon texture
-    ];
-
-    // Add planets with weighted texture distribution
-    SAMPLE_PLANETS.forEach((planet, index) => {
-      // Use different textures in rotation (20% chance for each texture)
-      const textureIndex = index % 5;
-      const planetTexture = textureLoader.load(planetTextures[textureIndex]);
-      
+    // Add planets with basic materials
+    SAMPLE_PLANETS.forEach((planet) => {
       const geometry = new THREE.SphereGeometry(planet.size, 32, 32);
       const material = new THREE.MeshStandardMaterial({
-        map: planetTexture,
+        color: planet.color,
         metalness: 0.3,
         roughness: 0.4,
       });
