@@ -1,12 +1,51 @@
 import Universe from "@/components/Universe";
+import { Input } from "@/components/ui/input";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import { useState } from "react";
 
 const Index = () => {
+  const [searchAddress, setSearchAddress] = useState("");
+
   return (
     <div className="relative w-full h-screen overflow-hidden">
       <Universe />
       <div className="absolute top-4 left-1/2 -translate-x-1/2 glass-panel px-6 py-3">
         <h1 className="text-xl font-semibold text-white">Crypto Universe</h1>
       </div>
+      
+      {/* Visit Universes Table */}
+      <div className="absolute right-4 top-4 glass-panel p-4 w-80">
+        <h2 className="text-lg font-semibold text-white mb-4">Visit Universes</h2>
+        <Input
+          type="text"
+          placeholder="Search wallet address..."
+          className="mb-4 bg-space-lighter/50 border-white/10 text-white placeholder:text-white/50"
+          value={searchAddress}
+          onChange={(e) => setSearchAddress(e.target.value)}
+        />
+        <div className="max-h-[400px] overflow-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-white/80">Address</TableHead>
+                <TableHead className="text-white/80">Planets</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {/* Example rows - replace with actual data */}
+              <TableRow>
+                <TableCell className="text-white/70">0x1234...5678</TableCell>
+                <TableCell className="text-white/70">42</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="text-white/70">0x8765...4321</TableCell>
+                <TableCell className="text-white/70">28</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 glass-panel px-4 py-2">
         <p className="text-sm text-white/80">Click on planets to explore token values</p>
         <p className="text-sm text-white/80">Use Scroll wheel to zoom in and out</p>
