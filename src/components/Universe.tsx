@@ -43,7 +43,7 @@ const SAMPLE_PLANETS: Planet[] = [
     value: 45000,
     color: "#F7931A",
     size: 2,
-    position: [-15, 5, -10], // Moved away from center
+    position: [-15, 5, -10],
   },
   {
     id: "eth",
@@ -51,7 +51,7 @@ const SAMPLE_PLANETS: Planet[] = [
     value: 2500,
     color: "#627EEA",
     size: 1.5,
-    position: [20, -8, 15], // Moved away from center
+    position: [20, -8, 15],
   },
   {
     id: "sol",
@@ -59,12 +59,12 @@ const SAMPLE_PLANETS: Planet[] = [
     value: 100,
     color: "#00FFA3",
     size: 1,
-    position: [12, 15, -18], // Moved away from center
+    position: [12, 15, -18],
   },
 ];
 
-// Generate 100 additional planets
-for (let i = 0; i < 100; i++) {
+// Generate 2000 additional planets
+for (let i = 0; i < 2000; i++) {
   SAMPLE_PLANETS.push({
     id: `planet-${i}`,
     name: `${CRYPTO_NAMES[i % CRYPTO_NAMES.length]} ${Math.floor(i / CRYPTO_NAMES.length) + 1}`,
