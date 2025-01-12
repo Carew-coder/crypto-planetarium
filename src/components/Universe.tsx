@@ -140,7 +140,7 @@ const Universe = () => {
 
     // Add sun in the center
     const sunGeometry = new THREE.SphereGeometry(5, 32, 32);
-    const sunMaterial = new THREE.MeshBasicMaterial({
+    const sunMaterial = new THREE.MeshPhongMaterial({
       color: 0xffff00,
       emissive: 0xffff00,
       emissiveIntensity: 1,
