@@ -122,7 +122,7 @@ const Universe = () => {
       0.1,
       1000
     );
-    camera.position.z = 100; // Set initial camera position further out
+    camera.position.z = 100;
     cameraRef.current = camera;
 
     // Renderer setup
@@ -138,19 +138,20 @@ const Universe = () => {
     controls.dampingFactor = 0.05;
     controlsRef.current = controls;
 
-    // Add sun in the center
+    // Add sun in the center with texture
+    const textureLoader = new THREE.TextureLoader();
     const sunGeometry = new THREE.SphereGeometry(5, 32, 32);
+    const sunTexture = textureLoader.load('/placeholder.svg'); // Using placeholder.svg as the texture
     const sunMaterial = new THREE.MeshPhongMaterial({
-      color: 0xffff00,
+      map: sunTexture,
       emissive: 0xffff00,
-      emissiveIntensity: 1,
+      emissiveIntensity: 0.5,
     });
     const sun = new THREE.Mesh(sunGeometry, sunMaterial);
     sun.position.set(0, 0, 0);
     scene.add(sun);
     sunRef.current = sun;
 
-    // Add stars
     const starsGeometry = new THREE.BufferGeometry();
     const starsMaterial = new THREE.PointsMaterial({
       color: 0xFFFFFF,
@@ -325,7 +326,6 @@ const Universe = () => {
 
     window.addEventListener('click', handleClick);
 
-    // Cleanup
     return () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('click', handleClick);
