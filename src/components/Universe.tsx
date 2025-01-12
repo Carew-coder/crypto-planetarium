@@ -71,8 +71,8 @@ const SAMPLE_PLANETS: Planet[] = [
   },
 ];
 
-// Generate 100 additional planets instead of 2000
-for (let i = 0; i < 100; i++) {
+// Generate 500 additional planets instead of 100
+for (let i = 0; i < 500; i++) {
   SAMPLE_PLANETS.push({
     id: `planet-${i}`,
     name: `${CRYPTO_NAMES[i % CRYPTO_NAMES.length]} ${Math.floor(i / CRYPTO_NAMES.length) + 1}`,
