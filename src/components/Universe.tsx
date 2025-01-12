@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { useToast } from "@/components/ui/use-toast";
 
 interface Planet {
@@ -117,9 +117,9 @@ const Universe = () => {
       const glowGeometry = new THREE.SphereGeometry(planet.size * 1.2, 32, 32);
       const glowMaterial = new THREE.ShaderMaterial({
         uniforms: {
-          c: { type: "f", value: 0.5 },
-          p: { type: "f", value: 4.5 },
-          glowColor: { type: "c", value: new THREE.Color(planet.color) },
+          c: { value: 0.5 },
+          p: { value: 4.5 },
+          glowColor: { value: new THREE.Color(planet.color) },
         },
         vertexShader: `
           varying vec3 vNormal;
