@@ -140,7 +140,6 @@ const Universe = () => {
 
     // Add sun in the center
     const textureLoader = new THREE.TextureLoader();
-    const planetTexture = textureLoader.load('/lovable-uploads/a678dcac-8167-4e40-88b9-d955af93e403.png');
     const sunTexture = textureLoader.load('/lovable-uploads/74d9ee71-8684-4b15-9d2f-6111aa04dfb9.png');
     
     const sunGeometry = new THREE.SphereGeometry(5, 32, 32);
@@ -171,6 +170,33 @@ const Universe = () => {
     const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
     scene.add(glowMesh);
 
+    // Planet textures array
+    const planetTextures = [
+      '/lovable-uploads/a347d8b1-3d2a-4005-8bd0-7f502e2757d9.png',  // Mars
+      '/lovable-uploads/143c45be-81e7-4bc9-8c02-5b5d749b901a.png',  // Blue planet
+      '/lovable-uploads/f10e0ae1-80f3-4282-bfd4-adf428c266c0.png',  // Venus
+      '/lovable-uploads/47867400-645f-4a61-adea-7da70fa41000.png',  // Mercury
+      '/lovable-uploads/2628cfea-a949-4819-adb1-c3c393bb68d4.png',  // Gas giant
+      '/lovable-uploads/fe74738f-e4cb-410c-bdc2-49e0c9f0e59d.png',  // Ice planet
+    ];
+
+    // Add planets with distributed textures
+    SAMPLE_PLANETS.forEach((planet, index) => {
+      const textureIndex = index % planetTextures.length; // Ensure even distribution
+      const planetTexture = textureLoader.load(planetTextures[textureIndex]);
+      
+      const geometry = new THREE.SphereGeometry(planet.size, 32, 32);
+      const material = new THREE.MeshStandardMaterial({
+        map: planetTexture,
+        metalness: 0,
+        roughness: 0.5,
+      });
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.set(...planet.position);
+      scene.add(mesh);
+      planetsRef.current[planet.id] = mesh;
+    });
+
     const starsGeometry = new THREE.BufferGeometry();
     const starsMaterial = new THREE.PointsMaterial({
       color: 0xFFFFFF,
@@ -191,20 +217,6 @@ const Universe = () => {
     );
     const stars = new THREE.Points(starsGeometry, starsMaterial);
     scene.add(stars);
-
-    // Add planets with the Mars texture only
-    SAMPLE_PLANETS.forEach((planet) => {
-      const geometry = new THREE.SphereGeometry(planet.size, 32, 32);
-      const material = new THREE.MeshStandardMaterial({
-        map: planetTexture,
-        metalness: 0,
-        roughness: 0.5,
-      });
-      const mesh = new THREE.Mesh(geometry, material);
-      mesh.position.set(...planet.position);
-      scene.add(mesh);
-      planetsRef.current[planet.id] = mesh;
-    });
 
     // Enhanced lighting setup
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
