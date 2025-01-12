@@ -177,13 +177,11 @@ const Universe = () => {
     const stars = new THREE.Points(starsGeometry, starsMaterial);
     scene.add(stars);
 
-    // Add planets with the Mars texture
+    // Add planets with the Mars texture only
     SAMPLE_PLANETS.forEach((planet) => {
       const geometry = new THREE.SphereGeometry(planet.size, 32, 32);
       const material = new THREE.MeshPhongMaterial({
         map: planetTexture,
-        emissive: planet.color,
-        emissiveIntensity: 0.2,
         color: 0xffffff,
         shininess: 0,
         specular: 0x000000
@@ -192,40 +190,6 @@ const Universe = () => {
       mesh.position.set(...planet.position);
       scene.add(mesh);
       planetsRef.current[planet.id] = mesh;
-
-      // Add glow effect
-      const glowGeometry = new THREE.SphereGeometry(planet.size * 1.2, 32, 32);
-      const glowMaterial = new THREE.ShaderMaterial({
-        uniforms: {
-          c: { value: 0.5 },
-          p: { value: 4.5 },
-          glowColor: { value: new THREE.Color(planet.color) },
-        },
-        vertexShader: `
-          varying vec3 vNormal;
-          void main() {
-            vNormal = normalize(normalMatrix * normal);
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-          }
-        `,
-        fragmentShader: `
-          uniform vec3 glowColor;
-          uniform float c;
-          uniform float p;
-          varying vec3 vNormal;
-          void main() {
-            float intensity = pow(c - dot(vNormal, vec3(0.0, 0.0, 1.0)), p);
-            gl_FragColor = vec4(glowColor, intensity);
-          }
-        `,
-        side: THREE.BackSide,
-        blending: THREE.AdditiveBlending,
-        transparent: true,
-      });
-
-      const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
-      glowMesh.position.set(...planet.position);
-      scene.add(glowMesh);
     });
 
     // Add lighting
