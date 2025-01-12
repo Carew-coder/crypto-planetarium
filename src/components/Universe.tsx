@@ -280,6 +280,8 @@ const Universe = () => {
             title: "dev",
             description: "The central star of our universe",
           });
+          // Don't disable controls for dev wallet
+          controlsRef.current.enabled = true;
           return;
         }
       }
