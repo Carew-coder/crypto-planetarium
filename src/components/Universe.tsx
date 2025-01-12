@@ -82,9 +82,10 @@ const Universe = () => {
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
   const planetsRef = useRef<{ [key: string]: THREE.Mesh }>({});
+  const sunRef = useRef<THREE.Mesh | null>(null);
   const { toast } = useToast();
   const [isZoomedIn, setIsZoomedIn] = useState(false);
-  const [initialCameraPosition] = useState(new THREE.Vector3(0, 0, 100)); // Increased initial zoom distance
+  const [initialCameraPosition] = useState(new THREE.Vector3(0, 0, 100));
 
   const handleBackToOverview = () => {
     if (!cameraRef.current || !controlsRef.current) return;
@@ -136,6 +137,18 @@ const Universe = () => {
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controlsRef.current = controls;
+
+    // Add sun in the center
+    const sunGeometry = new THREE.SphereGeometry(5, 32, 32);
+    const sunMaterial = new THREE.MeshBasicMaterial({
+      color: 0xffff00,
+      emissive: 0xffff00,
+      emissiveIntensity: 1,
+    });
+    const sun = new THREE.Mesh(sunGeometry, sunMaterial);
+    sun.position.set(0, 0, 0);
+    scene.add(sun);
+    sunRef.current = sun;
 
     // Add stars
     const starsGeometry = new THREE.BufferGeometry();
@@ -211,8 +224,8 @@ const Universe = () => {
     const ambientLight = new THREE.AmbientLight(0x404040);
     scene.add(ambientLight);
 
-    const pointLight = new THREE.PointLight(0xFFFFFF, 1);
-    pointLight.position.set(10, 10, 10);
+    const pointLight = new THREE.PointLight(0xFFFFFF, 2);
+    pointLight.position.set(0, 0, 0);
     scene.add(pointLight);
 
     // Animation loop
@@ -223,6 +236,11 @@ const Universe = () => {
       Object.values(planetsRef.current).forEach((planet) => {
         planet.rotation.y += 0.005;
       });
+
+      // Rotate sun
+      if (sunRef.current) {
+        sunRef.current.rotation.y += 0.001;
+      }
 
       controls.update();
       renderer.render(scene, camera);
@@ -241,7 +259,7 @@ const Universe = () => {
 
     window.addEventListener('resize', handleResize);
 
-    // Handle planet click
+    // Handle planet and sun click
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
@@ -252,8 +270,22 @@ const Universe = () => {
       mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
       raycaster.setFromCamera(mouse, cameraRef.current);
-      const intersects = raycaster.intersectObjects(Object.values(planetsRef.current));
+      
+      // Check for sun click
+      if (sunRef.current) {
+        const sunIntersects = raycaster.intersectObject(sunRef.current);
+        if (sunIntersects.length > 0) {
+          setIsZoomedIn(true);
+          toast({
+            title: "dev",
+            description: "The central star of our universe",
+          });
+          return;
+        }
+      }
 
+      // Check for planet clicks
+      const intersects = raycaster.intersectObjects(Object.values(planetsRef.current));
       if (intersects.length > 0) {
         const clickedPlanet = SAMPLE_PLANETS.find(
           (p) => planetsRef.current[p.id] === intersects[0].object
