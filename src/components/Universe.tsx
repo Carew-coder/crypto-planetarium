@@ -148,11 +148,28 @@ const Universe = () => {
       map: sunTexture,
       metalness: 0,
       roughness: 0.5,
+      emissive: new THREE.Color(0xff6b00),
+      emissiveIntensity: 0.5,
     });
     const sun = new THREE.Mesh(sunGeometry, sunMaterial);
     sun.position.set(0, 0, 0);
     scene.add(sun);
     sunRef.current = sun;
+
+    // Add sun glow effect using point light
+    const sunGlow = new THREE.PointLight(0xff6b00, 2, 50);
+    sunGlow.position.set(0, 0, 0);
+    scene.add(sunGlow);
+
+    // Add ambient glow using a larger sphere
+    const glowGeometry = new THREE.SphereGeometry(5.2, 32, 32);
+    const glowMaterial = new THREE.MeshBasicMaterial({
+      color: 0xff6b00,
+      transparent: true,
+      opacity: 0.15,
+    });
+    const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
+    scene.add(glowMesh);
 
     const starsGeometry = new THREE.BufferGeometry();
     const starsMaterial = new THREE.PointsMaterial({
@@ -210,9 +227,10 @@ const Universe = () => {
         planet.rotation.y += 0.005;
       });
 
-      // Rotate sun
+      // Rotate sun and update glow
       if (sunRef.current) {
         sunRef.current.rotation.y += 0.001;
+        glowMesh.rotation.y += 0.001;
       }
 
       controls.update();
