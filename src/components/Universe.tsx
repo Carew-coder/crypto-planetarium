@@ -76,11 +76,9 @@ const Universe = () => {
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // Scene setup
     const scene = new THREE.Scene();
     sceneRef.current = scene;
 
-    // Camera setup
     const camera = new THREE.PerspectiveCamera(
       75,
       window.innerWidth / window.innerHeight,
@@ -90,77 +88,79 @@ const Universe = () => {
     camera.position.z = 10;
     cameraRef.current = camera;
 
-    // Renderer setup
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
     containerRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
-    // Controls setup
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controlsRef.current = controls;
 
-    // Add stars
-    const starsGeometry = new THREE.BufferGeometry();
-    const starsMaterial = new THREE.PointsMaterial({
-      color: 0xFFFFFF,
-      size: 0.1,
-    });
-
-    const starsVertices = [];
-    for (let i = 0; i < 5000; i++) {
-      const x = (Math.random() - 0.5) * 2000;
-      const y = (Math.random() - 0.5) * 2000;
-      const z = (Math.random() - 0.5) * 2000;
-      starsVertices.push(x, y, z);
-    }
-
-    starsGeometry.setAttribute(
-      'position',
-      new THREE.Float32BufferAttribute(starsVertices, 3)
-    );
-    const stars = new THREE.Points(starsGeometry, starsMaterial);
-    scene.add(stars);
-
-    // Add planets
     SAMPLE_PLANETS.forEach((planet) => {
-      const geometry = new THREE.SphereGeometry(planet.size, 32, 32);
-      const material = new THREE.MeshPhongMaterial({
-        color: planet.color,
-        emissive: planet.color,
-        emissiveIntensity: 0.2,
+      const geometry = new THREE.SphereGeometry(planet.size, 64, 64);
+      const material = new THREE.ShaderMaterial({
+        uniforms: {
+          color: { value: new THREE.Color(planet.color) },
+          time: { value: 0 },
+        },
+        vertexShader: `
+          varying vec3 vNormal;
+          varying vec2 vUv;
+          
+          void main() {
+            vNormal = normalize(normalMatrix * normal);
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          uniform vec3 color;
+          uniform float time;
+          varying vec3 vNormal;
+          varying vec2 vUv;
+          
+          void main() {
+            float noise = sin(vUv.x * 20.0) * sin(vUv.y * 20.0) * 0.1;
+            float rim = 1.0 - max(dot(vNormal, vec3(0.0, 0.0, 1.0)), 0.0);
+            rim = pow(rim, 2.0);
+            vec3 finalColor = color + color * noise + vec3(1.0) * rim * 0.5;
+            gl_FragColor = vec4(finalColor, 1.0);
+          }
+        `,
       });
+
       const mesh = new THREE.Mesh(geometry, material);
       mesh.position.set(...planet.position);
       scene.add(mesh);
       planetsRef.current[planet.id] = mesh;
 
-      // Add glow effect
-      const glowGeometry = new THREE.SphereGeometry(planet.size * 1.2, 32, 32);
+      const glowGeometry = new THREE.SphereGeometry(planet.size * 1.2, 64, 64);
       const glowMaterial = new THREE.ShaderMaterial({
         uniforms: {
-          c: { value: 0.5 },
-          p: { value: 4.5 },
           glowColor: { value: new THREE.Color(planet.color) },
+          viewVector: { value: camera.position },
+          c: { value: 0.6 },
+          p: { value: 4.5 },
         },
         vertexShader: `
-          varying vec3 vNormal;
+          uniform vec3 viewVector;
+          varying float intensity;
           void main() {
-            vNormal = normalize(normalMatrix * normal);
+            vec3 vNormal = normalize(normalMatrix * normal);
+            vec3 vNormel = normalize(normalMatrix * viewVector);
+            intensity = pow(0.63 - dot(vNormal, vNormel), 4.0);
             gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
           }
         `,
         fragmentShader: `
           uniform vec3 glowColor;
-          uniform float c;
-          uniform float p;
-          varying vec3 vNormal;
+          varying float intensity;
           void main() {
-            float intensity = pow(c - dot(vNormal, vec3(0.0, 0.0, 1.0)), p);
-            gl_FragColor = vec4(glowColor, intensity);
+            vec3 glow = glowColor * intensity;
+            gl_FragColor = vec4(glow, intensity);
           }
         `,
         side: THREE.BackSide,
@@ -171,9 +171,37 @@ const Universe = () => {
       const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
       glowMesh.position.set(...planet.position);
       scene.add(glowMesh);
+
+      const atmosphereGeometry = new THREE.SphereGeometry(planet.size * 1.1, 64, 64);
+      const atmosphereMaterial = new THREE.ShaderMaterial({
+        uniforms: {
+          color: { value: new THREE.Color(planet.color) },
+        },
+        vertexShader: `
+          varying vec3 vNormal;
+          void main() {
+            vNormal = normalize(normalMatrix * normal);
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          uniform vec3 color;
+          varying vec3 vNormal;
+          void main() {
+            float intensity = pow(0.7 - dot(vNormal, vec3(0, 0, 1.0)), 2.0);
+            gl_FragColor = vec4(color, intensity * 0.3);
+          }
+        `,
+        side: THREE.FrontSide,
+        blending: THREE.AdditiveBlending,
+        transparent: true,
+      });
+
+      const atmosphereMesh = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
+      atmosphereMesh.position.set(...planet.position);
+      scene.add(atmosphereMesh);
     });
 
-    // Add lighting
     const ambientLight = new THREE.AmbientLight(0x404040);
     scene.add(ambientLight);
 
@@ -181,11 +209,9 @@ const Universe = () => {
     pointLight.position.set(10, 10, 10);
     scene.add(pointLight);
 
-    // Animation loop
     const animate = () => {
       requestAnimationFrame(animate);
       
-      // Rotate planets
       Object.values(planetsRef.current).forEach((planet) => {
         planet.rotation.y += 0.005;
       });
@@ -196,7 +222,6 @@ const Universe = () => {
 
     animate();
 
-    // Handle window resize
     const handleResize = () => {
       if (!cameraRef.current || !rendererRef.current) return;
       
@@ -207,7 +232,6 @@ const Universe = () => {
 
     window.addEventListener('resize', handleResize);
 
-    // Handle planet click
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
@@ -257,7 +281,6 @@ const Universe = () => {
 
     window.addEventListener('click', handleClick);
 
-    // Cleanup
     return () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('click', handleClick);
