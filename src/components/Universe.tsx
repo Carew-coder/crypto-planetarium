@@ -249,12 +249,29 @@ const Universe = () => {
         const sunIntersects = raycaster.intersectObject(sunRef.current);
         if (sunIntersects.length > 0) {
           setIsZoomedIn(true);
-          toast({
-            title: "dev",
-            description: "The central star of our universe",
-          });
-          // Don't disable controls for dev wallet
-          controlsRef.current.enabled = true;
+          const position = new THREE.Vector3(0, 0, 15); // Position slightly in front of the sun
+
+          const currentPos = cameraRef.current.position.clone();
+          let progress = 0;
+          const animate = () => {
+            progress += 0.02;
+            if (progress > 1) {
+              toast({
+                title: "dev",
+                description: "The central star of our universe",
+              });
+              return;
+            }
+
+            const newPos = currentPos.clone().lerp(position, progress);
+            cameraRef.current!.position.copy(newPos);
+            controlsRef.current!.target.copy(new THREE.Vector3(0, 0, 0));
+            controlsRef.current!.update();
+
+            requestAnimationFrame(animate);
+          };
+
+          animate();
           return;
         }
       }
