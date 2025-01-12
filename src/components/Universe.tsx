@@ -146,6 +146,9 @@ const Universe = () => {
       map: sunTexture,
       emissive: 0xffffff,
       emissiveIntensity: 0.2,
+      color: 0xffffff, // Set base color to white to show true texture colors
+      shininess: 0, // Reduce shininess to minimize specular highlights
+      specular: 0x000000 // Remove specular highlights that might wash out texture
     });
     const sun = new THREE.Mesh(sunGeometry, sunMaterial);
     sun.position.set(0, 0, 0);
