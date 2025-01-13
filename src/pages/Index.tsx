@@ -37,34 +37,8 @@ const Index = () => {
       console.log('Successfully fetched token holders data:', data);
       return data;
     },
-    refetchInterval: 10000, // Reduced to 10 seconds from 300000 (5 minutes)
-    staleTime: 5000, // Data becomes stale after 5 seconds
+    refetchInterval: 300000,
   });
-
-  // Add real-time subscription for token holders updates
-  useEffect(() => {
-    console.log('Setting up real-time subscription for token holders...');
-    
-    const channel = supabase
-      .channel('schema-db-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*', // Listen to all changes
-          schema: 'public',
-          table: 'token_holders'
-        },
-        (payload) => {
-          console.log('Received real-time update for token holders in Index:', payload);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      console.log('Cleaning up real-time subscription...');
-      supabase.removeChannel(channel);
-    };
-  }, []);
 
   const userHasPlanet = holders?.some(
     holder => holder.wallet_address.toLowerCase() === connectedWalletAddress?.toLowerCase()
