@@ -69,7 +69,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey)
     console.log('Supabase client initialized')
 
-    // Transform data
+    // Transform data from API response
     let holders;
     if (Array.isArray(data)) {
       console.log('Processing array response format')
@@ -93,33 +93,45 @@ serve(async (req) => {
     console.log('Transformed data. Number of holders:', holders.length)
     console.log('First holder example:', holders[0])
 
-    // Instead of deleting and inserting, use upsert
-    const { error: upsertError } = await supabase
-      .from('token_holders')
-      .upsert(holders, {
-        onConflict: 'wallet_address',
-        ignoreDuplicates: false
-      })
+    // Get list of new wallet addresses
+    const newWalletAddresses = holders.map(h => h.wallet_address)
+    
+    // First, delete planet customizations for wallets not in the new data
+    console.log('Cleaning up old planet customizations...')
+    const { error: cleanupCustomizationsError } = await supabase
+      .from('planet_customizations')
+      .delete()
+      .not('wallet_address', 'in', `(${newWalletAddresses.map(w => `'${w}'`).join(',')})`)
 
-    if (upsertError) {
-      console.error('Error upserting data into Supabase:', upsertError)
-      throw upsertError
+    if (cleanupCustomizationsError) {
+      console.error('Error cleaning up old planet customizations:', cleanupCustomizationsError)
+      throw cleanupCustomizationsError
     }
 
-    // Clean up any old records that are no longer in the new data
-    const currentWallets = holders.map(h => h.wallet_address)
-    const { error: cleanupError } = await supabase
+    // Then, delete old token holders
+    console.log('Cleaning up old token holders...')
+    const { error: cleanupHoldersError } = await supabase
       .from('token_holders')
       .delete()
-      .not('wallet_address', 'in', `(${currentWallets.map(w => `'${w}'`).join(',')})`)
-      .neq('wallet_address', 'any-wallet-to-preserve') // Add specific wallets to preserve if needed
+      .not('wallet_address', 'in', `(${newWalletAddresses.map(w => `'${w}'`).join(',')})`)
 
-    if (cleanupError) {
-      console.error('Error cleaning up old data:', cleanupError)
-      // Don't throw here, as the main operation succeeded
+    if (cleanupHoldersError) {
+      console.error('Error cleaning up old token holders:', cleanupHoldersError)
+      throw cleanupHoldersError
     }
 
-    console.log('Successfully updated token holders in database')
+    // Finally, insert new data
+    console.log('Inserting new token holders...')
+    const { error: insertError } = await supabase
+      .from('token_holders')
+      .insert(holders)
+
+    if (insertError) {
+      console.error('Error inserting new token holders:', insertError)
+      throw insertError
+    }
+
+    console.log('Successfully updated token holders database')
 
     return new Response(JSON.stringify({ 
       success: true, 
