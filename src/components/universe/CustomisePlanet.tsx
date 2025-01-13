@@ -52,11 +52,17 @@ const CustomisePlanet = ({ walletAddress }: CustomisePlanetProps) => {
       console.log('Updating planet customization in database');
       const { error: dbError } = await supabase
         .from('planet_customizations')
-        .upsert({
-          wallet_address: walletAddress,
-          nickname: data.nickname,
-          skin_url: skinUrl
-        });
+        .upsert(
+          {
+            wallet_address: walletAddress,
+            nickname: data.nickname,
+            skin_url: skinUrl
+          },
+          {
+            onConflict: 'wallet_address',
+            ignoreDuplicates: false
+          }
+        );
 
       if (dbError) {
         console.error('Error saving customization:', dbError);
