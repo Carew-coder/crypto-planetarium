@@ -54,6 +54,7 @@ const PlanetInformation = ({ holder, connectedWalletAddress }: PlanetInformation
           <TableHeader>
             <TableRow>
               <TableHead className="text-white/80">Planet Name</TableHead>
+              <TableHead className="text-white/80">Value</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
