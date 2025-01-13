@@ -401,6 +401,34 @@ const Universe = ({
     let animationFrameId: number;
     let isPageVisible = true;
 
+    // Define animate function first so it's available to the visibility handler
+    const animate = () => {
+      if (!isPageVisible) {
+        console.log('Animation paused - page not visible');
+        return;
+      }
+
+      animationFrameId = requestAnimationFrame(animate);
+      
+      if (!isZoomedIn) {
+        Object.values(planetsRef.current).forEach((planet) => {
+          planet.rotation.y += 0.005;
+        });
+
+        if (sunRef.current) {
+          sunRef.current.rotation.y += 0.001;
+        }
+      }
+
+      if (controlsRef.current) {
+        controlsRef.current.update();
+      }
+
+      if (rendererRef.current && sceneRef.current && cameraRef.current) {
+        rendererRef.current.render(sceneRef.current, cameraRef.current);
+      }
+    };
+
     const handleVisibilityChange = () => {
       isPageVisible = !document.hidden;
       console.log('Page visibility changed:', isPageVisible);
