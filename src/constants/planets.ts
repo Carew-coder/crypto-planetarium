@@ -11,7 +11,20 @@ export const PLANET_TEXTURES = [
   '/lovable-uploads/f8de2475-536f-4ad7-a175-fefe2aa34b72.png',  // Purple nebula
   '/lovable-uploads/98a4a118-feb5-4773-8508-8ea28b9f15ac.png',  // Golden swirl
   '/lovable-uploads/18882195-537b-4429-ab8d-b25064f44981.png',  // Crystal cave
-  '/lovable-uploads/3a2b0bbf-5268-4126-bc25-d4ea7fec9f4e.png'   // Red plasma
+  '/lovable-uploads/3a2b0bbf-5268-4126-bc25-d4ea7fec9f4e.png',  // Red plasma
+  '/lovable-uploads/48173985-b772-417b-a059-0f06ce157864.png',  // Turquoise waves
+  '/lovable-uploads/3a85be40-1d78-439d-a616-39c2c23c12b3.png',  // Electric blue
+  '/lovable-uploads/1db1a524-720b-4aee-8d6a-ce040ddf3964.png',  // Green lightning
+  '/lovable-uploads/7b2be74e-3448-4b5d-8a4a-3e95d46924e2.png',  // Crystal formation
+  '/lovable-uploads/2d357c7a-8e5c-41a2-ace8-66bb245e27ed.png',  // Purple storm
+  '/lovable-uploads/e9932568-3394-42a3-86b5-b6e4659dfe52.png',  // Cosmic swirl
+  '/lovable-uploads/09aa93e8-a49f-4f20-83cf-2e3eb67a07be.png',  // Metallic flow
+  '/lovable-uploads/ac546a61-94c1-48d5-86cf-57aa0c45b8e6.png',  // Solar flare
+  '/lovable-uploads/406c7022-a3f6-4a8c-85ca-9ca72a66e8c6.png',  // Lava core
+  '/lovable-uploads/b2b2500b-52f3-4a95-bf21-5d16a08765bc.png',  // Fire storm
+  '/lovable-uploads/62092156-4668-4f73-934a-b7977f2f9614.png',  // Royal nebula
+  '/lovable-uploads/02393287-3e3c-435f-866d-b46ebdc6e7cb.png',  // Rainbow wave
+  '/lovable-uploads/0a64a3c5-ee2b-4aa5-bef0-52892071647d.png'   // Yellow energy
 ];
 
 // Function to calculate planet size based on holding percentage with exponential scaling and a maximum cap
