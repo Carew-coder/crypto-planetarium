@@ -21,24 +21,49 @@ const Index = () => {
     queryFn: async () => {
       console.log('Fetching token holders data...');
       
-      await supabase.functions.invoke('fetchTokenHolders')
+      await supabase.functions.invoke('fetchTokenHolders');
       
       const { data, error } = await supabase
         .from('token_holders')
         .select('*')
         .order('percentage', { ascending: false })
-        .limit(100)
+        .limit(100);
 
       if (error) {
         console.error('Error fetching token holders:', error);
         throw error;
       }
       
-      console.log('Successfully fetched token holders data:', data);
       return data;
     },
-    refetchInterval: 300000,
+    refetchInterval: 10000, // Decreased from 300000 to 10000 (10 seconds)
+    staleTime: 5000,
   });
+
+  // Add real-time subscription for token holders
+  useEffect(() => {
+    console.log('Setting up real-time subscription for token holders in Index...');
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'token_holders'
+        },
+        (payload) => {
+          console.log('Received real-time update for token holders in Index:', payload);
+          void queryClient.invalidateQueries({ queryKey: ['tokenHolders'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('Cleaning up token holders subscription in Index');
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const userHasPlanet = holders?.some(
     holder => holder.wallet_address.toLowerCase() === connectedWalletAddress?.toLowerCase()

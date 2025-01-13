@@ -13,27 +13,25 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Starting fetchTokenHolders function...')
+    console.log('Starting fetchTokenHolders function...');
     
-    const apiKey = Deno.env.get('SOLANA_TRACKER_API_KEY')
+    const apiKey = Deno.env.get('SOLANA_TRACKER_API_KEY');
     if (!apiKey) {
-      console.error('SOLANA_TRACKER_API_KEY not found in environment variables')
-      throw new Error('API key not found')
+      console.error('SOLANA_TRACKER_API_KEY not found in environment variables');
+      throw new Error('API key not found');
     }
 
-    console.log('Retrieved API key successfully:', apiKey.substring(0, 8) + '...')
+    const tokenAddress = 'GxHJDpqpPGjeM1n9y2WnDxjJzXzL43p593DdauEmXTkE';
+    const url = `https://data.solanatracker.io/tokens/${tokenAddress}/holders`;
 
-    const tokenAddress = 'GxHJDpqpPGjeM1n9y2WnDxjJzXzL43p593DdauEmXTkE'
-    const url = `https://data.solanatracker.io/tokens/${tokenAddress}/holders`
-
-    console.log('Making API request to:', url)
+    console.log('Making API request to:', url);
     
     const response = await fetch(url, {
       headers: {
         'x-api-key': apiKey,
         'Accept': 'application/json',
       }
-    })
+    });
 
     console.log('API Response Status:', response.status)
     console.log('API Response Headers:', Object.fromEntries(response.headers.entries()))
@@ -126,10 +124,10 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {
-    console.error('Error in fetchTokenHolders function:', error)
+    console.error('Error in fetchTokenHolders function:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    });
   }
-})
+});
