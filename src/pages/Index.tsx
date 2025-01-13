@@ -48,12 +48,6 @@ const Index = () => {
     setIsPlanetSelected(true);
   };
 
-  const handleBackToOverview = () => {
-    console.log('Logo clicked - handling back to overview');
-    setIsPlanetSelected(false);
-    setSelectedWallet(null);
-  };
-
   const handleConnectWallet = async () => {
     try {
       const { solana } = window as any;
@@ -117,6 +111,11 @@ const Index = () => {
     console.error('Error fetching holders:', error);
   }
 
+  const handleBackToOverview = () => {
+    setIsPlanetSelected(false);
+    setSelectedWallet(null);
+  };
+
   return (
     <div className="relative w-full h-screen overflow-hidden">
       <Universe 
@@ -149,8 +148,13 @@ const Index = () => {
             </Button>
           </form>
 
-          {/* Solar Logo (Center) - Now just a static image */}
-          <div className="absolute left-1/2 -translate-x-1/2 glass-panel px-4 py-2">
+          {/* Solar Logo (Center) - Clickable with conditional behavior */}
+          <div 
+            onClick={isPlanetSelected ? handleBackToOverview : undefined}
+            className={`absolute left-1/2 -translate-x-1/2 glass-panel px-4 py-2 ${
+              isPlanetSelected ? 'cursor-pointer hover:bg-white/10 transition-colors' : ''
+            }`}
+          >
             <img 
               src="/lovable-uploads/32b1c67e-6454-4649-b37d-dc0bae8bb0b0.png" 
               alt="Solar Logo" 

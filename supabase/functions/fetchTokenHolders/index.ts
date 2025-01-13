@@ -69,33 +69,19 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey)
     console.log('Supabase client initialized')
 
-    // First, delete all planet customizations
-    console.log('Clearing existing planet customizations...')
-    const { error: deleteCustomizationsError } = await supabase
-      .from('planet_customizations')
-      .delete()
-      .neq('id', '00000000-0000-0000-0000-000000000000')
-
-    if (deleteCustomizationsError) {
-      console.error('Error deleting planet customizations:', deleteCustomizationsError)
-      throw deleteCustomizationsError
-    }
-
-    console.log('Successfully cleared planet customizations')
-
-    // Then, delete token holders
+    // Clear existing data
     console.log('Clearing existing token holders data...')
-    const { error: deleteHoldersError } = await supabase
+    const { error: deleteError } = await supabase
       .from('token_holders')
       .delete()
       .neq('id', '00000000-0000-0000-0000-000000000000')
 
-    if (deleteHoldersError) {
-      console.error('Error deleting token holders:', deleteHoldersError)
-      throw deleteHoldersError
+    if (deleteError) {
+      console.error('Error deleting existing data:', deleteError)
+      throw deleteError
     }
 
-    console.log('Successfully cleared existing token holders data')
+    console.log('Successfully cleared existing data')
 
     // Transform and insert new data
     let holders;
