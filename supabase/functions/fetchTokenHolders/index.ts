@@ -13,48 +13,46 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Starting fetchTokenHolders function...')
+    console.log('Starting fetchTokenHolders function using Solscan API...')
     
-    const apiKey = Deno.env.get('SOLANA_TRACKER_API_KEY')
-    if (!apiKey) {
-      console.error('SOLANA_TRACKER_API_KEY not found in environment variables')
-      throw new Error('API key not found')
+    const apiToken = Deno.env.get('SOLSCAN_API_TOKEN')
+    if (!apiToken) {
+      console.error('SOLSCAN_API_TOKEN not found in environment variables')
+      throw new Error('API token not found')
     }
 
-    console.log('Retrieved API key successfully:', apiKey.substring(0, 8) + '...')
+    console.log('Retrieved Solscan API token successfully')
 
     const tokenAddress = 'Cy1GS2FqefgaMbi45UunrUzin1rfEmTUYnomddzBpump'
-    const url = `https://data.solanatracker.io/tokens/${tokenAddress}/holders`
+    const url = `https://pro-api.solscan.io/v2.0/token/holders?address=${tokenAddress}&page=1&page_size=100`
 
-    console.log('Making API request to:', url)
+    console.log('Making API request to Solscan:', url)
     
     const response = await fetch(url, {
       headers: {
-        'x-api-key': apiKey,
+        'token': apiToken,
         'Accept': 'application/json',
       }
     })
 
-    console.log('API Response Status:', response.status)
-    console.log('API Response Headers:', Object.fromEntries(response.headers.entries()))
+    console.log('Solscan API Response Status:', response.status)
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('API request failed:', {
+      console.error('Solscan API request failed:', {
         status: response.status,
         statusText: response.statusText,
-        body: errorText,
-        headers: Object.fromEntries(response.headers.entries()),
+        body: errorText
       })
-      throw new Error(`API request failed: ${response.statusText}. Status: ${response.status}. Body: ${errorText}`)
+      throw new Error(`API request failed: ${response.statusText}`)
     }
 
     const data = await response.json()
-    console.log('Raw API response:', JSON.stringify(data, null, 2))
+    console.log('Raw Solscan API response structure:', Object.keys(data))
 
-    if (!data) {
-      console.error('Empty API response')
-      throw new Error('Empty API response')
+    if (!data || !data.data || !Array.isArray(data.data.items)) {
+      console.error('Unexpected data format from Solscan API:', data)
+      throw new Error('Invalid data format received from Solscan API')
     }
 
     // Store data in Supabase
@@ -69,32 +67,14 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey)
     console.log('Supabase client initialized')
 
-    // Transform data from API response
-    let holders;
-    if (Array.isArray(data)) {
-      console.log('Processing array response format')
-      holders = data
-        .map((holder: any) => ({
-          wallet_address: holder.owner,
-          token_amount: parseFloat(holder.amount) || 0,
-          percentage: parseFloat((holder.amount / holder.total_supply) * 100) || 0,
-        }))
-        .filter(holder => holder.token_amount > 0) // Filter out zero balance holders
-        .sort((a, b) => b.token_amount - a.token_amount) // Sort by token amount in descending order
-    } else if (data.accounts && Array.isArray(data.accounts)) {
-      console.log('Processing object with accounts array format')
-      holders = data.accounts
-        .map((holder: any) => ({
-          wallet_address: holder.wallet || holder.owner,
-          token_amount: parseFloat(holder.amount) || 0,
-          percentage: parseFloat(holder.percentage) || parseFloat((holder.amount / holder.total_supply) * 100) || 0,
-        }))
-        .filter(holder => holder.token_amount > 0) // Filter out zero balance holders
-        .sort((a, b) => b.token_amount - a.token_amount) // Sort by token amount in descending order
-    } else {
-      console.error('Unexpected data format:', data)
-      throw new Error('Invalid data format received from API')
-    }
+    // Transform data from Solscan API response
+    const holders = data.data.items.map((holder: any) => ({
+      wallet_address: holder.owner,
+      token_amount: parseFloat(holder.amount) || 0,
+      percentage: parseFloat(holder.percentage) || 0,
+    }))
+    .filter(holder => holder.token_amount > 0)
+    .sort((a: any, b: any) => b.token_amount - a.token_amount)
 
     console.log('Transformed data. Number of holders:', holders.length)
     console.log('First holder example:', holders[0])
@@ -107,7 +87,7 @@ serve(async (req) => {
     const { error: truncateCustomizationsError } = await supabase
       .from('planet_customizations')
       .delete()
-      .neq('wallet_address', 'dummy_value') // This will delete all rows
+      .neq('wallet_address', 'dummy_value')
 
     if (truncateCustomizationsError) {
       console.error('Error truncating planet_customizations:', truncateCustomizationsError)
@@ -118,7 +98,7 @@ serve(async (req) => {
     const { error: truncateHoldersError } = await supabase
       .from('token_holders')
       .delete()
-      .neq('wallet_address', 'dummy_value') // This will delete all rows
+      .neq('wallet_address', 'dummy_value')
 
     if (truncateHoldersError) {
       console.error('Error truncating token_holders:', truncateHoldersError)
