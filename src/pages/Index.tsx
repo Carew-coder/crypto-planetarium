@@ -55,8 +55,8 @@ const Index = () => {
         backButtonText="Back to the Solar System"
       />
       
-      {/* Top Navigation Bar */}
-      <div className="absolute top-4 left-0 right-0 flex items-center px-4">
+      {/* Top Navigation Bar - Updated positioning */}
+      <div className="fixed top-4 left-0 right-0 flex items-center px-4 z-50">
         {/* Solar Title (Centered) */}
         <div className="absolute left-1/2 transform -translate-x-1/2">
           <div className="glass-panel px-6 py-3">
