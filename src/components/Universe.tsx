@@ -96,11 +96,10 @@ const Universe = ({
     }
 
     if (isAnimatingRef.current) {
-      console.log("Animation already in progress, skipping");
-      return;
+      console.log("Animation already in progress, canceling previous animation");
+      cleanupAnimation();
     }
 
-    cleanupAnimation();
     isAnimatingRef.current = true;
 
     setIsZoomedIn(false);
@@ -112,7 +111,13 @@ const Universe = ({
     const startTime = Date.now();
     const duration = 1000;
 
-    controlsRef.current.enabled = false;
+    // Disable controls during animation
+    if (controlsRef.current) {
+      controlsRef.current.enabled = false;
+      controlsRef.current.enableZoom = false;
+      controlsRef.current.enableRotate = false;
+      controlsRef.current.enablePan = false;
+    }
 
     const animate = () => {
       const currentTime = Date.now();
@@ -122,28 +127,32 @@ const Universe = ({
       if (progress < 1) {
         const easeProgress = 1 - Math.pow(1 - progress, 3);
         
-        const newPos = new THREE.Vector3().lerpVectors(
-          startPosition,
-          targetPosition,
-          easeProgress
-        );
-        
-        cameraRef.current!.position.copy(newPos);
-        controlsRef.current!.target.lerp(new THREE.Vector3(0, 0, 0), easeProgress);
-        controlsRef.current!.update();
+        if (cameraRef.current && controlsRef.current) {
+          const newPos = new THREE.Vector3().lerpVectors(
+            startPosition,
+            targetPosition,
+            easeProgress
+          );
+          
+          cameraRef.current.position.copy(newPos);
+          controlsRef.current.target.lerp(new THREE.Vector3(0, 0, 0), easeProgress);
+          controlsRef.current.update();
+        }
         
         animationFrameRef.current = requestAnimationFrame(animate);
       } else {
         console.log("Zoom out animation complete");
         if (controlsRef.current) {
+          // Re-enable controls after animation
           controlsRef.current.enabled = true;
           controlsRef.current.enableZoom = true;
           controlsRef.current.enableRotate = true;
           controlsRef.current.enablePan = true;
           controlsRef.current.minDistance = 1;
           controlsRef.current.maxDistance = 500;
+          controlsRef.current.update();
         }
-        cleanupAnimation();
+        isAnimatingRef.current = false;
       }
     };
 
@@ -159,16 +168,16 @@ const Universe = ({
 
     if (isAnimatingRef.current) {
       console.log("Animation already in progress, canceling previous animation");
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
+      cleanupAnimation();
     }
 
     isAnimatingRef.current = true;
     
+    // Calculate zoom distance based on planet size
     const baseZOffset = planetPosition.equals(new THREE.Vector3(0, 0, 0)) ? 15 : 5;
     const zOffset = planetSize ? Math.max(planetSize * 3, baseZOffset) : baseZOffset;
     
+    // Calculate target position with offset
     const targetPosition = new THREE.Vector3(
       planetPosition.x,
       planetPosition.y,
@@ -177,10 +186,14 @@ const Universe = ({
 
     const startPosition = cameraRef.current.position.clone();
     const startTime = Date.now();
-    const duration = 1000;
+    const duration = 1000; // 1 second animation
     
+    // Disable controls during animation
     if (controlsRef.current) {
       controlsRef.current.enabled = false;
+      controlsRef.current.enableZoom = false;
+      controlsRef.current.enableRotate = false;
+      controlsRef.current.enablePan = false;
     }
     
     const animate = () => {
@@ -189,6 +202,7 @@ const Universe = ({
       const progress = Math.min(elapsed / duration, 1);
 
       if (progress < 1) {
+        // Cubic easing for smoother animation
         const easeProgress = 1 - Math.pow(1 - progress, 3);
         
         if (cameraRef.current && controlsRef.current) {
@@ -207,6 +221,7 @@ const Universe = ({
       } else {
         console.log("Zoom animation complete");
         if (controlsRef.current) {
+          // Re-enable controls after animation
           controlsRef.current.enabled = true;
           controlsRef.current.enableZoom = true;
           controlsRef.current.enableRotate = true;
