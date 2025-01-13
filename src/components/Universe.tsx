@@ -399,8 +399,18 @@ const Universe = ({
     isPageVisibleRef.current = document.visibilityState === 'visible';
     
     if (isPageVisibleRef.current && rendererRef.current && cameraRef.current && sceneRef.current) {
-      console.log('Page is visible, resuming animation');
-      animateRef.current();
+      console.log('Page is visible, resuming animation and controls');
+      
+      // Re-enable controls when page becomes visible
+      if (controlsRef.current) {
+        controlsRef.current.enabled = true;
+        controlsRef.current.enableZoom = true;
+        controlsRef.current.enableRotate = true;
+        controlsRef.current.enablePan = true;
+        controlsRef.current.update();
+      }
+      
+      animateRef.current?.();
     } else {
       console.log('Page is hidden, pausing animation');
       if (animationFrameRef.current) {
@@ -470,9 +480,9 @@ const Universe = ({
       controls.enableDamping = true;
       controls.dampingFactor = 0.05;
       controls.rotateSpeed = 0.5;
-      controls.zoomSpeed = 2.0; // Increased from 0.5 to 2.0 for faster zoom
+      controls.zoomSpeed = 2.0;
       controls.minDistance = 1;
-      controls.maxDistance = 500; // Increased from 200 to 500
+      controls.maxDistance = 500;
       controls.enableZoom = true;
       controls.enableRotate = true;
       controls.enablePan = true;
@@ -526,6 +536,17 @@ const Universe = ({
       scene.add(hemisphereLight);
 
       document.addEventListener('visibilitychange', handleVisibilityChange);
+      window.addEventListener('focus', () => {
+        console.log('Window focused, ensuring controls are enabled');
+        if (controlsRef.current) {
+          controlsRef.current.enabled = true;
+          controlsRef.current.enableZoom = true;
+          controlsRef.current.enableRotate = true;
+          controlsRef.current.enablePan = true;
+          controlsRef.current.update();
+        }
+      });
+
       animateRef.current = animate;
       animate();
 
@@ -598,6 +619,7 @@ const Universe = ({
       return () => {
         console.log('Cleaning up universe component');
         document.removeEventListener('visibilitychange', handleVisibilityChange);
+        window.removeEventListener('focus', () => {});
         window.removeEventListener('resize', handleResize);
         window.removeEventListener('click', handleClick);
         if (animationFrameRef.current) {
