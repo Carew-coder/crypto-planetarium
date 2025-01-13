@@ -4,7 +4,7 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Wallet, Loader2, Search, Globe } from "lucide-react";
+import { Wallet, Loader2, Search, Globe, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
@@ -151,10 +151,21 @@ const Index = () => {
           {/* Solar Logo (Center) - Clickable with conditional behavior */}
           <div 
             onClick={isPlanetSelected ? handleBackToOverview : undefined}
-            className={`absolute left-1/2 -translate-x-1/2 glass-panel px-4 py-2 ${
+            className={`absolute left-1/2 -translate-x-1/2 glass-panel px-4 py-2 flex items-center gap-2 ${
               isPlanetSelected ? 'cursor-pointer hover:bg-white/10 transition-colors' : ''
             }`}
           >
+            {isPlanetSelected && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="bg-space-lighter text-white hover:bg-space-accent/20"
+                onClick={handleBackToOverview}
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to the Solar System
+              </Button>
+            )}
             <img 
               src="/lovable-uploads/32b1c67e-6454-4649-b37d-dc0bae8bb0b0.png" 
               alt="Solar Logo" 
