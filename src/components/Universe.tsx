@@ -277,8 +277,13 @@ const Universe = ({
 
       const planet = new THREE.Mesh(planetGeometry, planetMaterial);
       
-      // Generate random position for the planet
-      const position = generateRandomPosition(20, 50); // Min 20 units, max 50 units from center
+      // Generate random position for the planet and convert to Vector3
+      const randomPosition = generateRandomPosition(20, 50); // Min 20 units, max 50 units from center
+      const position = new THREE.Vector3(
+        randomPosition.x,
+        randomPosition.y,
+        randomPosition.z
+      );
       planet.position.copy(position);
       
       // Store references to the planet and its position
