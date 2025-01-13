@@ -71,12 +71,18 @@ const CustomisePlanet = ({ walletAddress }: CustomisePlanetProps) => {
         throw new Error('Failed to save planet customization');
       }
 
-      // Invalidate both queries to trigger immediate refresh
+      // Invalidate queries and show success message
       await queryClient.invalidateQueries({ queryKey: ['planetCustomizations'] });
       await queryClient.invalidateQueries({ queryKey: ['tokenHolders'] });
 
-      toast.success('Planet customized successfully!');
+      toast.success('Planet customized successfully! Refreshing page...');
       form.reset();
+      
+      // Add a small delay before refreshing to ensure the toast is visible
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+
     } catch (error) {
       console.error('Error in planet customization:', error);
       toast.error('Failed to customize planet. Please try again.');
