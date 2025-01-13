@@ -4,7 +4,6 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import HolderTable from './universe/HolderTable';
 import RewardsTable from './universe/RewardsTable';
 import { SAMPLE_PLANETS, PLANET_TEXTURES, SUN_TEXTURE } from '@/constants/planets';
 import { Planet } from '@/types/universe';
@@ -388,11 +387,7 @@ const Universe = ({
       )}
 
       {showTables && isZoomedIn && (
-        <div className="absolute top-1/2 -translate-y-1/2 flex gap-4">
-          <HolderTable
-            collapsed={holderTableCollapsed}
-            onToggle={() => setHolderTableCollapsed(!holderTableCollapsed)}
-          />
+        <div className="absolute top-1/2 -translate-y-1/2">
           <RewardsTable
             collapsed={rewardsTableCollapsed}
             onToggle={() => setRewardsTableCollapsed(!rewardsTableCollapsed)}

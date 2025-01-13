@@ -1,22 +1,46 @@
 import Universe from "@/components/Universe";
 import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { useState, useEffect } from "react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, Wallet } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Wallet, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { Connection, PublicKey } from "@solana/web3.js";
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const [searchAddress, setSearchAddress] = useState("");
-  const [isOpen, setIsOpen] = useState(true);
   const [isPlanetSelected, setIsPlanetSelected] = useState(false);
   const [isWalletConnected, setIsWalletConnected] = useState(false);
 
+  const { data: holders, isLoading, error } = useQuery({
+    queryKey: ['tokenHolders'],
+    queryFn: async () => {
+      console.log('Fetching token holders data...');
+      
+      // First trigger the edge function to fetch latest data
+      await supabase.functions.invoke('fetchTokenHolders')
+      
+      // Then fetch the data from our database
+      const { data, error } = await supabase
+        .from('token_holders')
+        .select('*')
+        .order('percentage', { ascending: false })
+        .limit(10)
+
+      if (error) {
+        console.error('Error fetching token holders:', error);
+        throw error;
+      }
+      
+      console.log('Successfully fetched token holders data:', data);
+      return data;
+    },
+    refetchInterval: 300000, // Refetch every 5 minutes
+  });
+
   const handlePlanetClick = () => {
     setIsPlanetSelected(true);
-    setIsOpen(false);
   };
 
   const handleConnectWallet = async () => {
@@ -44,13 +68,16 @@ const Index = () => {
     }
   };
 
+  if (error) {
+    console.error('Error fetching holders:', error);
+  }
+
   return (
     <div className="relative w-full h-screen overflow-hidden">
       <Universe 
         onPlanetClick={handlePlanetClick} 
         onBackToOverview={() => {
           setIsPlanetSelected(false);
-          setIsOpen(true);
         }}
         backButtonText="Back to the Solar System"
       />
@@ -90,30 +117,36 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Top Holders Tab (Right Side) - Only show when not zoomed in */}
-      {!isPlanetSelected && (
-        <div className="fixed right-8 top-1/2 -translate-y-1/2 glass-panel p-4 w-[20rem] z-30">
-          <h2 className="text-lg font-semibold text-white mb-4">Top Holders</h2>
+      {/* Top Holders Panel (Right Side) */}
+      <div className="fixed right-8 top-1/2 -translate-y-1/2 glass-panel p-4 w-[20rem] z-30">
+        <h2 className="text-lg font-semibold text-white mb-4">Top Holders</h2>
+        {isLoading ? (
+          <div className="flex justify-center items-center p-4">
+            <Loader2 className="h-6 w-6 animate-spin text-white" />
+          </div>
+        ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-white/80">Planet</TableHead>
+                <TableHead className="text-white/80">Wallet</TableHead>
                 <TableHead className="text-white/80">Holding %</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              <TableRow>
-                <TableCell className="text-white/70">0x1234...5678</TableCell>
-                <TableCell className="text-white/70">10%</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="text-white/70">0x8765...4321</TableCell>
-                <TableCell className="text-white/70">8%</TableCell>
-              </TableRow>
+              {holders?.map((holder) => (
+                <TableRow key={holder.wallet_address}>
+                  <TableCell className="text-white/70">
+                    {holder.wallet_address.slice(0, 6)}...{holder.wallet_address.slice(-4)}
+                  </TableCell>
+                  <TableCell className="text-white/70">
+                    {Number(holder.percentage).toFixed(2)}%
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
