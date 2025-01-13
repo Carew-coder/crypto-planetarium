@@ -4,7 +4,7 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Wallet, Loader2 } from "lucide-react";
+import { Wallet, Loader2, Search } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
@@ -76,6 +76,24 @@ const Index = () => {
     setIsPlanetSelected(true);
   };
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('Searching for wallet:', searchAddress);
+    
+    const foundHolder = holders?.find(
+      holder => holder.wallet_address.toLowerCase() === searchAddress.toLowerCase()
+    );
+
+    if (foundHolder) {
+      console.log('Found holder:', foundHolder);
+      setSelectedWallet(foundHolder.wallet_address);
+      setIsPlanetSelected(true);
+      toast.success("Planet found!");
+    } else {
+      toast.error("Wallet address not found");
+    }
+  };
+
   if (error) {
     console.error('Error fetching holders:', error);
   }
@@ -96,7 +114,7 @@ const Index = () => {
       <div className="fixed top-0 left-0 right-0 z-50">
         <div className="flex justify-between items-center w-full px-4 pt-4">
           {/* Search Wallet Address - Always visible in top left */}
-          <div className="glass-panel">
+          <form onSubmit={handleSearch} className="glass-panel flex gap-2">
             <Input
               type="text"
               placeholder="Search wallet address..."
@@ -104,7 +122,15 @@ const Index = () => {
               value={searchAddress}
               onChange={(e) => setSearchAddress(e.target.value)}
             />
-          </div>
+            <Button 
+              type="submit" 
+              variant="outline" 
+              size="icon"
+              className="bg-space-lighter/50 border-white/10 hover:bg-white/10"
+            >
+              <Search className="h-4 w-4" />
+            </Button>
+          </form>
 
           {/* Solar Title (Center) */}
           <div className="glass-panel px-6 py-2">
