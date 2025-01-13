@@ -40,7 +40,7 @@ const Universe = ({
   const [selectedHolder, setSelectedHolder] = useState<any>(null);
   const animationFrameRef = useRef<number>();
 
-  const { data: holders } = useQuery({
+  const { data: holders, isLoading: holdersLoading } = useQuery({
     queryKey: ['tokenHolders'],
     queryFn: async () => {
       console.log('Fetching token holders data for planets...');
@@ -60,7 +60,7 @@ const Universe = ({
     refetchInterval: 300000,
   });
 
-  const { data: planetCustomizations } = useQuery({
+  const { data: planetCustomizations, isLoading: customizationsLoading } = useQuery({
     queryKey: ['planetCustomizations'],
     queryFn: async () => {
       console.log('Fetching planet customizations...');
@@ -76,6 +76,7 @@ const Universe = ({
       return data;
     },
     refetchInterval: 300000,
+    staleTime: 0, // Always fetch fresh data
   });
 
   const cleanupAnimation = () => {
@@ -167,7 +168,25 @@ const Universe = ({
       let texture;
       if (customization?.skin_url) {
         console.log(`Loading custom skin for wallet ${holder.wallet_address}:`, customization.skin_url);
-        texture = textureLoaderRef.current.load(customization.skin_url);
+        textureLoaderRef.current.load(
+          customization.skin_url,
+          (loadedTexture) => {
+            console.log(`Custom skin loaded successfully for ${holder.wallet_address}`);
+            if (planetsRef.current[holder.wallet_address]) {
+              const material = planetsRef.current[holder.wallet_address].material as THREE.MeshStandardMaterial;
+              material.map = loadedTexture;
+              material.needsUpdate = true;
+            }
+          },
+          undefined,
+          (error) => {
+            console.error(`Error loading custom skin for ${holder.wallet_address}:`, error);
+            // Fallback to default texture
+            const textureIndex = index % PLANET_TEXTURES.length;
+            const texturePath = PLANET_TEXTURES[textureIndex];
+            texture = loadedTexturesRef.current[texturePath];
+          }
+        );
       } else {
         const textureIndex = index % PLANET_TEXTURES.length;
         const texturePath = PLANET_TEXTURES[textureIndex];

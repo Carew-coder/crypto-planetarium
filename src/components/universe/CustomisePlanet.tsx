@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { useQueryClient } from '@tanstack/react-query';
 
 interface CustomisePlanetProps {
   walletAddress: string;
@@ -20,6 +21,7 @@ interface FormValues {
 const CustomisePlanet = ({ walletAddress }: CustomisePlanetProps) => {
   const form = useForm<FormValues>();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const queryClient = useQueryClient();
 
   const onSubmit = async (data: FormValues) => {
     try {
@@ -68,6 +70,10 @@ const CustomisePlanet = ({ walletAddress }: CustomisePlanetProps) => {
         console.error('Error saving customization:', dbError);
         throw new Error('Failed to save planet customization');
       }
+
+      // Invalidate both queries to trigger immediate refresh
+      await queryClient.invalidateQueries({ queryKey: ['planetCustomizations'] });
+      await queryClient.invalidateQueries({ queryKey: ['tokenHolders'] });
 
       toast.success('Planet customized successfully!');
       form.reset();
