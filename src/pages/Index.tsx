@@ -13,6 +13,7 @@ const Index = () => {
   const [searchAddress, setSearchAddress] = useState("");
   const [isPlanetSelected, setIsPlanetSelected] = useState(false);
   const [isWalletConnected, setIsWalletConnected] = useState(false);
+  const [selectedWallet, setSelectedWallet] = useState<string | null>(null);
 
   const { data: holders, isLoading, error } = useQuery({
     queryKey: ['tokenHolders'],
@@ -27,7 +28,7 @@ const Index = () => {
         .from('token_holders')
         .select('*')
         .order('percentage', { ascending: false })
-        .limit(100)  // Updated to fetch top 100 holders
+        .limit(100)
 
       if (error) {
         console.error('Error fetching token holders:', error);
@@ -69,6 +70,12 @@ const Index = () => {
     }
   };
 
+  const handleWalletClick = (walletAddress: string) => {
+    console.log('Wallet clicked:', walletAddress);
+    setSelectedWallet(walletAddress);
+    setIsPlanetSelected(true);
+  };
+
   if (error) {
     console.error('Error fetching holders:', error);
   }
@@ -79,8 +86,10 @@ const Index = () => {
         onPlanetClick={handlePlanetClick} 
         onBackToOverview={() => {
           setIsPlanetSelected(false);
+          setSelectedWallet(null);
         }}
         backButtonText="Back to the Solar System"
+        selectedWalletAddress={selectedWallet}
       />
       
       {/* Top Navigation Bar */}
@@ -137,7 +146,11 @@ const Index = () => {
               </TableHeader>
               <TableBody>
                 {holders?.map((holder, index) => (
-                  <TableRow key={holder.wallet_address}>
+                  <TableRow 
+                    key={holder.wallet_address}
+                    className="cursor-pointer hover:bg-white/10 transition-colors"
+                    onClick={() => handleWalletClick(holder.wallet_address)}
+                  >
                     <TableCell className="text-white/70">
                       {index + 1}
                     </TableCell>

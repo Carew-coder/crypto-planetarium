@@ -14,11 +14,13 @@ import { generateRandomPosition } from '@/utils/positionUtils';
 const Universe = ({ 
   onPlanetClick,
   onBackToOverview,
-  backButtonText = "Back to Overview"
+  backButtonText = "Back to Overview",
+  selectedWalletAddress
 }: { 
   onPlanetClick: () => void;
   onBackToOverview: () => void;
   backButtonText?: string;
+  selectedWalletAddress?: string | null;
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -396,6 +398,61 @@ const Universe = ({
 
     init();
   }, [holders]);
+
+  // Effect to handle wallet selection from the table
+  useEffect(() => {
+    if (selectedWalletAddress && !isZoomedIn && planetsRef.current[selectedWalletAddress]) {
+      console.log('Zooming to selected wallet planet:', selectedWalletAddress);
+      
+      const planet = planetsRef.current[selectedWalletAddress];
+      const holder = holders?.find(h => h.wallet_address === selectedWalletAddress);
+      
+      if (planet && holder && cameraRef.current && controlsRef.current) {
+        // Clean up any existing animation
+        cleanupAnimation();
+        
+        setIsZoomedIn(true);
+        setSelectedHolder(holder);
+        onPlanetClick();
+
+        const planetPosition = planetPositionsRef.current[selectedWalletAddress];
+        if (!planetPosition) return;
+
+        // Disable controls
+        controlsRef.current.enabled = false;
+
+        const targetPosition = new THREE.Vector3(
+          planetPosition.x - 2,
+          planetPosition.y,
+          planetPosition.z + 5
+        );
+
+        const currentPos = cameraRef.current.position.clone();
+        let progress = 0;
+        const animate = () => {
+          progress += 0.02;
+          if (progress > 1) {
+            controlsRef.current!.enabled = false;
+            cleanupAnimation();
+            return;
+          }
+
+          const newPos = currentPos.clone().lerp(targetPosition, progress);
+          cameraRef.current!.position.copy(newPos);
+          controlsRef.current!.target.copy(new THREE.Vector3(
+            planetPosition.x - 2,
+            planetPosition.y,
+            planetPosition.z
+          ));
+          controlsRef.current!.update();
+
+          animationFrameRef.current = requestAnimationFrame(animate);
+        };
+
+        animate();
+      }
+    }
+  }, [selectedWalletAddress, holders, isZoomedIn, onPlanetClick]);
 
   // Cleanup animations when component unmounts
   useEffect(() => {
