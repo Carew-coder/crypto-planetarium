@@ -50,23 +50,52 @@ const Universe = ({
     queryFn: async () => {
       console.log('Fetching token holders data for planets...');
       
-      await supabase.functions.invoke('fetchTokenHolders');
-      
-      const { data, error } = await supabase
-        .from('token_holders')
-        .select('*')
-        .order('percentage', { ascending: false })
-        .limit(100);
+      try {
+        const { data: existingData, error: fetchError } = await supabase
+          .from('token_holders')
+          .select('*')
+          .order('percentage', { ascending: false })
+          .limit(100);
 
-      if (error) {
-        console.error('Error fetching token holders:', error);
+        if (existingData && existingData.length > 0) {
+          console.log('Successfully fetched existing token holders:', existingData.length);
+          return existingData;
+        }
+
+        console.log('No existing data found, triggering edge function...');
+        const { error: functionError } = await supabase.functions.invoke('fetchTokenHolders');
+        
+        if (functionError) {
+          console.error('Error invoking edge function:', functionError);
+          throw functionError;
+        }
+
+        const { data: newData, error: newFetchError } = await supabase
+          .from('token_holders')
+          .select('*')
+          .order('percentage', { ascending: false })
+          .limit(100);
+
+        if (newFetchError) {
+          console.error('Error fetching new token holders:', newFetchError);
+          throw newFetchError;
+        }
+
+        console.log('Successfully fetched new token holders:', newData?.length);
+        return newData;
+      } catch (error) {
+        console.error('Error in token holders fetch chain:', error);
+        toast({
+          title: "Error fetching token holders",
+          description: "Please try refreshing the page",
+          variant: "destructive"
+        });
         throw error;
       }
-      
-      console.log('Successfully fetched token holders data:', data);
-      return data;
     },
     refetchInterval: 60000, // Refetch every minute
+    retry: 3, // Retry failed requests 3 times
+    retryDelay: 1000, // Wait 1 second between retries
   });
 
   const { data: planetCustomizations, isLoading: customizationsLoading } = useQuery({
@@ -120,7 +149,6 @@ const Universe = ({
     const startTime = Date.now();
     const duration = 1000;
 
-    // Disable controls during animation
     if (controlsRef.current) {
       controlsRef.current.enabled = false;
       controlsRef.current.enableZoom = false;
@@ -152,7 +180,6 @@ const Universe = ({
       } else {
         console.log("Zoom out animation complete");
         if (controlsRef.current) {
-          // Re-enable controls after animation
           controlsRef.current.enabled = true;
           controlsRef.current.enableZoom = true;
           controlsRef.current.enableRotate = true;
@@ -182,11 +209,9 @@ const Universe = ({
 
     isAnimatingRef.current = true;
     
-    // Calculate zoom distance based on planet size
     const baseZOffset = planetPosition.equals(new THREE.Vector3(0, 0, 0)) ? 15 : 5;
     const zOffset = planetSize ? Math.max(planetSize * 3, baseZOffset) : baseZOffset;
     
-    // Calculate target position with offset
     const targetPosition = new THREE.Vector3(
       planetPosition.x,
       planetPosition.y,
@@ -195,12 +220,10 @@ const Universe = ({
 
     const startPosition = cameraRef.current.position.clone();
     const startTime = Date.now();
-    const duration = 1000; // 1 second animation
+    const duration = 1000;
 
-    // Store the current control state
     const currentControlsEnabled = controlsRef.current.enabled;
     
-    // Disable controls during animation
     if (controlsRef.current) {
       controlsRef.current.enabled = false;
     }
@@ -211,7 +234,6 @@ const Universe = ({
       const progress = Math.min(elapsed / duration, 1);
 
       if (progress < 1) {
-        // Cubic easing for smoother animation
         const easeProgress = 1 - Math.pow(1 - progress, 3);
         
         if (cameraRef.current && controlsRef.current) {
@@ -230,7 +252,6 @@ const Universe = ({
       } else {
         console.log("Zoom animation complete");
         if (controlsRef.current) {
-          // Re-enable controls after animation
           controlsRef.current.enabled = true;
           controlsRef.current.enableZoom = true;
           controlsRef.current.enableRotate = true;
@@ -254,7 +275,6 @@ const Universe = ({
 
     const loadTexture = (url: string): Promise<void> => {
       return new Promise((resolve, reject) => {
-        // Check cache first
         if (textureCache.current.has(url)) {
           console.log(`Using cached texture for: ${url}`);
           loadedTexturesRef.current[url] = textureCache.current.get(url)!;
@@ -264,18 +284,15 @@ const Universe = ({
           return;
         }
 
-        // Load new texture
         textureLoaderRef.current.load(
           url,
           (texture) => {
             console.log(`Texture loaded and compressed: ${url}`);
-            // Enable texture compression
             texture.generateMipmaps = true;
             texture.minFilter = THREE.LinearMipmapLinearFilter;
             texture.magFilter = THREE.LinearFilter;
             texture.anisotropy = 16;
             
-            // Cache the texture
             textureCache.current.set(url, texture);
             loadedTexturesRef.current[url] = texture;
             loadedCount++;
@@ -294,10 +311,8 @@ const Universe = ({
     };
 
     try {
-      // Load sun texture first
       await loadTexture(SUN_TEXTURE);
 
-      // Load planet textures in batches of 5
       const batchSize = 5;
       for (let i = 0; i < PLANET_TEXTURES.length; i += batchSize) {
         const batch = PLANET_TEXTURES.slice(i, i + batchSize);
@@ -337,7 +352,6 @@ const Universe = ({
         let texture: THREE.Texture | undefined;
         
         if (customization?.skin_url) {
-          // Use cached texture if available
           if (textureCache.current.has(customization.skin_url)) {
             texture = textureCache.current.get(customization.skin_url);
           } else {
@@ -348,7 +362,6 @@ const Universe = ({
                   const material = planetsRef.current[holder.wallet_address].material as THREE.MeshStandardMaterial;
                   material.map = loadedTexture;
                   material.needsUpdate = true;
-                  // Cache the texture
                   textureCache.current.set(customization.skin_url!, loadedTexture);
                 }
               }
@@ -380,13 +393,11 @@ const Universe = ({
 
       currentIndex = endIndex;
       
-      // Continue adding planets if there are more
       if (currentIndex < holders.length) {
         requestAnimationFrame(addPlanetBatch);
       }
     };
 
-    // Start adding planets
     addPlanetBatch();
   };
 
