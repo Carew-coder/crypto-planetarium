@@ -24,7 +24,6 @@ serve(async (req) => {
     console.log('Retrieved Solscan API token successfully')
 
     const tokenAddress = 'Cy1GS2FqefgaMbi45UunrUzin1rfEmTUYnomddzBpump'
-    // Updated to use a valid page_size value (40 to get more holders)
     const url = `https://pro-api.solscan.io/v2.0/token/holders?address=${tokenAddress}&page=1&page_size=40`
 
     console.log('Making API request to Solscan:', url)
@@ -69,11 +68,11 @@ serve(async (req) => {
     console.log('Supabase client initialized')
 
     // Transform data from Solscan API response
-    const totalSupply = data.data.items.reduce((acc: number, item: any) => acc + Number(item.amount), 0)
+    const TOTAL_SUPPLY = 1_000_000_000 // 1 billion tokens
     
     const holders = data.data.items.map((holder: any) => {
       const amount = Number(holder.amount) / Math.pow(10, holder.decimals)
-      const percentage = (amount / (totalSupply / Math.pow(10, holder.decimals))) * 100
+      const percentage = (amount / TOTAL_SUPPLY) * 100
       
       return {
         wallet_address: holder.owner,
