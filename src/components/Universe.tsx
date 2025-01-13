@@ -52,19 +52,41 @@ const Universe = ({
       
       await supabase.functions.invoke('fetchTokenHolders');
       
-      const { data, error } = await supabase
-        .from('token_holders')
-        .select('*')
-        .order('percentage', { ascending: false })
-        .limit(100);
+      const fetchAllHolders = async () => {
+        let allHolders: any[] = [];
+        let currentPage = 0;
+        const pageSize = 40;
+        let hasMore = true;
 
-      if (error) {
-        console.error('Error fetching token holders:', error);
-        throw error;
-      }
-      
-      console.log('Successfully fetched token holders data:', data);
-      return data;
+        while (hasMore) {
+          console.log(`Fetching holders page ${currentPage + 1}`);
+          const { data, error, count } = await supabase
+            .from('token_holders')
+            .select('*', { count: 'exact' })
+            .order('percentage', { ascending: false })
+            .range(currentPage * pageSize, (currentPage + 1) * pageSize - 1);
+
+          if (error) {
+            console.error('Error fetching token holders:', error);
+            throw error;
+          }
+
+          if (data.length === 0) {
+            hasMore = false;
+          } else {
+            allHolders = [...allHolders, ...data];
+            currentPage++;
+          }
+
+          // Add a small delay to prevent overwhelming the renderer
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+
+        console.log('Successfully fetched all token holders:', allHolders.length);
+        return allHolders;
+      };
+
+      return fetchAllHolders();
     },
     refetchInterval: 60000,
   });
