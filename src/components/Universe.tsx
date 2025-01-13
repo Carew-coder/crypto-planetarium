@@ -335,7 +335,7 @@ const Universe = ({
         <Button
           variant="outline"
           size="sm"
-          className="absolute top-4 left-4 bg-space-lighter text-white hover:bg-space-accent/20"
+          className="absolute top-4 left-4 bg-space-lighter text-white hover:bg-space-accent/20 z-50"
           onClick={handleBackToOverview}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
