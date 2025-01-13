@@ -75,6 +75,12 @@ const PlanetInformation = ({ holder, connectedWalletAddress }: PlanetInformation
           </TableHeader>
           <TableBody>
             <TableRow>
+              <TableCell className="text-white/70">Planet Name</TableCell>
+              <TableCell className="text-white/70">
+                {planetCustomization?.nickname || 'Connect Wallet and Customise your Planet Now!'}
+              </TableCell>
+            </TableRow>
+            <TableRow>
               <TableCell className="text-white/70">Rank</TableCell>
               <TableCell className="text-white/70">#{rank || '...'}</TableCell>
             </TableRow>
@@ -85,12 +91,6 @@ const PlanetInformation = ({ holder, connectedWalletAddress }: PlanetInformation
             <TableRow>
               <TableCell className="text-white/70">Percentage</TableCell>
               <TableCell className="text-white/70">{`${holder.percentage.toFixed(2)}%`}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell className="text-white/70">Name</TableCell>
-              <TableCell className="text-white/70">
-                {planetCustomization?.nickname || 'Connect Wallet and Customise your Planet Now!'}
-              </TableCell>
             </TableRow>
           </TableBody>
         </Table>
