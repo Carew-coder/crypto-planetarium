@@ -133,11 +133,11 @@ const Index = () => {
           </form>
 
           {/* Solar Logo (Center) */}
-          <div className="absolute left-1/2 -translate-x-1/2 transform -translate-x-1/2">
+          <div className="absolute left-1/2 -translate-x-1/2">
             <img 
               src="/lovable-uploads/4bae2941-9dd2-4ab4-80cb-252023cc4385.png" 
               alt="Solar Logo" 
-              className="w-12 h-12"
+              className="h-12 w-auto"
             />
           </div>
 
