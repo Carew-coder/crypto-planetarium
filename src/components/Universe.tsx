@@ -463,9 +463,9 @@ const Universe = () => {
       )}
 
       {showTables && (
-        <div className="absolute top-20 inset-x-4 flex gap-4">
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-4 w-80">
           {/* Holder Information Table */}
-          <Card className="w-1/2 bg-space-lighter/80 text-white border-white/10">
+          <Card className="bg-space-lighter/80 text-white border-white/10">
             <CardHeader>
               <CardTitle>Holder Information</CardTitle>
             </CardHeader>
@@ -495,7 +495,7 @@ const Universe = () => {
           </Card>
 
           {/* Rewards Table */}
-          <Card className="w-1/2 bg-space-lighter/80 text-white border-white/10">
+          <Card className="bg-space-lighter/80 text-white border-white/10">
             <CardHeader>
               <CardTitle>Rewards</CardTitle>
             </CardHeader>
