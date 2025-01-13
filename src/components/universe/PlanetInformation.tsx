@@ -57,10 +57,6 @@ const PlanetInformation = ({ holder }: PlanetInformationProps) => {
             <TableCell className="text-white/70">{`${holder.wallet_address.slice(0, 6)}...${holder.wallet_address.slice(-4)}`}</TableCell>
           </TableRow>
           <TableRow>
-            <TableCell className="text-white/70">Amount</TableCell>
-            <TableCell className="text-white/70">{holder.token_amount.toLocaleString()}</TableCell>
-          </TableRow>
-          <TableRow>
             <TableCell className="text-white/70">Percentage</TableCell>
             <TableCell className="text-white/70">{`${holder.percentage.toFixed(2)}%`}</TableCell>
           </TableRow>
