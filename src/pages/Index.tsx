@@ -45,15 +45,11 @@ const Index = () => {
         }}
         backButtonText="Back to the Solar System"
       />
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 glass-panel px-6 py-3">
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 glass-panel px-6 py-3 flex items-center gap-4">
         <h1 className="text-xl font-semibold text-white">Solar</h1>
-      </div>
-
-      {/* Connect Wallet Button */}
-      <div className="absolute top-20 left-1/2 -translate-x-1/2">
         <Button
           variant="outline"
-          size="lg"
+          size="sm"
           className="glass-panel border-none hover:bg-white/10"
           onClick={handleConnectWallet}
           disabled={isWalletConnected}
