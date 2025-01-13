@@ -173,7 +173,6 @@ const Universe = ({
     
     cleanupAnimation();
     
-    // Adjust the z-axis offset based on whether it's the sun (at position 0,0,0) or a planet
     const zOffset = planetPosition.equals(new THREE.Vector3(0, 0, 0)) ? 15 : 5;
     
     const targetPosition = new THREE.Vector3(
@@ -189,10 +188,18 @@ const Universe = ({
       progress += 0.02;
       if (progress > 1) {
         if (controlsRef.current) {
+          // Enable all controls after zoom animation
           controlsRef.current.enableZoom = true;
           controlsRef.current.enableRotate = true;
           controlsRef.current.enablePan = true;
-          // Adjust min/max distance for sun vs planets
+          controlsRef.current.enabled = true;
+          
+          // Adjust control settings for better rotation
+          controlsRef.current.enableDamping = true;
+          controlsRef.current.dampingFactor = 0.05;
+          controlsRef.current.rotateSpeed = 0.8;
+          
+          // Set appropriate distance limits based on target
           if (planetPosition.equals(new THREE.Vector3(0, 0, 0))) {
             controlsRef.current.minDistance = 10;
             controlsRef.current.maxDistance = 25;
@@ -200,7 +207,10 @@ const Universe = ({
             controlsRef.current.minDistance = 3;
             controlsRef.current.maxDistance = 10;
           }
+          
+          // Set the target to the planet's position
           controlsRef.current.target.copy(planetPosition);
+          controlsRef.current.update();
         }
         cleanupAnimation();
         return;
@@ -247,10 +257,11 @@ const Universe = ({
       containerRef.current.appendChild(renderer.domElement);
       rendererRef.current = renderer;
 
-      // Update controls setup
+      // Update controls setup with enhanced rotation settings
       const controls = new OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
       controls.dampingFactor = 0.05;
+      controls.rotateSpeed = 0.8;
       controls.minDistance = 1;
       controls.maxDistance = 200;
       controls.enableZoom = true;
@@ -308,7 +319,7 @@ const Universe = ({
       const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
       scene.add(hemisphereLight);
 
-      // Update animation loop
+      // Update animation loop to include controls update
       const animate = () => {
         requestAnimationFrame(animate);
         
@@ -322,6 +333,7 @@ const Universe = ({
           }
         }
 
+        // Always update controls for smooth damping
         controls.update();
         renderer.render(scene, camera);
       };
