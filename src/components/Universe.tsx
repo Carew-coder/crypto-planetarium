@@ -41,6 +41,10 @@ const Universe = ({
       return;
     }
 
+    // Ensure we're actually zooming out
+    setIsZoomedIn(false);
+    setShowTables(false);
+
     const targetPosition = initialCameraPosition.clone();
     const startPosition = cameraRef.current.position.clone();
     const startTime = Date.now();
@@ -70,8 +74,6 @@ const Universe = ({
       } else {
         // Animation complete
         console.log("Zoom out animation complete");
-        setIsZoomedIn(false);
-        setShowTables(false);
         onBackToOverview();
       }
     };
