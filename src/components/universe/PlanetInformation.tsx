@@ -19,28 +19,48 @@ interface PlanetInformationProps {
 const PlanetInformation = ({ holder }: PlanetInformationProps) => {
   if (!holder) return null;
 
+  // Find the rank of the holder by fetching all holders and sorting them
+  const getRank = async () => {
+    const { data: holders } = await supabase
+      .from('token_holders')
+      .select('percentage')
+      .gte('percentage', holder.percentage)
+      .order('percentage', { ascending: false });
+    
+    return holders?.length || 1;
+  };
+
+  const { data: rank } = useQuery({
+    queryKey: ['holderRank', holder.wallet_address],
+    queryFn: getRank
+  });
+
   return (
-    <div className="fixed left-4 top-1/2 -translate-y-1/2 bg-space-lighter p-4 rounded-lg border border-space-accent/20 w-80 z-50">
-      <h3 className="text-xl font-bold mb-4 text-white">Planet Information</h3>
+    <div className="absolute left-4 top-1/2 -translate-y-1/2 glass-panel p-4 w-[32rem]">
+      <h2 className="text-lg font-semibold text-white mb-4">Planet Information</h2>
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="text-white">Property</TableHead>
-            <TableHead className="text-white">Value</TableHead>
+            <TableHead className="text-white/80">Property</TableHead>
+            <TableHead className="text-white/80">Value</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           <TableRow>
-            <TableCell className="text-white">Wallet</TableCell>
-            <TableCell className="text-white">{`${holder.wallet_address.slice(0, 6)}...${holder.wallet_address.slice(-4)}`}</TableCell>
+            <TableCell className="text-white/70">Rank</TableCell>
+            <TableCell className="text-white/70">#{rank}</TableCell>
           </TableRow>
           <TableRow>
-            <TableCell className="text-white">Amount</TableCell>
-            <TableCell className="text-white">{holder.token_amount.toLocaleString()}</TableCell>
+            <TableCell className="text-white/70">Wallet</TableCell>
+            <TableCell className="text-white/70">{`${holder.wallet_address.slice(0, 6)}...${holder.wallet_address.slice(-4)}`}</TableCell>
           </TableRow>
           <TableRow>
-            <TableCell className="text-white">Percentage</TableCell>
-            <TableCell className="text-white">{`${holder.percentage.toFixed(2)}%`}</TableCell>
+            <TableCell className="text-white/70">Amount</TableCell>
+            <TableCell className="text-white/70">{holder.token_amount.toLocaleString()}</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell className="text-white/70">Percentage</TableCell>
+            <TableCell className="text-white/70">{`${holder.percentage.toFixed(2)}%`}</TableCell>
           </TableRow>
         </TableBody>
       </Table>
