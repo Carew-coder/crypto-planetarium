@@ -50,7 +50,6 @@ const Universe = ({
     queryFn: async () => {
       console.log('Fetching token holders data for planets...');
       
-      // First trigger the edge function to fetch latest data
       await supabase.functions.invoke('fetchTokenHolders');
       
       const { data, error } = await supabase
@@ -67,7 +66,7 @@ const Universe = ({
       console.log('Successfully fetched token holders data:', data);
       return data;
     },
-    refetchInterval: 60000, // Refetch every minute
+    refetchInterval: 60000,
   });
 
   const { data: planetCustomizations, isLoading: customizationsLoading } = useQuery({
@@ -86,8 +85,8 @@ const Universe = ({
       console.log('Successfully fetched planet customizations:', data);
       return data;
     },
-    refetchInterval: 300000, // Refetch every 5 minutes
-    staleTime: 0, // Always fetch fresh data
+    refetchInterval: 300000,
+    staleTime: 0,
   });
 
   const cleanupAnimation = () => {
@@ -121,7 +120,6 @@ const Universe = ({
     const startTime = Date.now();
     const duration = 1000;
 
-    // Disable controls during animation
     if (controlsRef.current) {
       controlsRef.current.enabled = false;
       controlsRef.current.enableZoom = false;
@@ -153,7 +151,6 @@ const Universe = ({
       } else {
         console.log("Zoom out animation complete");
         if (controlsRef.current) {
-          // Re-enable controls after animation
           controlsRef.current.enabled = true;
           controlsRef.current.enableZoom = true;
           controlsRef.current.enableRotate = true;
@@ -183,11 +180,9 @@ const Universe = ({
 
     isAnimatingRef.current = true;
     
-    // Calculate zoom distance based on planet size
     const baseZOffset = planetPosition.equals(new THREE.Vector3(0, 0, 0)) ? 15 : 5;
     const zOffset = planetSize ? Math.max(planetSize * 3, baseZOffset) : baseZOffset;
     
-    // Calculate target position with offset
     const targetPosition = new THREE.Vector3(
       planetPosition.x,
       planetPosition.y,
@@ -196,9 +191,8 @@ const Universe = ({
 
     const startPosition = cameraRef.current.position.clone();
     const startTime = Date.now();
-    const duration = 1000; // 1 second animation
+    const duration = 1000;
     
-    // Disable controls during animation
     if (controlsRef.current) {
       controlsRef.current.enabled = false;
       controlsRef.current.enableZoom = false;
@@ -212,7 +206,6 @@ const Universe = ({
       const progress = Math.min(elapsed / duration, 1);
 
       if (progress < 1) {
-        // Cubic easing for smoother animation
         const easeProgress = 1 - Math.pow(1 - progress, 3);
         
         if (cameraRef.current && controlsRef.current) {
@@ -231,7 +224,6 @@ const Universe = ({
       } else {
         console.log("Zoom animation complete");
         if (controlsRef.current) {
-          // Re-enable controls after animation
           controlsRef.current.enabled = true;
           controlsRef.current.enableZoom = true;
           controlsRef.current.enableRotate = true;
@@ -250,12 +242,11 @@ const Universe = ({
 
   const preloadTextures = async () => {
     console.log('Starting optimized texture preloading...');
-    const totalTextures = PLANET_TEXTURES.length + 1; // +1 for sun texture
+    const totalTextures = PLANET_TEXTURES.length + 1;
     let loadedCount = 0;
 
     const loadTexture = (url: string): Promise<void> => {
       return new Promise((resolve, reject) => {
-        // Check cache first
         if (textureCache.current.has(url)) {
           console.log(`Using cached texture for: ${url}`);
           loadedTexturesRef.current[url] = textureCache.current.get(url)!;
@@ -265,18 +256,15 @@ const Universe = ({
           return;
         }
 
-        // Load new texture
         textureLoaderRef.current.load(
           url,
           (texture) => {
             console.log(`Texture loaded and compressed: ${url}`);
-            // Enable texture compression
             texture.generateMipmaps = true;
             texture.minFilter = THREE.LinearMipmapLinearFilter;
             texture.magFilter = THREE.LinearFilter;
             texture.anisotropy = 16;
             
-            // Cache the texture
             textureCache.current.set(url, texture);
             loadedTexturesRef.current[url] = texture;
             loadedCount++;
@@ -295,10 +283,8 @@ const Universe = ({
     };
 
     try {
-      // Load sun texture first
       await loadTexture(SUN_TEXTURE);
 
-      // Load planet textures in batches of 5
       const batchSize = 5;
       for (let i = 0; i < PLANET_TEXTURES.length; i += batchSize) {
         const batch = PLANET_TEXTURES.slice(i, i + batchSize);
@@ -338,7 +324,6 @@ const Universe = ({
         let texture: THREE.Texture | undefined;
         
         if (customization?.skin_url) {
-          // Use cached texture if available
           if (textureCache.current.has(customization.skin_url)) {
             texture = textureCache.current.get(customization.skin_url);
           } else {
@@ -349,7 +334,6 @@ const Universe = ({
                   const material = planetsRef.current[holder.wallet_address].material as THREE.MeshStandardMaterial;
                   material.map = loadedTexture;
                   material.needsUpdate = true;
-                  // Cache the texture
                   textureCache.current.set(customization.skin_url!, loadedTexture);
                 }
               }
@@ -381,13 +365,11 @@ const Universe = ({
 
       currentIndex = endIndex;
       
-      // Continue adding planets if there are more
       if (currentIndex < holders.length) {
         requestAnimationFrame(addPlanetBatch);
       }
     };
 
-    // Start adding planets
     addPlanetBatch();
   };
 
@@ -398,14 +380,17 @@ const Universe = ({
     }
 
     console.log('Initializing universe with holders:', holders.length);
-    let animationFrameId: number;
-    let isPageVisible = true;
+    let animationFrameId: number | null = null;
+    let isPageVisible = !document.hidden;
 
-    // Define animate function first so it's available to the visibility handler
     const animate = () => {
       if (!isPageVisible) {
         console.log('Animation paused - page not visible');
         return;
+      }
+
+      if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId);
       }
 
       animationFrameId = requestAnimationFrame(animate);
@@ -433,11 +418,11 @@ const Universe = ({
       isPageVisible = !document.hidden;
       console.log('Page visibility changed:', isPageVisible);
       
-      if (!isPageVisible && animationFrameId) {
+      if (!isPageVisible && animationFrameId !== null) {
         console.log('Canceling animation frame on tab hide');
         cancelAnimationFrame(animationFrameId);
-        animationFrameId = 0;
-      } else if (isPageVisible && !animationFrameId && rendererRef.current && sceneRef.current && cameraRef.current) {
+        animationFrameId = null;
+      } else if (isPageVisible && !animationFrameId) {
         console.log('Restarting animation loop on tab show');
         animate();
       }
@@ -470,9 +455,9 @@ const Universe = ({
       controls.enableDamping = true;
       controls.dampingFactor = 0.05;
       controls.rotateSpeed = 0.5;
-      controls.zoomSpeed = 2.0; // Increased from 0.5 to 2.0 for faster zoom
+      controls.zoomSpeed = 2.0;
       controls.minDistance = 1;
-      controls.maxDistance = 500; // Increased from 200 to 500
+      controls.maxDistance = 500;
       controls.enableZoom = true;
       controls.enableRotate = true;
       controls.enablePan = true;
@@ -524,33 +509,6 @@ const Universe = ({
 
       const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
       scene.add(hemisphereLight);
-
-      const animate = () => {
-        if (!isPageVisible) {
-          console.log('Animation paused - page not visible');
-          return;
-        }
-
-        animationFrameId = requestAnimationFrame(animate);
-        
-        if (!isZoomedIn) {
-          Object.values(planetsRef.current).forEach((planet) => {
-            planet.rotation.y += 0.005;
-          });
-
-          if (sunRef.current) {
-            sunRef.current.rotation.y += 0.001;
-          }
-        }
-
-        if (controlsRef.current) {
-          controlsRef.current.update();
-        }
-
-        if (rendererRef.current && sceneRef.current && cameraRef.current) {
-          rendererRef.current.render(sceneRef.current, cameraRef.current);
-        }
-      };
 
       animate();
 
