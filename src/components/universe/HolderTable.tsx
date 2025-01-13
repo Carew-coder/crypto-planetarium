@@ -13,7 +13,7 @@ const HolderTable: React.FC<TableProps> = ({ collapsed, onToggle }) => {
           <ChevronDown className={`h-5 w-5 text-white transition-transform ${!collapsed ? 'transform rotate-180' : ''}`} />
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <div className="max-h-[400px] overflow-auto mt-4">
+          <div className="mt-4">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -35,6 +35,24 @@ const HolderTable: React.FC<TableProps> = ({ collapsed, onToggle }) => {
                   <TableCell className="text-white/70">5%</TableCell>
                   <TableCell className="text-white/70">500,000</TableCell>
                   <TableCell className="text-white/70">$250</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="text-white/70">Earth</TableCell>
+                  <TableCell className="text-white/70">15%</TableCell>
+                  <TableCell className="text-white/70">1,500,000</TableCell>
+                  <TableCell className="text-white/70">$750</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="text-white/70">Mars</TableCell>
+                  <TableCell className="text-white/70">8%</TableCell>
+                  <TableCell className="text-white/70">800,000</TableCell>
+                  <TableCell className="text-white/70">$400</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="text-white/70">Jupiter</TableCell>
+                  <TableCell className="text-white/70">20%</TableCell>
+                  <TableCell className="text-white/70">2,000,000</TableCell>
+                  <TableCell className="text-white/70">$1,000</TableCell>
                 </TableRow>
               </TableBody>
             </Table>
