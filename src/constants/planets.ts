@@ -18,11 +18,11 @@ export const calculatePlanetSize = (percentage: number): number => {
   // Base size for smallest planets (0.1% holdings)
   const minSize = 0.5;
   // Maximum size for largest planets (100% holdings)
-  const maxSize = 12; // Doubled from 6 to make larger planets more prominent
+  const maxSize = 25; // Significantly increased from 12 to make larger planets much more prominent
   
-  // Apply stronger exponential scaling to create even more dramatic size differences
-  // Using a power of 2 instead of 1.5 to make the size difference more noticeable
-  const normalizedPercentage = Math.pow(percentage / 100, 2);
+  // Apply even stronger exponential scaling to create more dramatic size differences
+  // Using a power of 2.5 to make the size difference even more noticeable
+  const normalizedPercentage = Math.pow(percentage / 100, 2.5);
   
   // Scale the percentage to a size between minSize and maxSize
   return minSize + normalizedPercentage * (maxSize - minSize);
