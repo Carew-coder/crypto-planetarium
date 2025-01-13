@@ -81,7 +81,7 @@ const Universe = ({
     controlsRef.current.enableRotate = true;
     controlsRef.current.enablePan = true;
     controlsRef.current.minDistance = 1;
-    controlsRef.current.maxDistance = 200;
+    controlsRef.current.maxDistance = 500; // Increased from 200 to 500
 
     const targetPosition = initialCameraPosition.clone();
     const startPosition = cameraRef.current.position.clone();
@@ -192,11 +192,11 @@ const Universe = ({
           controlsRef.current.enableDamping = true;
           controlsRef.current.dampingFactor = 0.05;
           controlsRef.current.rotateSpeed = 0.5;
-          controlsRef.current.zoomSpeed = 0.5;
+          controlsRef.current.zoomSpeed = 2.0; // Increased from 0.5 to 2.0 for faster zoom
           
-          // Remove the min/max distance constraints when zoomed in
+          // Increased max distance to allow zooming out further
           controlsRef.current.minDistance = 1;
-          controlsRef.current.maxDistance = 200;
+          controlsRef.current.maxDistance = 500; // Increased from 200 to 500
           
           controlsRef.current.target.copy(planetPosition);
           controlsRef.current.update();
@@ -247,9 +247,9 @@ const Universe = ({
       controls.enableDamping = true;
       controls.dampingFactor = 0.05;
       controls.rotateSpeed = 0.5;
-      controls.zoomSpeed = 0.5;
+      controls.zoomSpeed = 2.0; // Increased from 0.5 to 2.0 for faster zoom
       controls.minDistance = 1;
-      controls.maxDistance = 200;
+      controls.maxDistance = 500; // Increased from 200 to 500
       controls.enableZoom = true;
       controls.enableRotate = true;
       controls.enablePan = true;
