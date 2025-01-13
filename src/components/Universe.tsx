@@ -152,12 +152,18 @@ const Universe = ({
 
   const handlePlanetZoom = (planetPosition: THREE.Vector3, planetSize?: number) => {
     console.log("Starting zoom to planet animation", { planetPosition, planetSize });
-    if (!cameraRef.current || !controlsRef.current || isAnimatingRef.current) {
-      console.log("Cannot start zoom animation - camera not ready or animation in progress");
+    if (!cameraRef.current || !controlsRef.current) {
+      console.error("Camera or controls not initialized");
       return;
     }
-    
-    cleanupAnimation();
+
+    if (isAnimatingRef.current) {
+      console.log("Animation already in progress, canceling previous animation");
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    }
+
     isAnimatingRef.current = true;
     
     const baseZOffset = planetPosition.equals(new THREE.Vector3(0, 0, 0)) ? 15 : 5;
@@ -169,11 +175,13 @@ const Universe = ({
       planetPosition.z + zOffset
     );
 
-    const currentPos = cameraRef.current.position.clone();
+    const startPosition = cameraRef.current.position.clone();
     const startTime = Date.now();
     const duration = 1000;
     
-    controlsRef.current.enabled = false;
+    if (controlsRef.current) {
+      controlsRef.current.enabled = false;
+    }
     
     const animate = () => {
       const currentTime = Date.now();
@@ -182,13 +190,22 @@ const Universe = ({
 
       if (progress < 1) {
         const easeProgress = 1 - Math.pow(1 - progress, 3);
-        const newPos = currentPos.clone().lerp(targetPosition, easeProgress);
-        cameraRef.current!.position.copy(newPos);
-        controlsRef.current!.target.lerp(planetPosition, easeProgress);
-        controlsRef.current!.update();
+        
+        if (cameraRef.current && controlsRef.current) {
+          const newPos = new THREE.Vector3().lerpVectors(
+            startPosition,
+            targetPosition,
+            easeProgress
+          );
+          
+          cameraRef.current.position.copy(newPos);
+          controlsRef.current.target.lerp(planetPosition, easeProgress);
+          controlsRef.current.update();
+        }
+        
         animationFrameRef.current = requestAnimationFrame(animate);
       } else {
-        console.log("Zoom to planet animation complete");
+        console.log("Zoom animation complete");
         if (controlsRef.current) {
           controlsRef.current.enabled = true;
           controlsRef.current.enableZoom = true;
@@ -199,7 +216,7 @@ const Universe = ({
           controlsRef.current.target.copy(planetPosition);
           controlsRef.current.update();
         }
-        cleanupAnimation();
+        isAnimatingRef.current = false;
       }
     };
 
