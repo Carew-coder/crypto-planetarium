@@ -5,8 +5,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { PLANET_TEXTURES, SUN_TEXTURE, calculatePlanetSize } from '@/constants/planets';
-import { Planet } from '@/types/universe';
 import ShootingStars from './universe/ShootingStars';
+import PlanetInformation from './universe/PlanetInformation';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { generateRandomPosition } from '@/utils/positionUtils';
@@ -26,13 +26,14 @@ const Universe = ({
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
   const planetsRef = useRef<{ [key: string]: THREE.Mesh }>({});
+  const planetPositionsRef = useRef<{ [key: string]: THREE.Vector3 }>({});
   const sunRef = useRef<THREE.Mesh | null>(null);
   const textureLoaderRef = useRef<THREE.TextureLoader>(new THREE.TextureLoader());
   const loadedTexturesRef = useRef<{ [key: string]: THREE.Texture }>({});
   const { toast } = useToast();
   const [isZoomedIn, setIsZoomedIn] = useState(false);
   const [initialCameraPosition] = useState(new THREE.Vector3(0, 0, 100));
-  const [showTables, setShowTables] = useState(false);
+  const [selectedHolder, setSelectedHolder] = useState<any>(null);
   const animationFrameRef = useRef<number>();
 
   // Fetch token holders data
@@ -74,7 +75,7 @@ const Universe = ({
 
     // Immediately update states
     setIsZoomedIn(false);
-    setShowTables(false);
+    setSelectedHolder(null);
     onBackToOverview();
 
     // Re-enable controls
@@ -159,6 +160,7 @@ const Universe = ({
       mesh.position.set(...position);
       scene.add(mesh);
       planetsRef.current[holder.wallet_address] = mesh;
+      planetPositionsRef.current[holder.wallet_address] = mesh.position.clone();
     });
   };
 
@@ -298,7 +300,7 @@ const Universe = ({
             cleanupAnimation();
             
             setIsZoomedIn(true);
-            setShowTables(true);
+            setSelectedHolder(null);
             onPlanetClick();
             const position = new THREE.Vector3(-2, 0, 15);
 
@@ -340,16 +342,20 @@ const Universe = ({
             cleanupAnimation();
             
             setIsZoomedIn(true);
-            setShowTables(true);
+            setSelectedHolder(clickedPlanet);
             onPlanetClick();
+
+            // Get the planet's position from our reference
+            const planetPosition = planetPositionsRef.current[clickedPlanet.wallet_address];
+            if (!planetPosition) return;
 
             // Disable controls and ensure they stay disabled
             controlsRef.current.enabled = false;
 
-            const position = new THREE.Vector3(
-              clickedPlanet.position[0] - 2,
-              clickedPlanet.position[1],
-              clickedPlanet.position[2] + 5
+            const targetPosition = new THREE.Vector3(
+              planetPosition.x - 2,
+              planetPosition.y,
+              planetPosition.z + 5
             );
 
             const currentPos = cameraRef.current.position.clone();
@@ -362,12 +368,12 @@ const Universe = ({
                 return;
               }
 
-              const newPos = currentPos.clone().lerp(position, progress);
+              const newPos = currentPos.clone().lerp(targetPosition, progress);
               cameraRef.current!.position.copy(newPos);
               controlsRef.current!.target.copy(new THREE.Vector3(
-                clickedPlanet.position[0] - 2,
-                clickedPlanet.position[1],
-                clickedPlanet.position[2]
+                planetPosition.x - 2,
+                planetPosition.y,
+                planetPosition.z
               ));
               controlsRef.current!.update();
 
@@ -415,10 +421,8 @@ const Universe = ({
         </Button>
       )}
 
-      {showTables && isZoomedIn && (
-        <div className="absolute top-1/2 -translate-y-1/2">
-          {/* RewardsTable component can be added here */}
-        </div>
+      {isZoomedIn && selectedHolder && (
+        <PlanetInformation holder={selectedHolder} />
       )}
     </div>
   );
