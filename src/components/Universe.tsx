@@ -285,14 +285,17 @@ const Universe = ({
   const handleBackToOverview = () => {
     if (!cameraRef.current || !controlsRef.current) return;
     
+    console.log("Handling back to overview");
     setIsZoomedIn(false);
     setShowTables(false);
-    onBackToOverview();
     
     let progress = 0;
     const animate = () => {
       progress += 0.02;
-      if (progress > 1) return;
+      if (progress > 1) {
+        onBackToOverview();
+        return;
+      }
 
       const newPos = cameraRef.current!.position.clone().lerp(initialCameraPosition, progress);
       cameraRef.current!.position.copy(newPos);
