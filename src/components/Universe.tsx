@@ -196,13 +196,13 @@ const Universe = ({
     const startPosition = cameraRef.current.position.clone();
     const startTime = Date.now();
     const duration = 1000; // 1 second animation
+
+    // Store the current control state
+    const currentControlsEnabled = controlsRef.current.enabled;
     
     // Disable controls during animation
     if (controlsRef.current) {
       controlsRef.current.enabled = false;
-      controlsRef.current.enableZoom = false;
-      controlsRef.current.enableRotate = false;
-      controlsRef.current.enablePan = false;
     }
     
     const animate = () => {
