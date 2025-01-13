@@ -77,6 +77,8 @@ const Universe = ({
       } else {
         // Animation complete
         console.log("Zoom out animation complete");
+        setIsZoomedIn(false);
+        setShowTables(false);
         onBackToOverview();
       }
     };
@@ -357,7 +359,7 @@ const Universe = ({
         </Button>
       )}
 
-      {showTables && (
+      {showTables && isZoomedIn && (
         <div className="absolute top-1/2 -translate-y-1/2 flex gap-4">
           <HolderTable
             collapsed={holderTableCollapsed}
