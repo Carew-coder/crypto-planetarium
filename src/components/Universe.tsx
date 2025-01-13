@@ -30,12 +30,10 @@ const Universe = ({
   const { toast } = useToast();
   const [isZoomedIn, setIsZoomedIn] = useState(false);
   const [initialCameraPosition] = useState(new THREE.Vector3(0, 0, 100));
-  const [isLoading, setIsLoading] = useState(true);
   const [showTables, setShowTables] = useState(false);
   const [holderTableCollapsed, setHolderTableCollapsed] = useState(false);
   const [rewardsTableCollapsed, setRewardsTableCollapsed] = useState(false);
 
-  // Preload textures
   const preloadTextures = async () => {
     const texturePromises = PLANET_TEXTURES.map((texturePath) => {
       return new Promise<void>((resolve) => {
@@ -130,7 +128,6 @@ const Universe = ({
       await preloadTextures();
       addPlanetsInBatches(scene, SAMPLE_PLANETS);
 
-      // Add stars
       const starsGeometry = new THREE.BufferGeometry();
       const starsMaterial = new THREE.PointsMaterial({
         color: 0xFFFFFF,
@@ -337,12 +334,6 @@ const Universe = ({
             collapsed={rewardsTableCollapsed}
             onToggle={() => setRewardsTableCollapsed(!rewardsTableCollapsed)}
           />
-        </div>
-      )}
-
-      {isLoading && (
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-          <div className="relative h-[40px] w-[40px] before:content-[''] before:absolute before:top-0 before:left-0 before:h-full before:w-full before:rounded-full before:bg-white before:animate-[pulse_1.75s_ease-in-out_infinite] before:scale-0 before:transition-colors before:ease-in-out before:duration-300 after:content-[''] after:absolute after:top-0 after:left-0 after:h-full after:w-full after:rounded-full after:bg-white after:animate-[pulse_1.75s_ease-in-out_infinite] after:scale-0 after:transition-colors after:ease-in-out after:duration-300 after:delay-[calc(1.75s/-2)]" />
         </div>
       )}
     </div>
