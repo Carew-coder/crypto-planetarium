@@ -9,17 +9,18 @@ const Index = () => {
   const [searchAddress, setSearchAddress] = useState("");
   const [isOpen, setIsOpen] = useState(true);
   const [isOldestOpen, setIsOldestOpen] = useState(true);
+  const [isPlanetSelected, setIsPlanetSelected] = useState(false);
 
   return (
     <div className="relative w-full h-screen overflow-hidden">
-      <Universe />
+      <Universe onPlanetClick={() => setIsPlanetSelected(true)} onBackToOverview={() => setIsPlanetSelected(false)} />
       <div className="absolute top-4 left-1/2 -translate-x-1/2 glass-panel px-6 py-3">
         <h1 className="text-xl font-semibold text-white">Solar</h1>
       </div>
       
       {/* Visit Planets Table */}
-      <div className="absolute right-4 top-4 glass-panel p-4 w-80">
-        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <div className={`absolute right-4 ${isPlanetSelected ? 'top-4' : 'top-4'} glass-panel p-4 w-80`}>
+        <Collapsible open={!isPlanetSelected && isOpen} onOpenChange={setIsOpen}>
           <CollapsibleTrigger className="flex items-center justify-between w-full">
             <h2 className="text-lg font-semibold text-white">Visit Planets</h2>
             <ChevronDown className={`h-5 w-5 text-white transition-transform ${isOpen ? 'transform rotate-180' : ''}`} />
@@ -41,7 +42,6 @@ const Index = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {/* Example rows - replace with actual data */}
                   <TableRow>
                     <TableCell className="text-white/70">0x1234...5678</TableCell>
                     <TableCell className="text-white/70">4.2%</TableCell>
@@ -58,8 +58,8 @@ const Index = () => {
       </div>
 
       {/* Oldest Planets Table */}
-      <div className="absolute right-4 top-[calc(4rem+340px)] glass-panel p-4 w-80">
-        <Collapsible open={isOldestOpen} onOpenChange={setIsOldestOpen}>
+      <div className={`absolute right-4 ${isPlanetSelected ? 'top-4 right-[21rem]' : 'top-[calc(4rem+340px)]'} transition-all duration-300 glass-panel p-4 w-80`}>
+        <Collapsible open={!isPlanetSelected && isOldestOpen} onOpenChange={setIsOldestOpen}>
           <CollapsibleTrigger className="flex items-center justify-between w-full">
             <h2 className="text-lg font-semibold text-white">Oldest Planets</h2>
             <ChevronDown className={`h-5 w-5 text-white transition-transform ${isOldestOpen ? 'transform rotate-180' : ''}`} />

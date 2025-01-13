@@ -9,7 +9,13 @@ import RewardsTable from './universe/RewardsTable';
 import { SAMPLE_PLANETS, PLANET_TEXTURES, SUN_TEXTURE } from '@/constants/planets';
 import { Planet } from '@/types/universe';
 
-const Universe = () => {
+const Universe = ({ 
+  onPlanetClick,
+  onBackToOverview 
+}: { 
+  onPlanetClick: () => void;
+  onBackToOverview: () => void;
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -202,6 +208,7 @@ const Universe = () => {
           if (sunIntersects.length > 0) {
             setIsZoomedIn(true);
             setShowTables(true);
+            onPlanetClick();
             const position = new THREE.Vector3(0, 0, 15);
 
             const currentPos = cameraRef.current.position.clone();
@@ -235,6 +242,7 @@ const Universe = () => {
           if (clickedPlanet) {
             setIsZoomedIn(true);
             setShowTables(true);
+            onPlanetClick();
             const position = new THREE.Vector3(...clickedPlanet.position);
             position.z += 5;
 
@@ -280,6 +288,7 @@ const Universe = () => {
     
     setIsZoomedIn(false);
     setShowTables(false);
+    onBackToOverview();
     
     let progress = 0;
     const animate = () => {
