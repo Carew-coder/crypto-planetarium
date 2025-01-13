@@ -1,15 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { PLANET_TEXTURES, SUN_TEXTURE, calculatePlanetSize } from '@/constants/planets';
+import { PLANET_TEXTURES } from '@/constants/planets';
 import ShootingStars from './universe/ShootingStars';
 import PlanetInformation from './universe/PlanetInformation';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
-import { generateRandomPosition } from '@/utils/positionUtils';
+import SceneSetup from './universe/SceneSetup';
+import PlanetSystem from './universe/PlanetSystem';
+import CameraController from './universe/CameraController';
 
 const Universe = ({ 
   onPlanetClick,
@@ -32,7 +33,6 @@ const Universe = ({
   const sunRef = useRef<THREE.Mesh | null>(null);
   const textureLoaderRef = useRef<THREE.TextureLoader>(new THREE.TextureLoader());
   const loadedTexturesRef = useRef<{ [key: string]: THREE.Texture }>({});
-  const { toast } = useToast();
   const [isZoomedIn, setIsZoomedIn] = useState(false);
   const [initialCameraPosition] = useState(new THREE.Vector3(0, 0, 100));
   const [selectedHolder, setSelectedHolder] = useState<any>(null);
@@ -139,35 +139,6 @@ const Universe = ({
     await Promise.all(texturePromises);
   };
 
-  const addPlanetsFromHolders = (scene: THREE.Scene) => {
-    if (!holders) return;
-
-    const existingPositions: [number, number, number][] = [];
-
-    holders.forEach((holder, index) => {
-      const textureIndex = index % PLANET_TEXTURES.length;
-      const texturePath = PLANET_TEXTURES[textureIndex];
-      const texture = loadedTexturesRef.current[texturePath];
-
-      const size = calculatePlanetSize(holder.percentage);
-      const geometry = new THREE.SphereGeometry(size, 32, 32);
-      const material = new THREE.MeshStandardMaterial({
-        map: texture,
-        metalness: 0.3,
-        roughness: 0.4,
-      });
-
-      const position = generateRandomPosition(existingPositions);
-      existingPositions.push(position);
-
-      const mesh = new THREE.Mesh(geometry, material);
-      mesh.position.set(...position);
-      scene.add(mesh);
-      planetsRef.current[holder.wallet_address] = mesh;
-      planetPositionsRef.current[holder.wallet_address] = mesh.position.clone();
-    });
-  };
-
   const handlePlanetZoom = (planetPosition: THREE.Vector3) => {
     if (!cameraRef.current || !controlsRef.current) return;
     
@@ -247,86 +218,8 @@ const Universe = ({
       containerRef.current.appendChild(renderer.domElement);
       rendererRef.current = renderer;
 
-      // Update controls setup
-      const controls = new OrbitControls(camera, renderer.domElement);
-      controls.enableDamping = true;
-      controls.dampingFactor = 0.05;
-      controls.minDistance = 1;
-      controls.maxDistance = 200;
-      controls.enableZoom = true;
-      controls.enableRotate = true;
-      controls.enablePan = true;
-      controlsRef.current = controls;
-
-      // Add sun
-      const sunGeometry = new THREE.SphereGeometry(5, 32, 32);
-      const sunTexture = textureLoaderRef.current.load(SUN_TEXTURE);
-      const sunMaterial = new THREE.MeshStandardMaterial({
-        map: sunTexture,
-        emissive: 0xffa500,
-        emissiveIntensity: 0.5,
-        metalness: 0,
-        roughness: 0.7,
-      });
-      const sun = new THREE.Mesh(sunGeometry, sunMaterial);
-      scene.add(sun);
-      sunRef.current = sun;
-
-      // Preload textures and add planets
+      // Preload textures
       await preloadTextures();
-      addPlanetsFromHolders(scene);
-
-      const starsGeometry = new THREE.BufferGeometry();
-      const starsMaterial = new THREE.PointsMaterial({
-        color: 0xFFFFFF,
-        size: 0.1,
-      });
-
-      const starsVertices = [];
-      for (let i = 0; i < 5000; i++) {
-        const x = (Math.random() - 0.5) * 2000;
-        const y = (Math.random() - 0.5) * 2000;
-        const z = (Math.random() - 0.5) * 2000;
-        starsVertices.push(x, y, z);
-      }
-
-      starsGeometry.setAttribute(
-        'position',
-        new THREE.Float32BufferAttribute(starsVertices, 3)
-      );
-      const stars = new THREE.Points(starsGeometry, starsMaterial);
-      scene.add(stars);
-
-      // Lighting setup
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-      scene.add(ambientLight);
-
-      const pointLight = new THREE.PointLight(0xffffff, 2);
-      pointLight.position.set(0, 0, 0);
-      scene.add(pointLight);
-
-      const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
-      scene.add(hemisphereLight);
-
-      // Update animation loop
-      const animate = () => {
-        requestAnimationFrame(animate);
-        
-        if (!isZoomedIn) {
-          Object.values(planetsRef.current).forEach((planet) => {
-            planet.rotation.y += 0.005;
-          });
-
-          if (sunRef.current) {
-            sunRef.current.rotation.y += 0.001;
-          }
-        }
-
-        controls.update();
-        renderer.render(scene, camera);
-      };
-
-      animate();
 
       // Handle window resize
       const handleResize = () => {
@@ -390,8 +283,31 @@ const Universe = ({
 
       window.addEventListener('click', handleClick);
 
+      // Animation loop
+      const animate = () => {
+        requestAnimationFrame(animate);
+        
+        if (!isZoomedIn) {
+          Object.values(planetsRef.current).forEach((planet) => {
+            planet.rotation.y += 0.005;
+          });
+
+          if (sunRef.current) {
+            sunRef.current.rotation.y += 0.001;
+          }
+        }
+
+        if (controlsRef.current) {
+          controlsRef.current.update();
+        }
+        renderer.render(scene, camera);
+      };
+
+      animate();
+
       return () => {
         window.removeEventListener('click', handleClick);
+        window.removeEventListener('resize', handleResize);
         cleanupAnimation();
         renderer.dispose();
       };
@@ -423,17 +339,39 @@ const Universe = ({
     }
   }, [selectedWalletAddress, holders, isZoomedIn, onPlanetClick]);
 
-  // Cleanup animations when component unmounts
-  useEffect(() => {
-    return () => {
-      cleanupAnimation();
-    };
-  }, []);
-
   return (
     <div className="relative w-full h-screen">
       <div ref={containerRef} className="w-full h-screen" />
       <ShootingStars />
+      
+      {sceneRef.current && cameraRef.current && rendererRef.current && (
+        <>
+          <SceneSetup 
+            scene={sceneRef.current}
+            textureLoader={textureLoaderRef.current}
+            onSunCreated={(sun) => {
+              sunRef.current = sun;
+            }}
+          />
+          <PlanetSystem
+            scene={sceneRef.current}
+            holders={holders || []}
+            loadedTextures={loadedTexturesRef.current}
+            onPlanetsCreated={(planets, positions) => {
+              planetsRef.current = planets;
+              planetPositionsRef.current = positions;
+            }}
+          />
+          <CameraController
+            camera={cameraRef.current}
+            renderer={rendererRef.current}
+            initialPosition={initialCameraPosition}
+            onControlsCreated={(controls) => {
+              controlsRef.current = controls;
+            }}
+          />
+        </>
+      )}
       
       {isZoomedIn && (
         <Button
