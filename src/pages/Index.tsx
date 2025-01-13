@@ -73,7 +73,6 @@ const Index = () => {
   const handleWalletClick = (walletAddress: string) => {
     console.log('Wallet clicked:', walletAddress);
     setSelectedWallet(walletAddress);
-    setIsPlanetSelected(true);
   };
 
   if (error) {
