@@ -23,7 +23,7 @@ serve(async (req) => {
 
     console.log('Retrieved Solscan API token successfully')
 
-    const tokenAddress = 'wpdjfnFPcNAwkfYwsyRuUGiKYcoaN5NmntfCgNcpump'
+    const tokenAddress = '8PVVGVZSkrrLtxZDdH7zRonCwCff9FhY7Wk6Yh71pump'
     const PAGE_SIZE = 40 // Maximum allowed by Solscan API
     let allHolders: any[] = []
     let currentPage = 1
