@@ -58,7 +58,8 @@ const Universe = ({
       
       return data;
     },
-    refetchInterval: 300000,
+    refetchInterval: 10000, // Reduced to 10 seconds
+    staleTime: 5000, // Data becomes stale after 5 seconds
   });
 
   const { data: planetCustomizations, isLoading: customizationsLoading } = useQuery({
@@ -76,8 +77,8 @@ const Universe = ({
 
       return data;
     },
-    refetchInterval: 300000,
-    staleTime: 0, // Always fetch fresh data
+    refetchInterval: 10000, // Reduced to 10 seconds
+    staleTime: 5000, // Data becomes stale after 5 seconds
   });
 
   const cleanupAnimation = () => {
