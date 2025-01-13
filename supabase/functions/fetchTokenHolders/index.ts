@@ -13,6 +13,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Starting fetchTokenHolders function...')
+    
     const apiKey = Deno.env.get('SOLANA_TRACKER_API_KEY')
     if (!apiKey) {
       console.error('SOLANA_TRACKER_API_KEY not found in environment variables')
@@ -24,8 +26,7 @@ serve(async (req) => {
     const tokenAddress = 'GxHJDpqpPGjeM1n9y2WnDxjJzXzL43p593DdauEmXTkE'
     const url = `https://data.solanatracker.io/tokens/${tokenAddress}/holders`
 
-    console.log('Fetching token holders from Solana Tracker API...')
-    console.log('Request URL:', url)
+    console.log('Making API request to:', url)
     
     const response = await fetch(url, {
       headers: {
@@ -34,8 +35,8 @@ serve(async (req) => {
       }
     })
 
-    console.log('Response status:', response.status)
-    console.log('Response headers:', Object.fromEntries(response.headers.entries()))
+    console.log('API Response Status:', response.status)
+    console.log('API Response Headers:', Object.fromEntries(response.headers.entries()))
 
     if (!response.ok) {
       const errorText = await response.text()
@@ -51,9 +52,9 @@ serve(async (req) => {
     const data = await response.json()
     console.log('Raw API response:', JSON.stringify(data, null, 2))
 
-    if (!data || !Array.isArray(data)) {
-      console.error('Unexpected API response format:', data)
-      throw new Error('Invalid API response format')
+    if (!data) {
+      console.error('Empty API response')
+      throw new Error('Empty API response')
     }
 
     // Store data in Supabase
@@ -66,6 +67,7 @@ serve(async (req) => {
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey)
+    console.log('Supabase client initialized')
 
     // Clear existing data
     console.log('Clearing existing token holders data...')
@@ -79,14 +81,30 @@ serve(async (req) => {
       throw deleteError
     }
 
-    // Transform and insert new data
-    const holders = data.map((holder: any) => ({
-      wallet_address: holder.owner,
-      token_amount: holder.amount,
-      percentage: (holder.amount / holder.total_supply) * 100,
-    }))
+    console.log('Successfully cleared existing data')
 
-    console.log('Inserting new token holders data. Number of records:', holders.length)
+    // Transform and insert new data
+    let holders;
+    if (Array.isArray(data)) {
+      console.log('Processing array response format')
+      holders = data.map((holder: any) => ({
+        wallet_address: holder.owner,
+        token_amount: holder.amount,
+        percentage: (holder.amount / holder.total_supply) * 100,
+      }))
+    } else if (data.accounts && Array.isArray(data.accounts)) {
+      console.log('Processing object with accounts array format')
+      holders = data.accounts.map((holder: any) => ({
+        wallet_address: holder.wallet || holder.owner,
+        token_amount: holder.amount,
+        percentage: holder.percentage || (holder.amount / holder.total_supply) * 100,
+      }))
+    } else {
+      console.error('Unexpected data format:', data)
+      throw new Error('Invalid data format received from API')
+    }
+
+    console.log('Transformed data. Number of holders:', holders.length)
     console.log('First holder example:', holders[0])
 
     const { error: insertError } = await supabase
