@@ -79,7 +79,7 @@ const Index = () => {
           </div>
 
           {/* Connect Wallet Button (Right) */}
-          <div className="glass-panel px-4 py-2">
+          <div className="glass-panel px-4 py-2 ml-auto">
             <Button
               variant="outline"
               size="sm"
