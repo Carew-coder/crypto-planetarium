@@ -102,13 +102,29 @@ const SAMPLE_PLANETS: Planet[] = [
     size: 1,
     position: [12, 15, -18],
   },
+  {
+    id: "ada",
+    name: "Cardano",
+    value: 1.20,
+    color: "#0033AD",
+    size: 1.2,
+    position: [-8, -12, 10],
+  },
+  {
+    id: "dot",
+    name: "Polkadot",
+    value: 15.50,
+    color: "#E6007A",
+    size: 1.1,
+    position: [5, 18, -5],
+  }
 ];
 
 // Keep track of existing positions
 const existingPositions: [number, number, number][] = SAMPLE_PLANETS.map(p => p.position);
 
 // Generate additional planets with collision detection
-for (let i = 0; i < 500; i++) {
+for (let i = 0; i < 5; i++) {
   const position = generateRandomPosition(existingPositions);
   existingPositions.push(position);
   
