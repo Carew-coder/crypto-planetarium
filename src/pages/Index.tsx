@@ -36,7 +36,7 @@ const Index = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="text-white/80">Address</TableHead>
+                    <TableHead className="text-white/80">Planets</TableHead>
                     <TableHead className="text-white/80">Holding %</TableHead>
                   </TableRow>
                 </TableHeader>
