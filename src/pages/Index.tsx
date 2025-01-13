@@ -70,7 +70,7 @@ const Index = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="text-white/80">Planet</TableHead>
-                    <TableHead className="text-white/80">Age (B Years)</TableHead>
+                    <TableHead className="text-white/80">Age</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
