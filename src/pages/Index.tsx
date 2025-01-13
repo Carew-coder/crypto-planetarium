@@ -73,6 +73,7 @@ const Index = () => {
   const handleWalletClick = (walletAddress: string) => {
     console.log('Wallet clicked:', walletAddress);
     setSelectedWallet(walletAddress);
+    setIsPlanetSelected(true);
   };
 
   if (error) {
@@ -126,7 +127,7 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Top Holders Panel (Right Side) - Updated width from 32rem to 24rem */}
+      {/* Top Holders Panel (Right Side) */}
       <div className="fixed right-8 top-1/2 -translate-y-1/2 glass-panel p-4 w-[24rem] z-30 h-[70vh]">
         <h2 className="text-lg font-semibold text-white mb-4">Top Holders</h2>
         {isLoading ? (
