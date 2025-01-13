@@ -132,13 +132,9 @@ const Index = () => {
             </Button>
           </form>
 
-          {/* Solar Logo (Center) */}
-          <div className="absolute left-1/2 -translate-x-1/2">
-            <img 
-              src="/lovable-uploads/4bae2941-9dd2-4ab4-80cb-252023cc4385.png" 
-              alt="Solar Logo" 
-              className="h-12 w-auto"
-            />
+          {/* Solar Title (Center) */}
+          <div className="absolute left-1/2 -translate-x-1/2 glass-panel px-6 py-2">
+            <h1 className="text-xl font-semibold text-white">Solar</h1>
           </div>
 
           {/* Connect Wallet Button (Right) */}
