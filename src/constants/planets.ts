@@ -13,12 +13,17 @@ export const PLANET_TEXTURES = [
   '/lovable-uploads/47867400-645f-4a61-adea-7da70fa41000.png',
 ];
 
-// Function to calculate planet size based on holding percentage
+// Function to calculate planet size based on holding percentage with exponential scaling
 export const calculatePlanetSize = (percentage: number): number => {
-  // Base size for smallest planets
+  // Base size for smallest planets (0.1% holdings)
   const minSize = 0.5;
-  // Maximum size for largest planets
-  const maxSize = 3;
+  // Maximum size for largest planets (100% holdings)
+  const maxSize = 6;
+  
+  // Apply exponential scaling to make bigger holdings more prominent
+  // Using a power of 1.5 to create more dramatic size differences
+  const normalizedPercentage = Math.pow(percentage / 100, 1.5);
+  
   // Scale the percentage to a size between minSize and maxSize
-  return minSize + (percentage / 100) * (maxSize - minSize);
+  return minSize + normalizedPercentage * (maxSize - minSize);
 };
