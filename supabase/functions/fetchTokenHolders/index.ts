@@ -29,7 +29,7 @@ serve(async (req) => {
     
     const response = await fetch(url, {
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        'Authorization': apiKey, // Changed from 'Bearer ${apiKey}' to just apiKey
         'Accept': 'application/json',
       },
     })
@@ -39,7 +39,8 @@ serve(async (req) => {
       console.error('API request failed:', {
         status: response.status,
         statusText: response.statusText,
-        body: errorText
+        body: errorText,
+        headers: Object.fromEntries(response.headers.entries()), // Log response headers
       })
       throw new Error(`API request failed: ${response.statusText}. Status: ${response.status}. Body: ${errorText}`)
     }
