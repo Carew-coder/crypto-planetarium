@@ -52,7 +52,6 @@ const Universe = ({
     await Promise.all(texturePromises);
   };
 
-  // Add planets in batches
   const addPlanetsInBatches = (scene: THREE.Scene, planets: Planet[]) => {
     planets.forEach((planet, index) => {
       const textureIndex = index % PLANET_TEXTURES.length;
@@ -71,8 +70,6 @@ const Universe = ({
       scene.add(mesh);
       planetsRef.current[planet.id] = mesh;
     });
-
-    setIsLoading(false);
   };
 
   useEffect(() => {
