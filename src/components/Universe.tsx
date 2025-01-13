@@ -39,6 +39,7 @@ const Universe = ({
   const [initialCameraPosition] = useState(new THREE.Vector3(0, 0, 100));
   const [selectedHolder, setSelectedHolder] = useState<any>(null);
   const animationFrameRef = useRef<number>();
+  const isAnimatingRef = useRef(false);
 
   const { data: holders, isLoading: holdersLoading } = useQuery({
     queryKey: ['tokenHolders'],
@@ -82,7 +83,9 @@ const Universe = ({
   const cleanupAnimation = () => {
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = undefined;
     }
+    isAnimatingRef.current = false;
   };
 
   const handleBackToOverview = () => {
@@ -92,22 +95,24 @@ const Universe = ({
       return;
     }
 
+    if (isAnimatingRef.current) {
+      console.log("Animation already in progress, skipping");
+      return;
+    }
+
     cleanupAnimation();
+    isAnimatingRef.current = true;
 
     setIsZoomedIn(false);
     setSelectedHolder(null);
     onBackToOverview();
 
-    controlsRef.current.enableZoom = true;
-    controlsRef.current.enableRotate = true;
-    controlsRef.current.enablePan = true;
-    controlsRef.current.minDistance = 1;
-    controlsRef.current.maxDistance = 500; // Increased from 200 to 500
-
     const targetPosition = initialCameraPosition.clone();
     const startPosition = cameraRef.current.position.clone();
     const startTime = Date.now();
     const duration = 1000;
+
+    controlsRef.current.enabled = false;
 
     const animate = () => {
       const currentTime = Date.now();
@@ -130,6 +135,14 @@ const Universe = ({
         animationFrameRef.current = requestAnimationFrame(animate);
       } else {
         console.log("Zoom out animation complete");
+        if (controlsRef.current) {
+          controlsRef.current.enabled = true;
+          controlsRef.current.enableZoom = true;
+          controlsRef.current.enableRotate = true;
+          controlsRef.current.enablePan = true;
+          controlsRef.current.minDistance = 1;
+          controlsRef.current.maxDistance = 500;
+        }
         cleanupAnimation();
       }
     };
@@ -213,9 +226,14 @@ const Universe = ({
   };
 
   const handlePlanetZoom = (planetPosition: THREE.Vector3, planetSize?: number) => {
-    if (!cameraRef.current || !controlsRef.current) return;
+    if (!cameraRef.current || !controlsRef.current || isAnimatingRef.current) {
+      console.log("Cannot start zoom animation - camera not ready or animation in progress");
+      return;
+    }
     
+    console.log("Starting zoom to planet animation");
     cleanupAnimation();
+    isAnimatingRef.current = true;
     
     const baseZOffset = planetPosition.equals(new THREE.Vector3(0, 0, 0)) ? 15 : 5;
     const zOffset = planetSize ? Math.max(planetSize * 3, baseZOffset) : baseZOffset;
@@ -227,40 +245,37 @@ const Universe = ({
     );
 
     const currentPos = cameraRef.current.position.clone();
-    let progress = 0;
+    const startTime = Date.now();
+    const duration = 1000;
+    
+    controlsRef.current.enabled = false;
     
     const animate = () => {
-      progress += 0.02;
-      if (progress > 1) {
+      const currentTime = Date.now();
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      if (progress < 1) {
+        const easeProgress = 1 - Math.pow(1 - progress, 3);
+        const newPos = currentPos.clone().lerp(targetPosition, easeProgress);
+        cameraRef.current!.position.copy(newPos);
+        controlsRef.current!.target.lerp(planetPosition, easeProgress);
+        controlsRef.current!.update();
+        animationFrameRef.current = requestAnimationFrame(animate);
+      } else {
+        console.log("Zoom to planet animation complete");
         if (controlsRef.current) {
           controlsRef.current.enabled = true;
           controlsRef.current.enableZoom = true;
           controlsRef.current.enableRotate = true;
           controlsRef.current.enablePan = true;
-          
-          controlsRef.current.enableDamping = true;
-          controlsRef.current.dampingFactor = 0.05;
-          controlsRef.current.rotateSpeed = 0.5;
-          controlsRef.current.zoomSpeed = 2.0; // Increased from 0.5 to 2.0 for faster zoom
-          
-          // Increased max distance to allow zooming out further
           controlsRef.current.minDistance = 1;
-          controlsRef.current.maxDistance = 500; // Increased from 200 to 500
-          
+          controlsRef.current.maxDistance = 500;
           controlsRef.current.target.copy(planetPosition);
           controlsRef.current.update();
         }
         cleanupAnimation();
-        return;
       }
-
-      const newPos = currentPos.clone().lerp(targetPosition, progress);
-      cameraRef.current!.position.copy(newPos);
-      
-      controlsRef.current!.target.copy(planetPosition);
-      controlsRef.current!.update();
-
-      animationFrameRef.current = requestAnimationFrame(animate);
     };
 
     animate();
@@ -455,7 +470,6 @@ const Universe = ({
         if (!planetPosition) return;
 
         const planetSize = calculatePlanetSize(holder.percentage);
-        controlsRef.current.enabled = false;
         handlePlanetZoom(planetPosition, planetSize);
       }
     }
