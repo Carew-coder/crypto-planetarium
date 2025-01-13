@@ -69,21 +69,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey)
     console.log('Supabase client initialized')
 
-    // Clear existing data
-    console.log('Clearing existing token holders data...')
-    const { error: deleteError } = await supabase
-      .from('token_holders')
-      .delete()
-      .neq('id', '00000000-0000-0000-0000-000000000000')
-
-    if (deleteError) {
-      console.error('Error deleting existing data:', deleteError)
-      throw deleteError
-    }
-
-    console.log('Successfully cleared existing data')
-
-    // Transform and insert new data
+    // Transform data
     let holders;
     if (Array.isArray(data)) {
       console.log('Processing array response format')
@@ -107,16 +93,33 @@ serve(async (req) => {
     console.log('Transformed data. Number of holders:', holders.length)
     console.log('First holder example:', holders[0])
 
-    const { error: insertError } = await supabase
+    // Instead of deleting and inserting, use upsert
+    const { error: upsertError } = await supabase
       .from('token_holders')
-      .insert(holders)
+      .upsert(holders, {
+        onConflict: 'wallet_address',
+        ignoreDuplicates: false
+      })
 
-    if (insertError) {
-      console.error('Error inserting data into Supabase:', insertError)
-      throw insertError
+    if (upsertError) {
+      console.error('Error upserting data into Supabase:', upsertError)
+      throw upsertError
     }
 
-    console.log('Successfully stored token holders in database')
+    // Clean up any old records that are no longer in the new data
+    const currentWallets = holders.map(h => h.wallet_address)
+    const { error: cleanupError } = await supabase
+      .from('token_holders')
+      .delete()
+      .not('wallet_address', 'in', `(${currentWallets.map(w => `'${w}'`).join(',')})`)
+      .neq('wallet_address', 'any-wallet-to-preserve') // Add specific wallets to preserve if needed
+
+    if (cleanupError) {
+      console.error('Error cleaning up old data:', cleanupError)
+      // Don't throw here, as the main operation succeeded
+    }
+
+    console.log('Successfully updated token holders in database')
 
     return new Response(JSON.stringify({ 
       success: true, 
