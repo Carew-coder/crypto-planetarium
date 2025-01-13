@@ -61,14 +61,14 @@ const Universe = ({
         while (hasMore) {
           console.log(`Fetching holders page ${currentPage + 1}`);
           try {
-            const { data, error, count } = await supabase
+            const { data, error } = await supabase
               .from('token_holders')
               .select('*', { count: 'exact' })
               .order('percentage', { ascending: false })
               .range(currentPage * pageSize, (currentPage + 1) * pageSize - 1);
 
             if (error) {
-              if (error.code === 'PGRST103' || error.status === 416) {
+              if (error.code === 'PGRST103') {
                 console.log('Reached end of available holders');
                 hasMore = false;
                 break;
@@ -90,8 +90,8 @@ const Universe = ({
 
             // Add a small delay to prevent overwhelming the renderer
             await new Promise(resolve => setTimeout(resolve, 500));
-          } catch (error) {
-            if (error.status === 416 || (error.body && error.body.includes('PGRST103'))) {
+          } catch (error: any) {
+            if (error.code === 'PGRST103' || (error.message && error.message.includes('PGRST103'))) {
               console.log('Reached end of available holders');
               hasMore = false;
             } else {
