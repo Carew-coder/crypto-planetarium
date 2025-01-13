@@ -18,8 +18,7 @@ serve(async (req) => {
       throw new Error('API key not found')
     }
 
-    // The token address wasn't provided in the user message
-    const tokenAddress = '' // Please provide the token address
+    const tokenAddress = '3KzBEUwCm3Jfs61ikr1VDAzhpkkdhzLZUKVuBacRpump'
     const url = `https://api.solanatracker.io/v1/tokens/${tokenAddress}/holders`
 
     console.log('Fetching token holders from Solana Tracker API...')
