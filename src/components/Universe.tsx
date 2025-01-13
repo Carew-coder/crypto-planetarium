@@ -150,6 +150,62 @@ const Universe = ({
     animate();
   };
 
+  const handlePlanetZoom = (planetPosition: THREE.Vector3, planetSize?: number) => {
+    console.log("Starting zoom to planet animation", { planetPosition, planetSize });
+    if (!cameraRef.current || !controlsRef.current || isAnimatingRef.current) {
+      console.log("Cannot start zoom animation - camera not ready or animation in progress");
+      return;
+    }
+    
+    cleanupAnimation();
+    isAnimatingRef.current = true;
+    
+    const baseZOffset = planetPosition.equals(new THREE.Vector3(0, 0, 0)) ? 15 : 5;
+    const zOffset = planetSize ? Math.max(planetSize * 3, baseZOffset) : baseZOffset;
+    
+    const targetPosition = new THREE.Vector3(
+      planetPosition.x,
+      planetPosition.y,
+      planetPosition.z + zOffset
+    );
+
+    const currentPos = cameraRef.current.position.clone();
+    const startTime = Date.now();
+    const duration = 1000;
+    
+    controlsRef.current.enabled = false;
+    
+    const animate = () => {
+      const currentTime = Date.now();
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      if (progress < 1) {
+        const easeProgress = 1 - Math.pow(1 - progress, 3);
+        const newPos = currentPos.clone().lerp(targetPosition, easeProgress);
+        cameraRef.current!.position.copy(newPos);
+        controlsRef.current!.target.lerp(planetPosition, easeProgress);
+        controlsRef.current!.update();
+        animationFrameRef.current = requestAnimationFrame(animate);
+      } else {
+        console.log("Zoom to planet animation complete");
+        if (controlsRef.current) {
+          controlsRef.current.enabled = true;
+          controlsRef.current.enableZoom = true;
+          controlsRef.current.enableRotate = true;
+          controlsRef.current.enablePan = true;
+          controlsRef.current.minDistance = 1;
+          controlsRef.current.maxDistance = 500;
+          controlsRef.current.target.copy(planetPosition);
+          controlsRef.current.update();
+        }
+        cleanupAnimation();
+      }
+    };
+
+    animate();
+  };
+
   const preloadTextures = async () => {
     const texturePromises = PLANET_TEXTURES.map((texturePath) => {
       return new Promise<void>((resolve) => {
@@ -223,62 +279,6 @@ const Universe = ({
       planetsRef.current[holder.wallet_address] = mesh;
       planetPositionsRef.current[holder.wallet_address] = mesh.position.clone();
     });
-  };
-
-  const handlePlanetZoom = (planetPosition: THREE.Vector3, planetSize?: number) => {
-    if (!cameraRef.current || !controlsRef.current || isAnimatingRef.current) {
-      console.log("Cannot start zoom animation - camera not ready or animation in progress");
-      return;
-    }
-    
-    console.log("Starting zoom to planet animation");
-    cleanupAnimation();
-    isAnimatingRef.current = true;
-    
-    const baseZOffset = planetPosition.equals(new THREE.Vector3(0, 0, 0)) ? 15 : 5;
-    const zOffset = planetSize ? Math.max(planetSize * 3, baseZOffset) : baseZOffset;
-    
-    const targetPosition = new THREE.Vector3(
-      planetPosition.x,
-      planetPosition.y,
-      planetPosition.z + zOffset
-    );
-
-    const currentPos = cameraRef.current.position.clone();
-    const startTime = Date.now();
-    const duration = 1000;
-    
-    controlsRef.current.enabled = false;
-    
-    const animate = () => {
-      const currentTime = Date.now();
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-
-      if (progress < 1) {
-        const easeProgress = 1 - Math.pow(1 - progress, 3);
-        const newPos = currentPos.clone().lerp(targetPosition, easeProgress);
-        cameraRef.current!.position.copy(newPos);
-        controlsRef.current!.target.lerp(planetPosition, easeProgress);
-        controlsRef.current!.update();
-        animationFrameRef.current = requestAnimationFrame(animate);
-      } else {
-        console.log("Zoom to planet animation complete");
-        if (controlsRef.current) {
-          controlsRef.current.enabled = true;
-          controlsRef.current.enableZoom = true;
-          controlsRef.current.enableRotate = true;
-          controlsRef.current.enablePan = true;
-          controlsRef.current.minDistance = 1;
-          controlsRef.current.maxDistance = 500;
-          controlsRef.current.target.copy(planetPosition);
-          controlsRef.current.update();
-        }
-        cleanupAnimation();
-      }
-    };
-
-    animate();
   };
 
   useEffect(() => {
@@ -399,7 +399,10 @@ const Universe = ({
       const mouse = new THREE.Vector2();
 
       const handleClick = (event: MouseEvent) => {
-        if (!cameraRef.current || !sceneRef.current || !controlsRef.current) return;
+        if (!cameraRef.current || !sceneRef.current || !controlsRef.current) {
+          console.log("Camera, scene, or controls not ready");
+          return;
+        }
 
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -409,6 +412,7 @@ const Universe = ({
         if (sunRef.current) {
           const sunIntersects = raycaster.intersectObject(sunRef.current);
           if (sunIntersects.length > 0) {
+            console.log("Sun clicked");
             cleanupAnimation();
             setIsZoomedIn(true);
             setSelectedHolder(null);
@@ -426,13 +430,17 @@ const Universe = ({
           );
 
           if (clickedPlanet) {
+            console.log("Planet clicked:", clickedPlanet.wallet_address);
             cleanupAnimation();
             setIsZoomedIn(true);
             setSelectedHolder(clickedPlanet);
             onPlanetClick();
 
             const planetPosition = planetPositionsRef.current[clickedPlanet.wallet_address];
-            if (!planetPosition) return;
+            if (!planetPosition) {
+              console.error("Planet position not found");
+              return;
+            }
 
             const planetSize = calculatePlanetSize(clickedPlanet.percentage);
             controlsRef.current.enabled = false;
@@ -467,10 +475,15 @@ const Universe = ({
         onPlanetClick();
 
         const planetPosition = planetPositionsRef.current[selectedWalletAddress];
-        if (!planetPosition) return;
+        if (!planetPosition) {
+          console.error("Planet position not found for selected wallet");
+          return;
+        }
 
         const planetSize = calculatePlanetSize(holder.percentage);
         handlePlanetZoom(planetPosition, planetSize);
+      } else {
+        console.error("Required references not available for zoom");
       }
     }
   }, [selectedWalletAddress, holders, isZoomedIn, onPlanetClick]);
