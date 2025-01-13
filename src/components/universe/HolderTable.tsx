@@ -6,7 +6,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 
 const HolderTable: React.FC<TableProps> = ({ collapsed, onToggle }) => {
   return (
-    <div className="absolute left-4 top-1/2 -translate-y-1/2 glass-panel p-4 w-80">
+    <div className="absolute left-4 top-1/2 -translate-y-1/2 glass-panel p-4 w-96">
       <Collapsible open={!collapsed} onOpenChange={() => onToggle()}>
         <CollapsibleTrigger className="flex items-center justify-between w-full">
           <h2 className="text-lg font-semibold text-white">Holder Information</h2>
