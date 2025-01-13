@@ -7,7 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 const HolderTable: React.FC<TableProps> = ({ collapsed, onToggle }) => {
   return (
-    <Card className="absolute left-4 bg-space-lighter/80 text-white border-white/10 w-64">
+    <Card className="absolute left-4 top-1/2 -translate-y-1/2 bg-space-lighter/80 text-white border-white/10 w-64">
       <CardHeader className="relative">
         <CardTitle>Holder Information</CardTitle>
         <Button
