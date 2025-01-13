@@ -133,7 +133,6 @@ const Index = () => {
                   <TableHead className="text-white/80">Rank</TableHead>
                   <TableHead className="text-white/80">Wallet</TableHead>
                   <TableHead className="text-white/80">Holding %</TableHead>
-                  <TableHead className="text-white/80">Amount</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -147,9 +146,6 @@ const Index = () => {
                     </TableCell>
                     <TableCell className="text-white/70">
                       {Number(holder.percentage).toFixed(2)}%
-                    </TableCell>
-                    <TableCell className="text-white/70">
-                      {Number(holder.token_amount).toLocaleString()}
                     </TableCell>
                   </TableRow>
                 ))}
