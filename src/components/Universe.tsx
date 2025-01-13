@@ -253,10 +253,6 @@ const Universe = ({
             const animate = () => {
               progress += 0.02;
               if (progress > 1) {
-                toast({
-                  title: clickedPlanet.name,
-                  description: `Current Value: $${clickedPlanet.value.toLocaleString()}`,
-                });
                 return;
               }
 
