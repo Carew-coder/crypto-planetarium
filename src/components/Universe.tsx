@@ -45,6 +45,10 @@ const Universe = ({
     queryKey: ['tokenHolders'],
     queryFn: async () => {
       console.log('Fetching token holders data for planets...');
+      
+      // First trigger the edge function to fetch latest data
+      await supabase.functions.invoke('fetchTokenHolders');
+      
       const { data, error } = await supabase
         .from('token_holders')
         .select('*')
@@ -56,9 +60,10 @@ const Universe = ({
         throw error;
       }
       
+      console.log('Successfully fetched token holders data:', data);
       return data;
     },
-    refetchInterval: 60000, // Updated to 1 minute
+    refetchInterval: 60000, // Refetch every minute
   });
 
   const { data: planetCustomizations, isLoading: customizationsLoading } = useQuery({
@@ -74,9 +79,10 @@ const Universe = ({
         throw error;
       }
 
+      console.log('Successfully fetched planet customizations:', data);
       return data;
     },
-    refetchInterval: 300000,
+    refetchInterval: 300000, // Refetch every 5 minutes
     staleTime: 0, // Always fetch fresh data
   });
 
@@ -335,8 +341,12 @@ const Universe = ({
   };
 
   useEffect(() => {
-    if (!containerRef.current || !holders) return;
+    if (!containerRef.current || !holders) {
+      console.log('Container ref or holders data not ready');
+      return;
+    }
 
+    console.log('Initializing universe with holders:', holders.length);
     const init = async () => {
       const scene = new THREE.Scene();
       sceneRef.current = scene;
