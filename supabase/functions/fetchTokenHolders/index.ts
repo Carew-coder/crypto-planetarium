@@ -36,7 +36,6 @@ serve(async (req) => {
     })
 
     console.log('API Response Status:', response.status)
-    console.log('API Response Headers:', Object.fromEntries(response.headers.entries()))
 
     if (!response.ok) {
       const errorText = await response.text()
@@ -44,7 +43,6 @@ serve(async (req) => {
         status: response.status,
         statusText: response.statusText,
         body: errorText,
-        headers: Object.fromEntries(response.headers.entries()),
       })
       throw new Error(`API request failed: ${response.statusText}. Status: ${response.status}. Body: ${errorText}`)
     }
@@ -93,41 +91,62 @@ serve(async (req) => {
     console.log('Transformed data. Number of holders:', holders.length)
     console.log('First holder example:', holders[0])
 
-    // First, truncate both tables to remove ALL existing data
-    console.log('Removing all existing data from planet_customizations...')
-    const { error: truncateCustomizationsError } = await supabase
-      .from('planet_customizations')
-      .delete()
-      .neq('wallet_address', 'dummy_value') // This will delete all rows
+    try {
+      // First, get all wallet addresses from the new data
+      const newWalletAddresses = new Set(holders.map(h => h.wallet_address))
+      
+      // Get all existing customizations
+      const { data: existingCustomizations, error: fetchError } = await supabase
+        .from('planet_customizations')
+        .select('wallet_address')
+      
+      if (fetchError) {
+        throw fetchError
+      }
 
-    if (truncateCustomizationsError) {
-      console.error('Error truncating planet_customizations:', truncateCustomizationsError)
-      throw truncateCustomizationsError
+      // Find customizations to delete (those whose wallet_address is not in the new data)
+      const customizationsToDelete = existingCustomizations
+        ?.filter(c => !newWalletAddresses.has(c.wallet_address))
+        .map(c => c.wallet_address) || []
+
+      if (customizationsToDelete.length > 0) {
+        console.log('Deleting outdated planet customizations:', customizationsToDelete.length)
+        const { error: deleteCustomizationsError } = await supabase
+          .from('planet_customizations')
+          .delete()
+          .in('wallet_address', customizationsToDelete)
+
+        if (deleteCustomizationsError) {
+          throw deleteCustomizationsError
+        }
+      }
+
+      // Now safe to delete all token holders as relevant customizations are gone
+      console.log('Removing all existing token holders...')
+      const { error: truncateHoldersError } = await supabase
+        .from('token_holders')
+        .delete()
+        .neq('wallet_address', 'dummy_value')
+
+      if (truncateHoldersError) {
+        throw truncateHoldersError
+      }
+
+      // Insert new token holders data
+      console.log('Inserting new token holders...')
+      const { error: insertError } = await supabase
+        .from('token_holders')
+        .insert(holders)
+
+      if (insertError) {
+        throw insertError
+      }
+
+      console.log('Successfully updated token holders database')
+    } catch (dbError) {
+      console.error('Database operation failed:', dbError)
+      throw dbError
     }
-
-    console.log('Removing all existing data from token_holders...')
-    const { error: truncateHoldersError } = await supabase
-      .from('token_holders')
-      .delete()
-      .neq('wallet_address', 'dummy_value') // This will delete all rows
-
-    if (truncateHoldersError) {
-      console.error('Error truncating token_holders:', truncateHoldersError)
-      throw truncateHoldersError
-    }
-
-    // Insert new data
-    console.log('Inserting new token holders...')
-    const { error: insertError } = await supabase
-      .from('token_holders')
-      .insert(holders)
-
-    if (insertError) {
-      console.error('Error inserting new token holders:', insertError)
-      throw insertError
-    }
-
-    console.log('Successfully updated token holders database')
 
     return new Response(JSON.stringify({ 
       success: true, 
