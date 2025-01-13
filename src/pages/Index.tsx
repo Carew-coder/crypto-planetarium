@@ -56,7 +56,7 @@ const Index = () => {
       />
       
       {/* Top Navigation Bar */}
-      <nav className="fixed top-0 left-0 right-0 p-4 z-50">
+      <div className="fixed top-0 left-0 right-0 p-4 z-50">
         <div className="container mx-auto flex justify-between items-start max-w-7xl">
           {/* Visit Planet Table (Left) */}
           <div className="glass-panel p-4 w-80">
@@ -98,7 +98,7 @@ const Index = () => {
           </div>
 
           {/* Solar Title (Center) */}
-          <div className="absolute left-1/2 transform -translate-x-1/2 top-0">
+          <div className="absolute left-1/2 transform -translate-x-1/2">
             <div className="glass-panel px-6 py-2">
               <h1 className="text-xl font-semibold text-white">Solar</h1>
             </div>
@@ -118,7 +118,36 @@ const Index = () => {
             </Button>
           </div>
         </div>
-      </nav>
+      </div>
+
+      {/* Top Holders Tab (Right Side) */}
+      <div className="fixed right-4 top-20 glass-panel p-4 w-80 z-40">
+        <h2 className="text-lg font-semibold text-white mb-4">Top Holders</h2>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="text-white/80">Planet</TableHead>
+              <TableHead className="text-white/80">Holding %</TableHead>
+              <TableHead className="text-white/80">Amount</TableHead>
+              <TableHead className="text-white/80">Value</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow>
+              <TableCell className="text-white/70">0x1234...5678</TableCell>
+              <TableCell className="text-white/70">10%</TableCell>
+              <TableCell className="text-white/70">1,000,000</TableCell>
+              <TableCell className="text-white/70">$500</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="text-white/70">0x8765...4321</TableCell>
+              <TableCell className="text-white/70">8%</TableCell>
+              <TableCell className="text-white/70">800,000</TableCell>
+              <TableCell className="text-white/70">$400</TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 };
