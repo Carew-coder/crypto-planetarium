@@ -2,9 +2,9 @@ import Universe from "@/components/Universe";
 import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Wallet, Loader2, Search } from "lucide-react";
+import { Wallet, Loader2, Search, Globe } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +13,7 @@ const Index = () => {
   const [searchAddress, setSearchAddress] = useState("");
   const [isPlanetSelected, setIsPlanetSelected] = useState(false);
   const [isWalletConnected, setIsWalletConnected] = useState(false);
+  const [connectedWalletAddress, setConnectedWalletAddress] = useState<string | null>(null);
   const [selectedWallet, setSelectedWallet] = useState<string | null>(null);
 
   const { data: holders, isLoading, error } = useQuery({
@@ -20,10 +21,8 @@ const Index = () => {
     queryFn: async () => {
       console.log('Fetching token holders data...');
       
-      // First trigger the edge function to fetch latest data
       await supabase.functions.invoke('fetchTokenHolders')
       
-      // Then fetch the data from our database
       const { data, error } = await supabase
         .from('token_holders')
         .select('*')
@@ -38,8 +37,12 @@ const Index = () => {
       console.log('Successfully fetched token holders data:', data);
       return data;
     },
-    refetchInterval: 300000, // Refetch every 5 minutes
+    refetchInterval: 300000,
   });
+
+  const userHasPlanet = holders?.some(
+    holder => holder.wallet_address.toLowerCase() === connectedWalletAddress?.toLowerCase()
+  );
 
   const handlePlanetClick = () => {
     setIsPlanetSelected(true);
@@ -59,15 +62,25 @@ const Index = () => {
       toast.info("Connecting to Phantom wallet...");
       
       const response = await solana.connect();
-      console.log("Connected to wallet:", response.publicKey.toString());
+      const walletAddress = response.publicKey.toString();
+      console.log("Connected to wallet:", walletAddress);
       
       setIsWalletConnected(true);
+      setConnectedWalletAddress(walletAddress);
       toast.success("Wallet connected successfully!");
       
     } catch (error) {
       console.error("Failed to connect wallet:", error);
       toast.error("Failed to connect wallet");
     }
+  };
+
+  const handleMyPlanetClick = () => {
+    if (!connectedWalletAddress) return;
+    console.log('Navigating to user planet:', connectedWalletAddress);
+    setSelectedWallet(connectedWalletAddress);
+    setIsPlanetSelected(true);
+    toast.success("Navigating to your planet!");
   };
 
   const handleWalletClick = (walletAddress: string) => {
@@ -141,8 +154,19 @@ const Index = () => {
             />
           </div>
 
-          {/* Connect Wallet Button (Right) */}
-          <div className="ml-auto glass-panel px-4 py-2">
+          {/* Connect Wallet and My Planet Buttons (Right) */}
+          <div className="ml-auto glass-panel px-4 py-2 flex gap-2">
+            {isWalletConnected && userHasPlanet && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="glass-panel border-none hover:bg-white/10"
+                onClick={handleMyPlanetClick}
+              >
+                <Globe className="mr-2 h-4 w-4" />
+                My Planet
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
