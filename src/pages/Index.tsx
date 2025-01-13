@@ -123,6 +123,7 @@ const Index = () => {
         onBackToOverview={handleBackToOverview}
         backButtonText="Back to the Solar System"
         selectedWalletAddress={selectedWallet}
+        connectedWalletAddress={connectedWalletAddress}
       />
       
       {/* Top Navigation Bar */}

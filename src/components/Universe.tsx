@@ -15,12 +15,14 @@ const Universe = ({
   onPlanetClick,
   onBackToOverview,
   backButtonText = "Back to Overview",
-  selectedWalletAddress
+  selectedWalletAddress,
+  connectedWalletAddress
 }: { 
   onPlanetClick: () => void;
   onBackToOverview: () => void;
   backButtonText?: string;
   selectedWalletAddress?: string | null;
+  connectedWalletAddress?: string | null;
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -436,7 +438,10 @@ const Universe = ({
       )}
 
       {isZoomedIn && selectedHolder && (
-        <PlanetInformation holder={selectedHolder} />
+        <PlanetInformation 
+          holder={selectedHolder} 
+          connectedWalletAddress={connectedWalletAddress}
+        />
       )}
     </div>
   );
