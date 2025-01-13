@@ -195,7 +195,6 @@ const Universe = ({
           controlsRef.current.rotateSpeed = 0.5;
           controlsRef.current.zoomSpeed = 0.5;
           
-          const distance = planetSize ? Math.max(planetSize * 3, baseZOffset) : baseZOffset;
           controlsRef.current.minDistance = 1; // Allow zooming out
           controlsRef.current.maxDistance = 200;
           
@@ -316,13 +315,19 @@ const Universe = ({
           }
         }
 
-        // Check camera distance to control planet info visibility
+        // Calculate the midpoint between min and max zoom distances
         if (cameraRef.current && controlsRef.current && selectedHolder) {
           const distance = cameraRef.current.position.distanceTo(controlsRef.current.target);
-          const threshold = 50; // Adjust this value to change when info disappears
-          setShowPlanetInfo(distance < threshold);
+          const maxDistance = 200; // Maximum zoom out distance
+          const minDistance = 1; // Minimum zoom in distance
+          const midpoint = (maxDistance - minDistance) / 2;
           
-          if (distance > 150) { // If zoomed out very far, return to overview
+          console.log('Current camera distance:', distance);
+          console.log('Midpoint threshold:', midpoint);
+          
+          setShowPlanetInfo(distance < midpoint);
+          
+          if (distance > 150) {
             handleBackToOverview();
           }
         }
