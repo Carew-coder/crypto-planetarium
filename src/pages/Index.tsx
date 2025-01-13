@@ -85,14 +85,13 @@ const Index = () => {
     if (!connectedWalletAddress) return;
     console.log('Navigating to user planet:', connectedWalletAddress);
     setSelectedWallet(connectedWalletAddress);
-    setIsPlanetSelected(true);
     toast.success("Navigating to your planet!");
   };
 
   const handleWalletClick = (walletAddress: string) => {
     console.log('Wallet clicked:', walletAddress);
     setSelectedWallet(walletAddress);
-    setIsPlanetSelected(true);
+    toast.success("Navigating to selected planet!");
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -106,7 +105,6 @@ const Index = () => {
     if (foundHolder) {
       console.log('Found holder:', foundHolder);
       setSelectedWallet(foundHolder.wallet_address);
-      setIsPlanetSelected(true);
       toast.success("Planet found!");
     } else {
       toast.error("Wallet address not found");
@@ -152,11 +150,10 @@ const Index = () => {
           {/* Solar Logo (Center) - Clickable with conditional behavior */}
           <div className="absolute left-1/2 -translate-x-1/2 glass-panel px-4 py-2">
             <button 
-              onClick={isPlanetSelected ? handleBackToOverview : undefined}
-              className={`bg-transparent border-0 p-0 ${isPlanetSelected ? 'cursor-pointer hover:opacity-80 transition-opacity' : 'cursor-default'}`}
-              disabled={!isPlanetSelected}
-              title={isPlanetSelected ? "Back to Solar System" : undefined}
-              aria-label={isPlanetSelected ? "Back to Solar System" : "Solar Logo"}
+              onClick={handleBackToOverview}
+              className="bg-transparent border-0 p-0 cursor-pointer hover:opacity-80 transition-opacity"
+              title="Back to Solar System"
+              aria-label="Back to Solar System"
             >
               <img 
                 src="/lovable-uploads/32b1c67e-6454-4649-b37d-dc0bae8bb0b0.png" 
