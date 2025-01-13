@@ -48,20 +48,16 @@ const PlanetInformation = ({ holder, connectedWalletAddress }: PlanetInformation
           <TableHeader>
             <TableRow>
               <TableHead className="text-white/80">Property</TableHead>
-              <TableHead className="text-white/80">Value</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             <TableRow>
-              <TableCell className="text-white/70">Rank</TableCell>
               <TableCell className="text-white/70">#{rank}</TableCell>
             </TableRow>
             <TableRow>
-              <TableCell className="text-white/70">Wallet</TableCell>
               <TableCell className="text-white/70">{`${holder.wallet_address.slice(0, 6)}...${holder.wallet_address.slice(-4)}`}</TableCell>
             </TableRow>
             <TableRow>
-              <TableCell className="text-white/70">Percentage</TableCell>
               <TableCell className="text-white/70">{`${holder.percentage.toFixed(2)}%`}</TableCell>
             </TableRow>
           </TableBody>
