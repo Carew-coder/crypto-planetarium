@@ -5,8 +5,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
-  TableHeader,
   TableRow,
 } from "@/components/ui/table";
 import CustomisePlanet from './CustomisePlanet';
@@ -67,12 +65,6 @@ const PlanetInformation = ({ holder, connectedWalletAddress }: PlanetInformation
       <div className="glass-panel p-4 w-[32rem]">
         <h2 className="text-lg font-semibold text-white mb-4">Planet Information</h2>
         <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="text-white/80">Planet Name</TableHead>
-              <TableHead className="text-white/80">Value</TableHead>
-            </TableRow>
-          </TableHeader>
           <TableBody>
             <TableRow>
               <TableCell className="text-white/70">Planet Name</TableCell>
