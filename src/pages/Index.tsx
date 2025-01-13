@@ -57,9 +57,9 @@ const Index = () => {
       
       {/* Top Navigation Bar */}
       <div className="fixed top-0 left-0 right-0 z-50">
-        <div className="flex justify-between items-start max-w-7xl mx-auto">
+        <div className="flex justify-between items-center w-full px-4 pt-4">
           {/* Search Wallet Address - Always visible in top left */}
-          <div className="glass-panel m-4">
+          <div className="glass-panel">
             <Input
               type="text"
               placeholder="Search wallet address..."
@@ -70,14 +70,12 @@ const Index = () => {
           </div>
 
           {/* Solar Title (Center) */}
-          <div className="absolute left-1/2 transform -translate-x-1/2 mt-4">
-            <div className="glass-panel px-6 py-2">
-              <h1 className="text-xl font-semibold text-white">Solar</h1>
-            </div>
+          <div className="glass-panel px-6 py-2">
+            <h1 className="text-xl font-semibold text-white">Solar</h1>
           </div>
 
           {/* Connect Wallet Button (Right) */}
-          <div className="glass-panel px-4 py-2 m-4">
+          <div className="glass-panel px-4 py-2">
             <Button
               variant="outline"
               size="sm"
