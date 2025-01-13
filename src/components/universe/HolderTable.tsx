@@ -1,29 +1,67 @@
 import React from 'react';
 import { TableProps } from '@/types/universe';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
 
 const HolderTable: React.FC<TableProps> = () => {
+  const { data: holders, isLoading, error } = useQuery({
+    queryKey: ['tokenHolders'],
+    queryFn: async () => {
+      // First trigger the edge function to fetch latest data
+      await supabase.functions.invoke('fetchTokenHolders')
+      
+      // Then fetch the data from our database
+      const { data, error } = await supabase
+        .from('token_holders')
+        .select('*')
+        .order('percentage', { ascending: false })
+        .limit(10)
+
+      if (error) throw error
+      return data
+    },
+    refetchInterval: 300000, // Refetch every 5 minutes
+  });
+
+  if (error) {
+    console.error('Error fetching holders:', error);
+  }
+
   return (
     <div className="absolute left-4 top-1/2 -translate-y-1/2 glass-panel p-4 w-[32rem]">
       <h2 className="text-lg font-semibold text-white mb-4">Holder Information</h2>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="text-white/80">Planet</TableHead>
-            <TableHead className="text-white/80">Holding %</TableHead>
-            <TableHead className="text-white/80">Amount</TableHead>
-            <TableHead className="text-white/80">Value</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <TableRow>
-            <TableCell className="text-white/70">0x1234...5678</TableCell>
-            <TableCell className="text-white/70">10%</TableCell>
-            <TableCell className="text-white/70">1,000,000</TableCell>
-            <TableCell className="text-white/70">$500</TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
+      {isLoading ? (
+        <div className="flex justify-center items-center p-4">
+          <Loader2 className="h-6 w-6 animate-spin text-white" />
+        </div>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="text-white/80">Wallet</TableHead>
+              <TableHead className="text-white/80">Holding %</TableHead>
+              <TableHead className="text-white/80">Amount</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {holders?.map((holder) => (
+              <TableRow key={holder.wallet_address}>
+                <TableCell className="text-white/70">
+                  {holder.wallet_address.slice(0, 6)}...{holder.wallet_address.slice(-4)}
+                </TableCell>
+                <TableCell className="text-white/70">
+                  {Number(holder.percentage).toFixed(2)}%
+                </TableCell>
+                <TableCell className="text-white/70">
+                  {Number(holder.token_amount).toLocaleString()}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
     </div>
   );
 };
