@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { useToast } from "@/components/ui/use-toast";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
@@ -167,6 +168,8 @@ const Universe = () => {
   const [initialCameraPosition] = useState(new THREE.Vector3(0, 0, 100));
   const [isLoading, setIsLoading] = useState(true);
   const [showTables, setShowTables] = useState(false);
+  const [holderTableCollapsed, setHolderTableCollapsed] = useState(false);
+  const [rewardsTableCollapsed, setRewardsTableCollapsed] = useState(false);
 
   // Preload textures
   const preloadTextures = async () => {
@@ -482,65 +485,93 @@ const Universe = () => {
       )}
 
       {showTables && (
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-4 w-64">
-          {/* Holder Information Table */}
-          <Card className="bg-space-lighter/80 text-white border-white/10">
-            <CardHeader>
+        <div className="absolute top-1/2 -translate-y-1/2 flex gap-4">
+          {/* Holder Information Table - Left side */}
+          <Card className="absolute left-4 bg-space-lighter/80 text-white border-white/10 w-64">
+            <CardHeader className="relative">
               <CardTitle>Holder Information</CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute top-4 right-4 p-0 h-4 hover:bg-transparent"
+                onClick={() => setHolderTableCollapsed(!holderTableCollapsed)}
+              >
+                {holderTableCollapsed ? (
+                  <ChevronUp className="h-4 w-4 text-white/70" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-white/70" />
+                )}
+              </Button>
             </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-white/80">Address</TableHead>
-                    <TableHead className="text-white/80">Balance</TableHead>
-                    <TableHead className="text-white/80">Share</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell className="text-white/70">0x1234...5678</TableCell>
-                    <TableCell className="text-white/70">1,000,000</TableCell>
-                    <TableCell className="text-white/70">10%</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="text-white/70">0x8765...4321</TableCell>
-                    <TableCell className="text-white/70">500,000</TableCell>
-                    <TableCell className="text-white/70">5%</TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </CardContent>
+            {!holderTableCollapsed && (
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-white/80">Address</TableHead>
+                      <TableHead className="text-white/80">Balance</TableHead>
+                      <TableHead className="text-white/80">Share</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell className="text-white/70">0x1234...5678</TableCell>
+                      <TableCell className="text-white/70">1,000,000</TableCell>
+                      <TableCell className="text-white/70">10%</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="text-white/70">0x8765...4321</TableCell>
+                      <TableCell className="text-white/70">500,000</TableCell>
+                      <TableCell className="text-white/70">5%</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </CardContent>
+            )}
           </Card>
 
-          {/* Rewards Table */}
-          <Card className="bg-space-lighter/80 text-white border-white/10">
-            <CardHeader>
+          {/* Rewards Table - Right side */}
+          <Card className="absolute right-4 bg-space-lighter/80 text-white border-white/10 w-64">
+            <CardHeader className="relative">
               <CardTitle>Rewards</CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute top-4 right-4 p-0 h-4 hover:bg-transparent"
+                onClick={() => setRewardsTableCollapsed(!rewardsTableCollapsed)}
+              >
+                {rewardsTableCollapsed ? (
+                  <ChevronUp className="h-4 w-4 text-white/70" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-white/70" />
+                )}
+              </Button>
             </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-white/80">Type</TableHead>
-                    <TableHead className="text-white/80">Amount</TableHead>
-                    <TableHead className="text-white/80">Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell className="text-white/70">Staking</TableCell>
-                    <TableCell className="text-white/70">100</TableCell>
-                    <TableCell className="text-white/70">Claimable</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="text-white/70">Trading</TableCell>
-                    <TableCell className="text-white/70">50</TableCell>
-                    <TableCell className="text-white/70">Pending</TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </CardContent>
+            {!rewardsTableCollapsed && (
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-white/80">Type</TableHead>
+                      <TableHead className="text-white/80">Amount</TableHead>
+                      <TableHead className="text-white/80">Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell className="text-white/70">Staking</TableCell>
+                      <TableCell className="text-white/70">100</TableCell>
+                      <TableCell className="text-white/70">Claimable</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="text-white/70">Trading</TableCell>
+                      <TableCell className="text-white/70">50</TableCell>
+                      <TableCell className="text-white/70">Pending</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </CardContent>
+            )}
           </Card>
         </div>
       )}
@@ -555,4 +586,3 @@ const Universe = () => {
 };
 
 export default Universe;
-
