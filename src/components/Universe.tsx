@@ -286,13 +286,13 @@ const Universe = ({
     if (!cameraRef.current || !controlsRef.current) return;
     
     console.log("Handling back to overview");
-    setIsZoomedIn(false);
-    setShowTables(false);
     
     let progress = 0;
     const animate = () => {
       progress += 0.02;
       if (progress > 1) {
+        setIsZoomedIn(false);
+        setShowTables(false);
         onBackToOverview();
         return;
       }
