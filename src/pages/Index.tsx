@@ -12,9 +12,10 @@ const Index = () => {
   const [isPlanetSelected, setIsPlanetSelected] = useState(false);
 
   const handlePlanetClick = () => {
+    // Move the oldest planets tab immediately when planet is clicked
     setIsPlanetSelected(true);
     setIsOpen(false);
-    setIsOldestOpen(false);
+    setIsOldestOpen(true);
   };
 
   return (
@@ -33,7 +34,7 @@ const Index = () => {
       </div>
       
       {/* Visit Planets Table */}
-      <div className={`absolute right-4 top-4 glass-panel p-4 w-80`}>
+      <div className={`absolute right-4 top-4 glass-panel p-4 w-80 transition-all duration-300`}>
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
           <CollapsibleTrigger className="flex items-center justify-between w-full">
             <h2 className="text-lg font-semibold text-white">Visit Planet</h2>
@@ -72,7 +73,17 @@ const Index = () => {
       </div>
 
       {/* Oldest Planets Table */}
-      <div className={`absolute ${isPlanetSelected ? 'left-[calc(50%-24rem)] top-4' : 'right-4 top-[calc(4rem+340px)]'} transition-all duration-300 glass-panel p-4 w-80`}>
+      <div 
+        className={`absolute transition-all duration-300 glass-panel p-4 w-80 ${
+          isPlanetSelected 
+            ? 'left-[calc(50%-24rem)] top-4' 
+            : 'right-4 top-[calc(4rem+340px)]'
+        }`}
+        style={{ 
+          transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
+          transitionDuration: '300ms'
+        }}
+      >
         <Collapsible open={isOldestOpen} onOpenChange={setIsOldestOpen}>
           <CollapsibleTrigger className="flex items-center justify-between w-full">
             <h2 className="text-lg font-semibold text-white">Oldest Planets</h2>
