@@ -154,7 +154,7 @@ const Index = () => {
       </div>
 
       {/* Top Holders Panel (Right Side) */}
-      <div className="fixed right-8 top-1/2 -translate-y-1/2 glass-panel p-4 w-[24rem] z-30 h-[70vh]">
+      <div className="fixed right-8 top-1/2 -translate-y-1/2 glass-panel p-4 w-[32rem] z-30 h-[70vh]">
         <h2 className="text-lg font-semibold text-white mb-4">Top Holders</h2>
         {isLoading ? (
           <div className="flex justify-center items-center p-4">
@@ -180,8 +180,8 @@ const Index = () => {
                     <TableCell className="text-white/70">
                       {index + 1}
                     </TableCell>
-                    <TableCell className="text-white/70">
-                      {holder.wallet_address.slice(0, 6)}...{holder.wallet_address.slice(-4)}
+                    <TableCell className="text-white/70 font-mono text-xs">
+                      {holder.wallet_address}
                     </TableCell>
                     <TableCell className="text-white/70">
                       {Number(holder.percentage).toFixed(2)}%
