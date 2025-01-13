@@ -99,22 +99,16 @@ const Index = () => {
               <TableRow>
                 <TableHead className="text-white/80">Planet</TableHead>
                 <TableHead className="text-white/80">Holding %</TableHead>
-                <TableHead className="text-white/80">Amount</TableHead>
-                <TableHead className="text-white/80">Value</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               <TableRow>
                 <TableCell className="text-white/70">0x1234...5678</TableCell>
                 <TableCell className="text-white/70">10%</TableCell>
-                <TableCell className="text-white/70">1,000,000</TableCell>
-                <TableCell className="text-white/70">$500</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell className="text-white/70">0x8765...4321</TableCell>
                 <TableCell className="text-white/70">8%</TableCell>
-                <TableCell className="text-white/70">800,000</TableCell>
-                <TableCell className="text-white/70">$400</TableCell>
               </TableRow>
             </TableBody>
           </Table>
