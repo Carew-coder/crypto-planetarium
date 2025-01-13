@@ -168,7 +168,6 @@ const Universe = ({
     
     cleanupAnimation();
     
-    // Calculate zoom distance based on planet size or use default
     const baseZOffset = planetPosition.equals(new THREE.Vector3(0, 0, 0)) ? 15 : 5;
     const zOffset = planetSize ? Math.max(planetSize * 3, baseZOffset) : baseZOffset;
     
@@ -195,10 +194,9 @@ const Universe = ({
           controlsRef.current.rotateSpeed = 0.5;
           controlsRef.current.zoomSpeed = 0.5;
           
-          // Set min and max distance based on planet size
-          const distance = planetSize ? Math.max(planetSize * 3, baseZOffset) : baseZOffset;
-          controlsRef.current.minDistance = distance;
-          controlsRef.current.maxDistance = distance;
+          // Remove the min/max distance constraints when zoomed in
+          controlsRef.current.minDistance = 1;
+          controlsRef.current.maxDistance = 200;
           
           controlsRef.current.target.copy(planetPosition);
           controlsRef.current.update();
