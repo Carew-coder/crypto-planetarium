@@ -74,22 +74,22 @@ serve(async (req) => {
     if (Array.isArray(data)) {
       console.log('Processing array response format')
       holders = data
-        .filter(holder => holder.amount > 0) // Filter out zero balance holders
         .map((holder: any) => ({
           wallet_address: holder.owner,
-          token_amount: holder.amount,
-          percentage: (holder.amount / holder.total_supply) * 100,
+          token_amount: parseFloat(holder.amount) || 0,
+          percentage: parseFloat((holder.amount / holder.total_supply) * 100) || 0,
         }))
+        .filter(holder => holder.token_amount > 0) // Filter out zero balance holders
         .sort((a, b) => b.token_amount - a.token_amount) // Sort by token amount in descending order
     } else if (data.accounts && Array.isArray(data.accounts)) {
       console.log('Processing object with accounts array format')
       holders = data.accounts
-        .filter(holder => holder.amount > 0) // Filter out zero balance holders
         .map((holder: any) => ({
           wallet_address: holder.wallet || holder.owner,
-          token_amount: holder.amount,
-          percentage: holder.percentage || (holder.amount / holder.total_supply) * 100,
+          token_amount: parseFloat(holder.amount) || 0,
+          percentage: parseFloat(holder.percentage) || parseFloat((holder.amount / holder.total_supply) * 100) || 0,
         }))
+        .filter(holder => holder.token_amount > 0) // Filter out zero balance holders
         .sort((a, b) => b.token_amount - a.token_amount) // Sort by token amount in descending order
     } else {
       console.error('Unexpected data format:', data)
@@ -98,6 +98,9 @@ serve(async (req) => {
 
     console.log('Transformed data. Number of holders:', holders.length)
     console.log('First holder example:', holders[0])
+    console.log('Checking for specific address:', '4hKTgJdP7VN93R2gcRuFpSZAwTPSX3Lk6YbozYoqH4Nt')
+    const specificHolder = holders.find(h => h.wallet_address === '4hKTgJdP7VN93R2gcRuFpSZAwTPSX3Lk6YbozYoqH4Nt')
+    console.log('Specific holder data:', specificHolder)
 
     // First, truncate both tables to remove ALL existing data
     console.log('Removing all existing data from planet_customizations...')
