@@ -60,6 +60,24 @@ const Universe = ({
     refetchInterval: 300000,
   });
 
+  const { data: planetCustomizations } = useQuery({
+    queryKey: ['planetCustomizations'],
+    queryFn: async () => {
+      console.log('Fetching planet customizations...');
+      const { data, error } = await supabase
+        .from('planet_customizations')
+        .select('*');
+
+      if (error) {
+        console.error('Error fetching planet customizations:', error);
+        throw error;
+      }
+
+      return data;
+    },
+    refetchInterval: 300000,
+  });
+
   const cleanupAnimation = () => {
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
@@ -142,9 +160,19 @@ const Universe = ({
     const existingPositions: [number, number, number][] = [];
 
     holders.forEach((holder, index) => {
-      const textureIndex = index % PLANET_TEXTURES.length;
-      const texturePath = PLANET_TEXTURES[textureIndex];
-      const texture = loadedTexturesRef.current[texturePath];
+      const customization = planetCustomizations?.find(
+        pc => pc.wallet_address === holder.wallet_address
+      );
+
+      let texture;
+      if (customization?.skin_url) {
+        console.log(`Loading custom skin for wallet ${holder.wallet_address}:`, customization.skin_url);
+        texture = textureLoaderRef.current.load(customization.skin_url);
+      } else {
+        const textureIndex = index % PLANET_TEXTURES.length;
+        const texturePath = PLANET_TEXTURES[textureIndex];
+        texture = loadedTexturesRef.current[texturePath];
+      }
 
       const size = calculatePlanetSize(holder.percentage);
       const geometry = new THREE.SphereGeometry(size, 32, 32);
@@ -389,7 +417,7 @@ const Universe = ({
     };
 
     init();
-  }, [holders]);
+  }, [holders, planetCustomizations]);
 
   useEffect(() => {
     if (selectedWalletAddress && !isZoomedIn && planetsRef.current[selectedWalletAddress]) {
