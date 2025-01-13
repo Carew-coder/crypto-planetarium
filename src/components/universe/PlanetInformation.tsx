@@ -46,6 +46,22 @@ const PlanetInformation = ({ holder, connectedWalletAddress }: PlanetInformation
     }
   });
 
+  // Query to get planet customization data
+  const { data: planetCustomization } = useQuery({
+    queryKey: ['planetCustomization', holder.wallet_address],
+    queryFn: async () => {
+      console.log('Fetching planet customization for wallet:', holder.wallet_address);
+      
+      const { data } = await supabase
+        .from('planet_customizations')
+        .select('nickname')
+        .eq('wallet_address', holder.wallet_address)
+        .single();
+      
+      return data;
+    }
+  });
+
   return (
     <div className="absolute left-4 top-1/2 -translate-y-1/2 flex flex-col gap-4">
       <div className="glass-panel p-4 w-[32rem]">
@@ -68,7 +84,9 @@ const PlanetInformation = ({ holder, connectedWalletAddress }: PlanetInformation
             </TableRow>
             <TableRow>
               <TableCell className="text-white/70">Percentage</TableCell>
-              <TableCell className="text-white/70">{`${holder.percentage.toFixed(2)}%`}</TableCell>
+              <TableCell className="text-white/70">
+                {planetCustomization?.nickname || 'Connect Wallet and Customise your Planet Now!'}
+              </TableCell>
             </TableRow>
           </TableBody>
         </Table>
