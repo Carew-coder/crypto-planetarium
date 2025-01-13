@@ -12,8 +12,8 @@ const ShootingStars = () => {
 
   useEffect(() => {
     const createShootingStar = () => {
-      // Random angle between -60 and -30 degrees (downward diagonal)
-      const angle = Math.random() * 30 - 60;
+      // Random angle between 0 and 360 degrees for complete directional freedom
+      const angle = Math.random() * 360;
       // Random distance between 500 and 1000 pixels
       const distance = Math.random() * 500 + 500;
       
@@ -23,8 +23,8 @@ const ShootingStars = () => {
 
       const newStar = {
         id: Date.now(),
-        top: Math.random() * 50, // Only appear in top half of screen
-        left: Math.random() * 100,
+        top: Math.random() * 100, // Can appear anywhere vertically
+        left: Math.random() * 100, // Can appear anywhere horizontally
         delay: Math.random() * 0.5,
         angle,
         distance,
