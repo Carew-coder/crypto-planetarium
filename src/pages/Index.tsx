@@ -102,7 +102,7 @@ const Index = () => {
       console.log('Found holder:', foundHolder);
       setSelectedWallet(foundHolder.wallet_address);
       setIsPlanetSelected(true);
-      toast.success("Planet found!");
+      toast.success("Planet found! Navigating to selected planet!");
     } else {
       toast.error("Wallet address not found");
     }
