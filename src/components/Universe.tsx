@@ -222,8 +222,6 @@ const Universe = ({
     const startTime = Date.now();
     const duration = 1000;
 
-    const currentControlsEnabled = controlsRef.current.enabled;
-    
     if (controlsRef.current) {
       controlsRef.current.enabled = false;
     }
@@ -591,7 +589,7 @@ const Universe = ({
             setSelectedHolder(null);
             onPlanetClick();
             
-            handlePlanetZoom(new THREE.Vector3(0, 0, 0));
+            handlePlanetZoom(new THREE.Vector3(0, 0, 0), 5);
             return;
           }
         }
@@ -616,7 +614,6 @@ const Universe = ({
             }
 
             const planetSize = calculatePlanetSize(clickedPlanet.percentage);
-            controlsRef.current.enabled = false;
             handlePlanetZoom(planetPosition, planetSize);
           }
         }
