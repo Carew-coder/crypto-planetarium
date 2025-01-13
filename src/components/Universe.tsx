@@ -58,7 +58,7 @@ const Universe = ({
       
       return data;
     },
-    refetchInterval: 300000,
+    refetchInterval: 60000, // Updated to 1 minute
   });
 
   const { data: planetCustomizations, isLoading: customizationsLoading } = useQuery({

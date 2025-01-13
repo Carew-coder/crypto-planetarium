@@ -37,7 +37,7 @@ const Index = () => {
       console.log('Successfully fetched token holders data:', data);
       return data;
     },
-    refetchInterval: 300000,
+    refetchInterval: 60000, // Updated to 1 minute
   });
 
   const userHasPlanet = holders?.some(
