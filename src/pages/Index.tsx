@@ -45,8 +45,11 @@ const Index = () => {
         }}
         backButtonText="Back to the Solar System"
       />
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 glass-panel px-6 py-3 flex items-center gap-4">
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 glass-panel px-6 py-3">
         <h1 className="text-xl font-semibold text-white">Solar</h1>
+      </div>
+
+      <div className="absolute top-4 left-[calc(50%+120px)] glass-panel px-4 py-2">
         <Button
           variant="outline"
           size="sm"
