@@ -67,21 +67,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey)
     console.log('Supabase client initialized')
 
-    // Clear existing data
-    console.log('Clearing existing token holders data...')
-    const { error: deleteError } = await supabase
-      .from('token_holders')
-      .delete()
-      .neq('id', '00000000-0000-0000-0000-000000000000')
-
-    if (deleteError) {
-      console.error('Error deleting existing data:', deleteError)
-      throw deleteError
-    }
-
-    console.log('Successfully cleared existing data')
-
-    // Transform and insert new data
+    // Transform the data first
     let holders;
     if (Array.isArray(data)) {
       console.log('Processing array response format')
@@ -105,16 +91,61 @@ serve(async (req) => {
     console.log('Transformed data. Number of holders:', holders.length)
     console.log('First holder example:', holders[0])
 
-    const { error: insertError } = await supabase
+    // Get current wallet addresses to determine which ones to remove
+    const { data: currentHolders, error: fetchError } = await supabase
       .from('token_holders')
-      .insert(holders)
+      .select('wallet_address');
 
-    if (insertError) {
-      console.error('Error inserting data into Supabase:', insertError)
-      throw insertError
+    if (fetchError) {
+      console.error('Error fetching current holders:', fetchError);
+      throw fetchError;
     }
 
-    console.log('Successfully stored token holders in database')
+    const newWalletAddresses = new Set(holders.map(h => h.wallet_address));
+    const walletsToRemove = currentHolders
+      .filter(h => !newWalletAddresses.has(h.wallet_address))
+      .map(h => h.wallet_address);
+
+    if (walletsToRemove.length > 0) {
+      console.log('Removing customizations for wallets no longer holding tokens:', walletsToRemove);
+      
+      // First delete related planet customizations
+      const { error: deleteCustomizationsError } = await supabase
+        .from('planet_customizations')
+        .delete()
+        .in('wallet_address', walletsToRemove);
+
+      if (deleteCustomizationsError) {
+        console.error('Error deleting planet customizations:', deleteCustomizationsError);
+        throw deleteCustomizationsError;
+      }
+
+      // Then delete the token holders
+      const { error: deleteHoldersError } = await supabase
+        .from('token_holders')
+        .delete()
+        .in('wallet_address', walletsToRemove);
+
+      if (deleteHoldersError) {
+        console.error('Error deleting token holders:', deleteHoldersError);
+        throw deleteHoldersError;
+      }
+    }
+
+    // Upsert new data
+    const { error: upsertError } = await supabase
+      .from('token_holders')
+      .upsert(holders, {
+        onConflict: 'wallet_address',
+        ignoreDuplicates: false
+      });
+
+    if (upsertError) {
+      console.error('Error upserting data:', upsertError);
+      throw upsertError;
+    }
+
+    console.log('Successfully updated token holders in database');
 
     return new Response(JSON.stringify({ 
       success: true, 
