@@ -56,7 +56,7 @@ const Index = () => {
       />
       
       {/* Top Navigation Bar */}
-      <div className="fixed top-0 left-0 right-0 p-4 z-50">
+      <div className="fixed top-0 left-0 right-0 p-4 z-40">
         <div className="container mx-auto flex justify-between items-start max-w-7xl">
           {/* Visit Planet Search Bar (Left) - Only show when planet is not selected */}
           {!isPlanetSelected && (
@@ -96,7 +96,7 @@ const Index = () => {
 
       {/* Search bar below Back button when planet is selected */}
       {isPlanetSelected && (
-        <div className="fixed top-20 left-4 glass-panel p-4 z-50">
+        <div className="fixed top-20 left-4 glass-panel p-4 z-30">
           <Input
             type="text"
             placeholder="Search wallet address..."
@@ -109,7 +109,7 @@ const Index = () => {
 
       {/* Top Holders Tab (Right Side) - Only show when not zoomed in */}
       {!isPlanetSelected && (
-        <div className="fixed right-4 top-20 glass-panel p-4 w-[32rem] z-40">
+        <div className="fixed right-4 top-20 glass-panel p-4 w-[32rem] z-30">
           <h2 className="text-lg font-semibold text-white mb-4">Top Holders</h2>
           <Table>
             <TableHeader>
