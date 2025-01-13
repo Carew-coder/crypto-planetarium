@@ -398,6 +398,23 @@ const Universe = ({
     }
 
     console.log('Initializing universe with holders:', holders.length);
+    let animationFrameId: number;
+    let isPageVisible = true;
+
+    const handleVisibilityChange = () => {
+      isPageVisible = !document.hidden;
+      console.log('Page visibility changed:', isPageVisible);
+      
+      if (!isPageVisible && animationFrameId) {
+        console.log('Canceling animation frame on tab hide');
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = 0;
+      } else if (isPageVisible && !animationFrameId && rendererRef.current && sceneRef.current && cameraRef.current) {
+        console.log('Restarting animation loop on tab show');
+        animate();
+      }
+    };
+
     const init = async () => {
       const scene = new THREE.Scene();
       sceneRef.current = scene;
@@ -481,7 +498,12 @@ const Universe = ({
       scene.add(hemisphereLight);
 
       const animate = () => {
-        requestAnimationFrame(animate);
+        if (!isPageVisible) {
+          console.log('Animation paused - page not visible');
+          return;
+        }
+
+        animationFrameId = requestAnimationFrame(animate);
         
         if (!isZoomedIn) {
           Object.values(planetsRef.current).forEach((planet) => {
@@ -493,8 +515,13 @@ const Universe = ({
           }
         }
 
-        controls.update();
-        renderer.render(scene, camera);
+        if (controlsRef.current) {
+          controlsRef.current.update();
+        }
+
+        if (rendererRef.current && sceneRef.current && cameraRef.current) {
+          rendererRef.current.render(sceneRef.current, cameraRef.current);
+        }
       };
 
       animate();
@@ -564,11 +591,19 @@ const Universe = ({
       };
 
       window.addEventListener('click', handleClick);
+      document.addEventListener('visibilitychange', handleVisibilityChange);
 
       return () => {
+        console.log('Cleaning up universe component');
         window.removeEventListener('click', handleClick);
-        cleanupAnimation();
-        renderer.dispose();
+        window.removeEventListener('resize', handleResize);
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+        if (animationFrameId) {
+          cancelAnimationFrame(animationFrameId);
+        }
+        if (rendererRef.current) {
+          rendererRef.current.dispose();
+        }
       };
     };
 
