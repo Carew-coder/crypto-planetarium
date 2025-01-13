@@ -1,6 +1,7 @@
 import Universe from "@/components/Universe";
 import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Wallet, Loader2 } from "lucide-react";
@@ -26,7 +27,7 @@ const Index = () => {
         .from('token_holders')
         .select('*')
         .order('percentage', { ascending: false })
-        .limit(10)
+        .limit(100)  // Updated to fetch top 100 holders
 
       if (error) {
         console.error('Error fetching token holders:', error);
@@ -118,33 +119,43 @@ const Index = () => {
       </div>
 
       {/* Top Holders Panel (Right Side) */}
-      <div className="fixed right-8 top-1/2 -translate-y-1/2 glass-panel p-4 w-[20rem] z-30">
+      <div className="fixed right-8 top-1/2 -translate-y-1/2 glass-panel p-4 w-[32rem] z-30 h-[70vh]">
         <h2 className="text-lg font-semibold text-white mb-4">Top Holders</h2>
         {isLoading ? (
           <div className="flex justify-center items-center p-4">
             <Loader2 className="h-6 w-6 animate-spin text-white" />
           </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-white/80">Wallet</TableHead>
-                <TableHead className="text-white/80">Holding %</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {holders?.map((holder) => (
-                <TableRow key={holder.wallet_address}>
-                  <TableCell className="text-white/70">
-                    {holder.wallet_address.slice(0, 6)}...{holder.wallet_address.slice(-4)}
-                  </TableCell>
-                  <TableCell className="text-white/70">
-                    {Number(holder.percentage).toFixed(2)}%
-                  </TableCell>
+          <ScrollArea className="h-[calc(70vh-6rem)]">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-white/80">Rank</TableHead>
+                  <TableHead className="text-white/80">Wallet</TableHead>
+                  <TableHead className="text-white/80">Holding %</TableHead>
+                  <TableHead className="text-white/80">Amount</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {holders?.map((holder, index) => (
+                  <TableRow key={holder.wallet_address}>
+                    <TableCell className="text-white/70">
+                      {index + 1}
+                    </TableCell>
+                    <TableCell className="text-white/70">
+                      {holder.wallet_address.slice(0, 6)}...{holder.wallet_address.slice(-4)}
+                    </TableCell>
+                    <TableCell className="text-white/70">
+                      {Number(holder.percentage).toFixed(2)}%
+                    </TableCell>
+                    <TableCell className="text-white/70">
+                      {Number(holder.token_amount).toLocaleString()}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ScrollArea>
         )}
       </div>
     </div>
