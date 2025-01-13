@@ -27,12 +27,14 @@ serve(async (req) => {
     console.log('Fetching token holders from Solana Tracker API...')
     console.log('Request URL:', url)
     
-    const response = await fetch(url, {
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Accept': 'application/json',
-      },
-    })
+    // Log the headers we're about to send
+    const headers = {
+      'x-api-key': apiKey,
+      'Accept': 'application/json',
+    }
+    console.log('Request headers:', Object.keys(headers))
+    
+    const response = await fetch(url, { headers })
 
     console.log('Response status:', response.status)
     console.log('Response headers:', Object.fromEntries(response.headers.entries()))
