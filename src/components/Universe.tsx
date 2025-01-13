@@ -11,10 +11,12 @@ import { Planet } from '@/types/universe';
 
 const Universe = ({ 
   onPlanetClick,
-  onBackToOverview 
+  onBackToOverview,
+  backButtonText = "Back to Overview" // Added with default value
 }: { 
   onPlanetClick: () => void;
   onBackToOverview: () => void;
+  backButtonText?: string; // Added prop type definition
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -318,7 +320,7 @@ const Universe = ({
           onClick={handleBackToOverview}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Overview
+          {backButtonText}
         </Button>
       )}
 
