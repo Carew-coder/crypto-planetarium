@@ -211,7 +211,7 @@ const Universe = ({
             setIsZoomedIn(true);
             setShowTables(true);
             onPlanetClick();
-            const position = new THREE.Vector3(0, 0, 15);
+            const position = new THREE.Vector3(8, 0, 15); // Offset to the right
 
             const currentPos = cameraRef.current.position.clone();
             let progress = 0;
@@ -223,7 +223,7 @@ const Universe = ({
 
               const newPos = currentPos.clone().lerp(position, progress);
               cameraRef.current!.position.copy(newPos);
-              controlsRef.current!.target.copy(new THREE.Vector3(0, 0, 0));
+              controlsRef.current!.target.copy(new THREE.Vector3(8, 0, 0)); // Offset target as well
               controlsRef.current!.update();
 
               requestAnimationFrame(animate);
@@ -245,8 +245,11 @@ const Universe = ({
             setIsZoomedIn(true);
             setShowTables(true);
             onPlanetClick();
-            const position = new THREE.Vector3(...clickedPlanet.position);
-            position.z += 5;
+            const position = new THREE.Vector3(
+              clickedPlanet.position[0] + 8, // Offset x position to the right
+              clickedPlanet.position[1],
+              clickedPlanet.position[2] + 5
+            );
 
             const currentPos = cameraRef.current.position.clone();
             let progress = 0;
@@ -258,7 +261,11 @@ const Universe = ({
 
               const newPos = currentPos.clone().lerp(position, progress);
               cameraRef.current!.position.copy(newPos);
-              controlsRef.current!.target.copy(new THREE.Vector3(...clickedPlanet.position));
+              controlsRef.current!.target.copy(new THREE.Vector3(
+                clickedPlanet.position[0] + 8, // Offset target x position
+                clickedPlanet.position[1],
+                clickedPlanet.position[2]
+              ));
               controlsRef.current!.update();
 
               requestAnimationFrame(animate);
