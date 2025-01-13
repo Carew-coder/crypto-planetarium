@@ -163,12 +163,14 @@ const Universe = ({
     });
   };
 
-  const handlePlanetZoom = (planetPosition: THREE.Vector3) => {
+  const handlePlanetZoom = (planetPosition: THREE.Vector3, planetSize?: number) => {
     if (!cameraRef.current || !controlsRef.current) return;
     
     cleanupAnimation();
     
-    const zOffset = planetPosition.equals(new THREE.Vector3(0, 0, 0)) ? 15 : 5;
+    // Calculate zoom distance based on planet size or use default
+    const baseZOffset = planetPosition.equals(new THREE.Vector3(0, 0, 0)) ? 15 : 5;
+    const zOffset = planetSize ? Math.max(planetSize * 3, baseZOffset) : baseZOffset;
     
     const targetPosition = new THREE.Vector3(
       planetPosition.x,
@@ -193,13 +195,10 @@ const Universe = ({
           controlsRef.current.rotateSpeed = 0.5;
           controlsRef.current.zoomSpeed = 0.5;
           
-          if (planetPosition.equals(new THREE.Vector3(0, 0, 0))) {
-            controlsRef.current.minDistance = 15;
-            controlsRef.current.maxDistance = 15;
-          } else {
-            controlsRef.current.minDistance = 5;
-            controlsRef.current.maxDistance = 5;
-          }
+          // Set min and max distance based on planet size
+          const distance = planetSize ? Math.max(planetSize * 3, baseZOffset) : baseZOffset;
+          controlsRef.current.minDistance = distance;
+          controlsRef.current.maxDistance = distance;
           
           controlsRef.current.target.copy(planetPosition);
           controlsRef.current.update();
@@ -373,8 +372,9 @@ const Universe = ({
             const planetPosition = planetPositionsRef.current[clickedPlanet.wallet_address];
             if (!planetPosition) return;
 
+            const planetSize = calculatePlanetSize(clickedPlanet.percentage);
             controlsRef.current.enabled = false;
-            handlePlanetZoom(planetPosition);
+            handlePlanetZoom(planetPosition, planetSize);
           }
         }
       };
@@ -407,8 +407,9 @@ const Universe = ({
         const planetPosition = planetPositionsRef.current[selectedWalletAddress];
         if (!planetPosition) return;
 
+        const planetSize = calculatePlanetSize(holder.percentage);
         controlsRef.current.enabled = false;
-        handlePlanetZoom(planetPosition);
+        handlePlanetZoom(planetPosition, planetSize);
       }
     }
   }, [selectedWalletAddress, holders, isZoomedIn, onPlanetClick]);
