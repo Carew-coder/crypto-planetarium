@@ -398,10 +398,8 @@ const Universe = ({
     console.log('Visibility state changed:', document.visibilityState);
     isPageVisibleRef.current = document.visibilityState === 'visible';
     
-    if (isPageVisibleRef.current && rendererRef.current && cameraRef.current && sceneRef.current) {
+    if (isPageVisibleRef.current) {
       console.log('Page is visible, resuming animation and controls');
-      
-      // Re-enable controls when page becomes visible
       if (controlsRef.current) {
         controlsRef.current.enabled = true;
         controlsRef.current.enableZoom = true;
@@ -409,7 +407,6 @@ const Universe = ({
         controlsRef.current.enablePan = true;
         controlsRef.current.update();
       }
-      
       animateRef.current?.();
     } else {
       console.log('Page is hidden, pausing animation');
@@ -627,6 +624,9 @@ const Universe = ({
         }
         if (rendererRef.current) {
           rendererRef.current.dispose();
+        }
+        if (controlsRef.current) {
+          controlsRef.current.dispose();
         }
       };
     };
