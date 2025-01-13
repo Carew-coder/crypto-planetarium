@@ -172,11 +172,11 @@ const Universe = ({
     cleanupAnimation();
     
     // Calculate the target position for the camera
-    // Move back slightly on the z-axis for better view
+    // Reduced z-axis offset from 8 to 5 for a less aggressive zoom
     const targetPosition = new THREE.Vector3(
       planetPosition.x,
       planetPosition.y,
-      planetPosition.z + 8
+      planetPosition.z + 5
     );
 
     const currentPos = cameraRef.current.position.clone();
