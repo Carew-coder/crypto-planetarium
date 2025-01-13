@@ -4,6 +4,9 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { Database } from '@/integrations/supabase/types';
+
+type TokenHolder = Database['public']['Tables']['token_holders']['Row'];
 
 const HolderTable: React.FC<TableProps> = () => {
   const { data: holders, isLoading, error } = useQuery({
@@ -20,7 +23,7 @@ const HolderTable: React.FC<TableProps> = () => {
         .limit(10)
 
       if (error) throw error
-      return data
+      return data as TokenHolder[]
     },
     refetchInterval: 300000, // Refetch every 5 minutes
   });
