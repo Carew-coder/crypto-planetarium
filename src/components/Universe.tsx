@@ -8,7 +8,6 @@ import HolderTable from './universe/HolderTable';
 import RewardsTable from './universe/RewardsTable';
 import { SAMPLE_PLANETS, PLANET_TEXTURES, SUN_TEXTURE } from '@/constants/planets';
 import { Planet } from '@/types/universe';
-import { useNavigate } from 'react-router-dom';
 
 const Universe = ({ 
   onPlanetClick,
@@ -19,7 +18,6 @@ const Universe = ({
   onBackToOverview: () => void;
   backButtonText?: string;
 }) => {
-  const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -37,8 +35,48 @@ const Universe = ({
   const [rewardsTableCollapsed, setRewardsTableCollapsed] = useState(false);
 
   const handleBackToOverview = () => {
-    console.log("Navigating back to index");
-    navigate('/');
+    console.log("Starting zoom out animation");
+    if (!cameraRef.current || !controlsRef.current) {
+      console.error("Camera or controls ref not available");
+      return;
+    }
+
+    const targetPosition = initialCameraPosition.clone();
+    const startPosition = cameraRef.current.position.clone();
+    const startTime = Date.now();
+    const duration = 1000; // 1 second animation
+
+    const animate = () => {
+      const currentTime = Date.now();
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      if (progress < 1) {
+        // Smooth easing function
+        const easeProgress = 1 - Math.pow(1 - progress, 3);
+        
+        // Calculate new position
+        const newPos = new THREE.Vector3().lerpVectors(
+          startPosition,
+          targetPosition,
+          easeProgress
+        );
+        
+        cameraRef.current!.position.copy(newPos);
+        controlsRef.current!.target.lerp(new THREE.Vector3(0, 0, 0), easeProgress);
+        controlsRef.current!.update();
+        
+        requestAnimationFrame(animate);
+      } else {
+        // Animation complete
+        console.log("Zoom out animation complete");
+        setIsZoomedIn(false);
+        setShowTables(false);
+        onBackToOverview();
+      }
+    };
+
+    animate();
   };
 
   const preloadTextures = async () => {
