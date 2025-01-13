@@ -49,7 +49,12 @@ serve(async (req) => {
     }
 
     const data = await response.json()
-    console.log('Successfully fetched token holders data. Number of accounts:', data.accounts?.length || 0)
+    console.log('Raw API response:', JSON.stringify(data, null, 2))
+
+    if (!data || !Array.isArray(data)) {
+      console.error('Unexpected API response format:', data)
+      throw new Error('Invalid API response format')
+    }
 
     // Store data in Supabase
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
@@ -75,13 +80,15 @@ serve(async (req) => {
     }
 
     // Transform and insert new data
-    const holders = data.accounts.map((holder: any) => ({
-      wallet_address: holder.wallet,
+    const holders = data.map((holder: any) => ({
+      wallet_address: holder.owner,
       token_amount: holder.amount,
-      percentage: holder.percentage,
+      percentage: (holder.amount / holder.total_supply) * 100,
     }))
 
     console.log('Inserting new token holders data. Number of records:', holders.length)
+    console.log('First holder example:', holders[0])
+
     const { error: insertError } = await supabase
       .from('token_holders')
       .insert(holders)
