@@ -53,7 +53,7 @@ const PlanetInformation = ({ holder, connectedWalletAddress }: PlanetInformation
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="text-white/80">Property</TableHead>
+              <TableHead className="text-white/80">Planet Name</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
