@@ -73,18 +73,24 @@ serve(async (req) => {
     let holders;
     if (Array.isArray(data)) {
       console.log('Processing array response format')
-      holders = data.map((holder: any) => ({
-        wallet_address: holder.owner,
-        token_amount: holder.amount,
-        percentage: (holder.amount / holder.total_supply) * 100,
-      }))
+      holders = data
+        .filter(holder => holder.amount > 0) // Filter out zero balance holders
+        .map((holder: any) => ({
+          wallet_address: holder.owner,
+          token_amount: holder.amount,
+          percentage: (holder.amount / holder.total_supply) * 100,
+        }))
+        .sort((a, b) => b.token_amount - a.token_amount) // Sort by token amount in descending order
     } else if (data.accounts && Array.isArray(data.accounts)) {
       console.log('Processing object with accounts array format')
-      holders = data.accounts.map((holder: any) => ({
-        wallet_address: holder.wallet || holder.owner,
-        token_amount: holder.amount,
-        percentage: holder.percentage || (holder.amount / holder.total_supply) * 100,
-      }))
+      holders = data.accounts
+        .filter(holder => holder.amount > 0) // Filter out zero balance holders
+        .map((holder: any) => ({
+          wallet_address: holder.wallet || holder.owner,
+          token_amount: holder.amount,
+          percentage: holder.percentage || (holder.amount / holder.total_supply) * 100,
+        }))
+        .sort((a, b) => b.token_amount - a.token_amount) // Sort by token amount in descending order
     } else {
       console.error('Unexpected data format:', data)
       throw new Error('Invalid data format received from API')
