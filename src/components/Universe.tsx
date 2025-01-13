@@ -50,7 +50,6 @@ const Universe = ({
     queryFn: async () => {
       console.log('Fetching token holders data for planets...');
       
-      // First trigger the edge function to fetch latest data
       await supabase.functions.invoke('fetchTokenHolders');
       
       const { data, error } = await supabase
@@ -399,8 +398,9 @@ const Universe = ({
     isPageVisibleRef.current = document.visibilityState === 'visible';
     
     if (isPageVisibleRef.current) {
-      console.log('Page is visible, resuming animation and controls');
-      if (controlsRef.current) {
+      console.log('Page is visible, resuming animation');
+      if (controlsRef.current && !isAnimatingRef.current) {
+        console.log('Re-enabling controls');
         controlsRef.current.enabled = true;
         controlsRef.current.enableZoom = true;
         controlsRef.current.enableRotate = true;
@@ -535,7 +535,7 @@ const Universe = ({
       document.addEventListener('visibilitychange', handleVisibilityChange);
       window.addEventListener('focus', () => {
         console.log('Window focused, ensuring controls are enabled');
-        if (controlsRef.current) {
+        if (controlsRef.current && !isAnimatingRef.current) {
           controlsRef.current.enabled = true;
           controlsRef.current.enableZoom = true;
           controlsRef.current.enableRotate = true;
