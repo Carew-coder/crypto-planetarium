@@ -8,6 +8,7 @@ import { ChevronDown } from "lucide-react";
 const Index = () => {
   const [searchAddress, setSearchAddress] = useState("");
   const [isOpen, setIsOpen] = useState(true);
+  const [isOldestOpen, setIsOldestOpen] = useState(true);
 
   return (
     <div className="relative w-full h-screen overflow-hidden">
@@ -48,6 +49,38 @@ const Index = () => {
                   <TableRow>
                     <TableCell className="text-white/70">0x8765...4321</TableCell>
                     <TableCell className="text-white/70">2.8%</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      </div>
+
+      {/* Oldest Planets Table */}
+      <div className="absolute right-4 top-[calc(4rem+340px)] glass-panel p-4 w-80">
+        <Collapsible open={isOldestOpen} onOpenChange={setIsOldestOpen}>
+          <CollapsibleTrigger className="flex items-center justify-between w-full">
+            <h2 className="text-lg font-semibold text-white">Oldest Planets</h2>
+            <ChevronDown className={`h-5 w-5 text-white transition-transform ${isOldestOpen ? 'transform rotate-180' : ''}`} />
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="max-h-[400px] overflow-auto mt-4">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-white/80">Planet</TableHead>
+                    <TableHead className="text-white/80">Age (B Years)</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell className="text-white/70">Mercury</TableCell>
+                    <TableCell className="text-white/70">4.5</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="text-white/70">Venus</TableCell>
+                    <TableCell className="text-white/70">4.5</TableCell>
                   </TableRow>
                 </TableBody>
               </Table>
