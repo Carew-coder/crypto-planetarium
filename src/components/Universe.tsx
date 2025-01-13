@@ -33,6 +33,13 @@ const Universe = ({
   const [showTables, setShowTables] = useState(false);
   const [holderTableCollapsed, setHolderTableCollapsed] = useState(false);
   const [rewardsTableCollapsed, setRewardsTableCollapsed] = useState(false);
+  const animationFrameRef = useRef<number>();
+
+  const cleanupAnimation = () => {
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+  };
 
   const handleBackToOverview = () => {
     console.log("Starting zoom out animation");
@@ -41,13 +48,16 @@ const Universe = ({
       return;
     }
 
-    // Re-enable controls when zooming out
-    controlsRef.current.enabled = true;
+    // Clean up any existing animation
+    cleanupAnimation();
 
-    // Immediately update states instead of waiting for animation completion
+    // Immediately update states
     setIsZoomedIn(false);
     setShowTables(false);
     onBackToOverview();
+
+    // Re-enable controls
+    controlsRef.current.enabled = true;
 
     const targetPosition = initialCameraPosition.clone();
     const startPosition = cameraRef.current.position.clone();
@@ -74,10 +84,11 @@ const Universe = ({
         controlsRef.current!.target.lerp(new THREE.Vector3(0, 0, 0), easeProgress);
         controlsRef.current!.update();
         
-        requestAnimationFrame(animate);
+        animationFrameRef.current = requestAnimationFrame(animate);
       } else {
         // Animation complete
         console.log("Zoom out animation complete");
+        cleanupAnimation();
       }
     };
 
@@ -254,6 +265,9 @@ const Universe = ({
         if (sunRef.current) {
           const sunIntersects = raycaster.intersectObject(sunRef.current);
           if (sunIntersects.length > 0) {
+            // Clean up any existing animation
+            cleanupAnimation();
+            
             setIsZoomedIn(true);
             setShowTables(true);
             onPlanetClick();
@@ -267,7 +281,8 @@ const Universe = ({
             const animate = () => {
               progress += 0.02;
               if (progress > 1) {
-                controlsRef.current!.enabled = false; // Ensure controls stay disabled after animation
+                controlsRef.current!.enabled = false;
+                cleanupAnimation();
                 return;
               }
 
@@ -276,7 +291,7 @@ const Universe = ({
               controlsRef.current!.target.copy(new THREE.Vector3(-2, 0, 0));
               controlsRef.current!.update();
 
-              requestAnimationFrame(animate);
+              animationFrameRef.current = requestAnimationFrame(animate);
             };
 
             animate();
@@ -292,6 +307,9 @@ const Universe = ({
           );
 
           if (clickedPlanet) {
+            // Clean up any existing animation
+            cleanupAnimation();
+            
             setIsZoomedIn(true);
             setShowTables(true);
             onPlanetClick();
@@ -310,7 +328,8 @@ const Universe = ({
             const animate = () => {
               progress += 0.02;
               if (progress > 1) {
-                controlsRef.current!.enabled = false; // Ensure controls stay disabled after animation
+                controlsRef.current!.enabled = false;
+                cleanupAnimation();
                 return;
               }
 
@@ -323,7 +342,7 @@ const Universe = ({
               ));
               controlsRef.current!.update();
 
-              requestAnimationFrame(animate);
+              animationFrameRef.current = requestAnimationFrame(animate);
             };
 
             animate();
@@ -334,13 +353,20 @@ const Universe = ({
       window.addEventListener('click', handleClick);
 
       return () => {
-        window.removeEventListener('resize', handleResize);
         window.removeEventListener('click', handleClick);
+        cleanupAnimation();
         renderer.dispose();
       };
     };
 
     init();
+  }, []);
+
+  // Cleanup animations when component unmounts
+  useEffect(() => {
+    return () => {
+      cleanupAnimation();
+    };
   }, []);
 
   return (
