@@ -1,59 +1,24 @@
-import { Planet } from '@/types/universe';
-import { generateRandomPosition, generateRandomColor } from '@/utils/positionUtils';
+export const SUN_TEXTURE = '/lovable-uploads/23b2bc40-66dc-4b5a-9b64-3d91755cea67.png';
 
-export const CRYPTO_NAMES = [
-  "Bitcoin", "Ethereum", "Solana", "Cardano", "Polkadot"
-];
-
+// Array of textures that will be used for the planets
 export const PLANET_TEXTURES = [
-  '/lovable-uploads/98244a61-a143-42a1-bc04-7400b789f28f.png',
+  '/lovable-uploads/0052a47d-d440-437c-8f29-fb5b458cb642.png',
   '/lovable-uploads/07940f47-fc24-4197-ba10-be4390f882b2.png',
-  '/lovable-uploads/f115cbf1-f4ec-4c06-9d95-2a208ce87fa6.png',
   '/lovable-uploads/0a36d67b-b2b3-4558-aad4-6665abaca922.png',
-  '/lovable-uploads/b6686ee5-c2dd-4297-8768-e92bc549f292.png',
+  '/lovable-uploads/143c45be-81e7-4bc9-8c02-5b5d749b901a.png',
+  '/lovable-uploads/1a9e1fee-d80e-4855-86e9-9fe6b4a730db.png',
+  '/lovable-uploads/1ab07e73-40b1-45f0-970a-3a546f65c396.png',
+  '/lovable-uploads/2628cfea-a949-4819-adb1-c3c393bb68d4.png',
+  '/lovable-uploads/454d5495-aee2-4eaa-b3a1-49e4cf51f279.png',
+  '/lovable-uploads/47867400-645f-4a61-adea-7da70fa41000.png',
 ];
 
-export const SUN_TEXTURE = '/lovable-uploads/c2d72184-32ac-4494-afd9-68ded2b76024.png';
-
-export const SAMPLE_PLANETS: Planet[] = [
-  {
-    id: "btc",
-    name: "Bitcoin",
-    value: 45000,
-    color: "#F7931A",
-    size: 2,
-    position: [-15, 5, -10],
-  },
-  {
-    id: "eth",
-    name: "Ethereum",
-    value: 2500,
-    color: "#627EEA",
-    size: 1.5,
-    position: [20, -8, 15],
-  },
-  {
-    id: "sol",
-    name: "Solana",
-    value: 100,
-    color: "#00FFA3",
-    size: 1,
-    position: [12, 15, -18],
-  },
-  {
-    id: "ada",
-    name: "Cardano",
-    value: 1.20,
-    color: "#0033AD",
-    size: 1.2,
-    position: [-8, -12, 10],
-  },
-  {
-    id: "dot",
-    name: "Polkadot",
-    value: 15.50,
-    color: "#E6007A",
-    size: 1.1,
-    position: [5, 18, -5],
-  }
-];
+// Function to calculate planet size based on holding percentage
+export const calculatePlanetSize = (percentage: number): number => {
+  // Base size for smallest planets
+  const minSize = 0.5;
+  // Maximum size for largest planets
+  const maxSize = 3;
+  // Scale the percentage to a size between minSize and maxSize
+  return minSize + (percentage / 100) * (maxSize - minSize);
+};

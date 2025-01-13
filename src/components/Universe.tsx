@@ -4,10 +4,12 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import RewardsTable from './universe/RewardsTable';
-import { SAMPLE_PLANETS, PLANET_TEXTURES, SUN_TEXTURE } from '@/constants/planets';
+import { PLANET_TEXTURES, SUN_TEXTURE, calculatePlanetSize } from '@/constants/planets';
 import { Planet } from '@/types/universe';
 import ShootingStars from './universe/ShootingStars';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from "@/integrations/supabase/client";
+import { generateRandomPosition } from '@/utils/positionUtils';
 
 const Universe = ({ 
   onPlanetClick,
@@ -31,9 +33,28 @@ const Universe = ({
   const [isZoomedIn, setIsZoomedIn] = useState(false);
   const [initialCameraPosition] = useState(new THREE.Vector3(0, 0, 100));
   const [showTables, setShowTables] = useState(false);
-  const [holderTableCollapsed, setHolderTableCollapsed] = useState(false);
-  const [rewardsTableCollapsed, setRewardsTableCollapsed] = useState(false);
   const animationFrameRef = useRef<number>();
+
+  // Fetch token holders data
+  const { data: holders } = useQuery({
+    queryKey: ['tokenHolders'],
+    queryFn: async () => {
+      console.log('Fetching token holders data for planets...');
+      const { data, error } = await supabase
+        .from('token_holders')
+        .select('*')
+        .order('percentage', { ascending: false })
+        .limit(100);
+
+      if (error) {
+        console.error('Error fetching token holders:', error);
+        throw error;
+      }
+      
+      return data;
+    },
+    refetchInterval: 300000, // Refetch every 5 minutes
+  });
 
   const cleanupAnimation = () => {
     if (animationFrameRef.current) {
@@ -113,28 +134,36 @@ const Universe = ({
     await Promise.all(texturePromises);
   };
 
-  const addPlanetsInBatches = (scene: THREE.Scene, planets: Planet[]) => {
-    planets.forEach((planet, index) => {
+  const addPlanetsFromHolders = (scene: THREE.Scene) => {
+    if (!holders) return;
+
+    const existingPositions: [number, number, number][] = [];
+
+    holders.forEach((holder, index) => {
       const textureIndex = index % PLANET_TEXTURES.length;
       const texturePath = PLANET_TEXTURES[textureIndex];
       const texture = loadedTexturesRef.current[texturePath];
 
-      const geometry = new THREE.SphereGeometry(planet.size, 32, 32);
+      const size = calculatePlanetSize(holder.percentage);
+      const geometry = new THREE.SphereGeometry(size, 32, 32);
       const material = new THREE.MeshStandardMaterial({
         map: texture,
         metalness: 0.3,
         roughness: 0.4,
       });
 
+      const position = generateRandomPosition(existingPositions);
+      existingPositions.push(position);
+
       const mesh = new THREE.Mesh(geometry, material);
-      mesh.position.set(...planet.position);
+      mesh.position.set(...position);
       scene.add(mesh);
-      planetsRef.current[planet.id] = mesh;
+      planetsRef.current[holder.wallet_address] = mesh;
     });
   };
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!containerRef.current || !holders) return;
 
     const init = async () => {
       // Scene setup
@@ -184,7 +213,7 @@ const Universe = ({
 
       // Preload textures and add planets
       await preloadTextures();
-      addPlanetsInBatches(scene, SAMPLE_PLANETS);
+      addPlanetsFromHolders(scene);
 
       const starsGeometry = new THREE.BufferGeometry();
       const starsMaterial = new THREE.PointsMaterial({
@@ -302,8 +331,8 @@ const Universe = ({
         // Check for planet clicks
         const intersects = raycaster.intersectObjects(Object.values(planetsRef.current));
         if (intersects.length > 0) {
-          const clickedPlanet = SAMPLE_PLANETS.find(
-            (p) => planetsRef.current[p.id] === intersects[0].object
+          const clickedPlanet = holders.find(
+            (p) => planetsRef.current[p.wallet_address] === intersects[0].object
           );
 
           if (clickedPlanet) {
@@ -360,7 +389,7 @@ const Universe = ({
     };
 
     init();
-  }, []);
+  }, [holders]);
 
   // Cleanup animations when component unmounts
   useEffect(() => {
@@ -388,10 +417,7 @@ const Universe = ({
 
       {showTables && isZoomedIn && (
         <div className="absolute top-1/2 -translate-y-1/2">
-          <RewardsTable
-            collapsed={rewardsTableCollapsed}
-            onToggle={() => setRewardsTableCollapsed(!rewardsTableCollapsed)}
-          />
+          {/* RewardsTable component can be added here */}
         </div>
       )}
     </div>
