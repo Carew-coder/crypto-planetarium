@@ -23,56 +23,37 @@ serve(async (req) => {
 
     console.log('Retrieved Solscan API token successfully')
 
-    const tokenAddress = '8PVVGVZSkrrLtxZDdH7zRonCwCff9FhY7Wk6Yh71pump'
-    const PAGE_SIZE = 40 // Maximum allowed by Solscan API
-    let allHolders: any[] = []
-    let currentPage = 1
-    let hasMorePages = true
+    const tokenAddress = 'Cy1GS2FqefgaMbi45UunrUzin1rfEmTUYnomddzBpump'
+    const url = `https://pro-api.solscan.io/v2.0/token/holders?address=${tokenAddress}&page=1&page_size=40`
 
-    while (hasMorePages) {
-      const url = `https://pro-api.solscan.io/v2.0/token/holders?address=${tokenAddress}&page=${currentPage}&page_size=${PAGE_SIZE}`
-      console.log(`Fetching page ${currentPage} from Solscan API...`)
-      
-      const response = await fetch(url, {
-        headers: {
-          'token': apiToken,
-          'Accept': 'application/json',
-        }
+    console.log('Making API request to Solscan:', url)
+    
+    const response = await fetch(url, {
+      headers: {
+        'token': apiToken,
+        'Accept': 'application/json',
+      }
+    })
+
+    console.log('Solscan API Response Status:', response.status)
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('Solscan API request failed:', {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorText
       })
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error('Solscan API request failed:', {
-          status: response.status,
-          statusText: response.statusText,
-          body: errorText
-        })
-        throw new Error(`API request failed: ${response.statusText}`)
-      }
-
-      const data = await response.json()
-      
-      if (!data || !data.data || !Array.isArray(data.data.items)) {
-        console.error('Unexpected data format from Solscan API:', data)
-        throw new Error('Invalid data format received from Solscan API')
-      }
-
-      allHolders = [...allHolders, ...data.data.items]
-      console.log(`Retrieved ${data.data.items.length} holders from page ${currentPage}`)
-
-      // Check if we've reached the end
-      if (data.data.items.length < PAGE_SIZE) {
-        hasMorePages = false
-        console.log('Reached last page of holders')
-      } else {
-        currentPage++
-      }
-
-      // Add a small delay to avoid rate limiting
-      await new Promise(resolve => setTimeout(resolve, 500))
+      throw new Error(`API request failed: ${response.statusText}`)
     }
 
-    console.log(`Total holders fetched: ${allHolders.length}`)
+    const data = await response.json()
+    console.log('Raw Solscan API response structure:', Object.keys(data))
+
+    if (!data || !data.data || !Array.isArray(data.data.items)) {
+      console.error('Unexpected data format from Solscan API:', data)
+      throw new Error('Invalid data format received from Solscan API')
+    }
 
     // Store data in Supabase
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
@@ -89,7 +70,7 @@ serve(async (req) => {
     // Transform data from Solscan API response
     const TOTAL_SUPPLY = 1_000_000_000 // 1 billion tokens
     
-    const holders = allHolders.map((holder: any) => {
+    const holders = data.data.items.map((holder: any) => {
       const amount = Number(holder.amount) / Math.pow(10, holder.decimals)
       const percentage = (amount / TOTAL_SUPPLY) * 100
       
@@ -104,6 +85,9 @@ serve(async (req) => {
 
     console.log('Transformed data. Number of holders:', holders.length)
     console.log('First holder example:', holders[0])
+    console.log('Checking for specific address:', '4hKTgJdP7VN93R2gcRuFpSZAwTPSX3Lk6YbozYoqH4Nt')
+    const specificHolder = holders.find(h => h.wallet_address === '4hKTgJdP7VN93R2gcRuFpSZAwTPSX3Lk6YbozYoqH4Nt')
+    console.log('Specific holder data:', specificHolder)
 
     // First, truncate both tables to remove ALL existing data
     console.log('Removing all existing data from planet_customizations...')
@@ -128,18 +112,15 @@ serve(async (req) => {
       throw truncateHoldersError
     }
 
-    // Insert new data using UPSERT operation
-    console.log('Upserting new token holders...')
-    const { error: upsertError } = await supabase
+    // Insert new data
+    console.log('Inserting new token holders...')
+    const { error: insertError } = await supabase
       .from('token_holders')
-      .upsert(holders, {
-        onConflict: 'wallet_address',
-        ignoreDuplicates: false
-      })
+      .insert(holders)
 
-    if (upsertError) {
-      console.error('Error upserting token holders:', upsertError)
-      throw upsertError
+    if (insertError) {
+      console.error('Error inserting new token holders:', insertError)
+      throw insertError
     }
 
     console.log('Successfully updated token holders database')
