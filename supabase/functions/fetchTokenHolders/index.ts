@@ -21,7 +21,7 @@ serve(async (req) => {
 
     console.log('Retrieved API key successfully:', apiKey.substring(0, 8) + '...')
 
-    const tokenAddress = '3KzBEUwCm3Jfs61ikr1VDAzhpkkdhzLZUKVuBacRpump'
+    const tokenAddress = 'GxHJDpqpPGjeM1n9y2WnDxjJzXzL43p593DdauEmXTkE'
     const url = `https://data.solanatracker.io/tokens/${tokenAddress}/holders`
 
     console.log('Fetching token holders from Solana Tracker API...')
