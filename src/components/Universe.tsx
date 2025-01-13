@@ -218,6 +218,78 @@ const Universe = ({
     animate();
   };
 
+  const preloadTextures = async () => {
+    console.log('Preloading planet textures...');
+    try {
+      // Load all planet textures
+      for (const texturePath of PLANET_TEXTURES) {
+        const texture = await new Promise<THREE.Texture>((resolve, reject) => {
+          textureLoaderRef.current.load(
+            texturePath,
+            (texture) => resolve(texture),
+            undefined,
+            (error) => reject(error)
+          );
+        });
+        loadedTexturesRef.current[texturePath] = texture;
+      }
+      console.log('Planet textures preloaded successfully');
+    } catch (error) {
+      console.error('Error preloading textures:', error);
+      toast({
+        title: "Error loading planet textures",
+        description: "Please refresh the page to try again",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const addPlanetsFromHolders = (scene: THREE.Scene) => {
+    console.log('Adding planets from holders data...');
+    if (!holders) {
+      console.warn('No holders data available');
+      return;
+    }
+
+    holders.forEach((holder, index) => {
+      if (!holder.wallet_address) {
+        console.warn('Holder missing wallet address, skipping planet creation');
+        return;
+      }
+
+      const planetSize = calculatePlanetSize(holder.percentage);
+      const planetGeometry = new THREE.SphereGeometry(planetSize, 32, 32);
+      
+      // Use a random texture from the preloaded textures
+      const textureKey = PLANET_TEXTURES[index % PLANET_TEXTURES.length];
+      const planetTexture = loadedTexturesRef.current[textureKey];
+      
+      if (!planetTexture) {
+        console.error(`Texture not found for planet: ${textureKey}`);
+        return;
+      }
+
+      const planetMaterial = new THREE.MeshStandardMaterial({
+        map: planetTexture,
+        metalness: 0,
+        roughness: 0.7,
+      });
+
+      const planet = new THREE.Mesh(planetGeometry, planetMaterial);
+      
+      // Generate random position for the planet
+      const position = generateRandomPosition(20, 50); // Min 20 units, max 50 units from center
+      planet.position.copy(position);
+      
+      // Store references to the planet and its position
+      planetsRef.current[holder.wallet_address] = planet;
+      planetPositionsRef.current[holder.wallet_address] = position;
+      
+      scene.add(planet);
+      console.log(`Added planet for holder: ${holder.wallet_address}`);
+    });
+  };
+
   useEffect(() => {
     if (!containerRef.current || !holders) return;
 
