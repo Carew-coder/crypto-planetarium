@@ -12,11 +12,11 @@ import { Planet } from '@/types/universe';
 const Universe = ({ 
   onPlanetClick,
   onBackToOverview,
-  backButtonText = "Back to Overview" // Added with default value
+  backButtonText = "Back to Overview"
 }: { 
   onPlanetClick: () => void;
   onBackToOverview: () => void;
-  backButtonText?: string; // Added prop type definition
+  backButtonText?: string;
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -211,7 +211,7 @@ const Universe = ({
             setIsZoomedIn(true);
             setShowTables(true);
             onPlanetClick();
-            const position = new THREE.Vector3(-8, 0, 15); // Changed offset to the left
+            const position = new THREE.Vector3(-2, 0, 15); // Changed from -4 to -2
 
             const currentPos = cameraRef.current.position.clone();
             let progress = 0;
@@ -223,7 +223,7 @@ const Universe = ({
 
               const newPos = currentPos.clone().lerp(position, progress);
               cameraRef.current!.position.copy(newPos);
-              controlsRef.current!.target.copy(new THREE.Vector3(-8, 0, 0)); // Changed offset target as well
+              controlsRef.current!.target.copy(new THREE.Vector3(-2, 0, 0)); // Changed from -4 to -2
               controlsRef.current!.update();
 
               requestAnimationFrame(animate);
@@ -246,7 +246,7 @@ const Universe = ({
             setShowTables(true);
             onPlanetClick();
             const position = new THREE.Vector3(
-              clickedPlanet.position[0] - 8, // Changed offset x position to the left
+              clickedPlanet.position[0] - 2, // Changed from -4 to -2
               clickedPlanet.position[1],
               clickedPlanet.position[2] + 5
             );
@@ -262,7 +262,7 @@ const Universe = ({
               const newPos = currentPos.clone().lerp(position, progress);
               cameraRef.current!.position.copy(newPos);
               controlsRef.current!.target.copy(new THREE.Vector3(
-                clickedPlanet.position[0] - 8, // Changed offset target x position to the left
+                clickedPlanet.position[0] - 2, // Changed from -4 to -2
                 clickedPlanet.position[1],
                 clickedPlanet.position[2]
               ));
