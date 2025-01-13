@@ -8,6 +8,7 @@ import HolderTable from './universe/HolderTable';
 import RewardsTable from './universe/RewardsTable';
 import { SAMPLE_PLANETS, PLANET_TEXTURES, SUN_TEXTURE } from '@/constants/planets';
 import { Planet } from '@/types/universe';
+import { useNavigate } from 'react-router-dom';
 
 const Universe = ({ 
   onPlanetClick,
@@ -18,6 +19,7 @@ const Universe = ({
   onBackToOverview: () => void;
   backButtonText?: string;
 }) => {
+  const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -35,46 +37,8 @@ const Universe = ({
   const [rewardsTableCollapsed, setRewardsTableCollapsed] = useState(false);
 
   const handleBackToOverview = () => {
-    if (!cameraRef.current || !controlsRef.current) {
-      console.error("Camera or controls ref not available");
-      return;
-    }
-    
-    console.log("Handling back to overview");
-    
-    const targetPosition = initialCameraPosition.clone();
-    const startPosition = cameraRef.current.position.clone();
-    let startTime = Date.now();
-    const duration = 1000; // 1 second animation
-
-    const animate = () => {
-      const currentTime = Date.now();
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-
-      if (progress < 1) {
-        // Calculate new position
-        const newPos = new THREE.Vector3(
-          startPosition.x + (targetPosition.x - startPosition.x) * progress,
-          startPosition.y + (targetPosition.y - startPosition.y) * progress,
-          startPosition.z + (targetPosition.z - startPosition.z) * progress
-        );
-        
-        cameraRef.current!.position.copy(newPos);
-        controlsRef.current!.target.copy(new THREE.Vector3(0, 0, 0));
-        controlsRef.current!.update();
-        
-        requestAnimationFrame(animate);
-      } else {
-        // Animation complete
-        console.log("Animation complete, resetting state");
-        setIsZoomedIn(false);
-        setShowTables(false);
-        onBackToOverview();
-      }
-    };
-
-    animate();
+    console.log("Navigating back to index");
+    navigate('/');
   };
 
   const preloadTextures = async () => {
