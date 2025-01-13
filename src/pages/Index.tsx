@@ -25,7 +25,8 @@ const Index = () => {
           setIsPlanetSelected(false);
           setIsOpen(true);
           setIsOldestOpen(true);
-        }} 
+        }}
+        backButtonText="Back to the Solar System"
       />
       <div className="absolute top-4 left-1/2 -translate-x-1/2 glass-panel px-6 py-3">
         <h1 className="text-xl font-semibold text-white">Solar</h1>
