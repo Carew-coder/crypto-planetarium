@@ -381,8 +381,6 @@ const Universe = ({
 
     console.log('Initializing universe with holders:', holders.length);
     let animationFrameId: number | null = null;
-    let lastVisibilityChange = Date.now();
-    const REFRESH_THRESHOLD = 5000; // 5 seconds threshold
 
     const animate = () => {
       if (document.hidden) {
@@ -419,19 +417,8 @@ const Universe = ({
       console.log('Visibility changed:', document.hidden ? 'hidden' : 'visible');
       
       if (!document.hidden) {
-        const currentTime = Date.now();
-        const timeSinceLastChange = currentTime - lastVisibilityChange;
-        
-        if (timeSinceLastChange > REFRESH_THRESHOLD) {
-          console.log('Tab was hidden for too long, refreshing page...');
-          window.location.reload();
-          return;
-        }
-        
-        console.log('Resuming animation');
-        if (animationFrameId === null) {
-          animate();
-        }
+        console.log('Tab is visible again, refreshing page immediately');
+        window.location.reload();
       } else {
         console.log('Pausing animation');
         if (animationFrameId !== null) {
@@ -439,8 +426,6 @@ const Universe = ({
           animationFrameId = null;
         }
       }
-      
-      lastVisibilityChange = Date.now();
     };
 
     const init = async () => {
