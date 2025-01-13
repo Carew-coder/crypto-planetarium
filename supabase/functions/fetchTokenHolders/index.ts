@@ -6,10 +6,46 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+async function fetchWithRetry(url: string, options: any, maxRetries = 3) {
+  let lastError;
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      console.log(`Attempt ${i + 1} of ${maxRetries} to fetch data...`);
+      const response = await fetch(url, options);
+      
+      if (response.status === 429) {
+        const retryAfter = response.headers.get('Retry-After');
+        const waitTime = retryAfter ? parseInt(retryAfter) * 1000 : Math.min(1000 * Math.pow(2, i), 10000);
+        console.log(`Rate limited. Waiting ${waitTime}ms before retry...`);
+        await sleep(waitTime);
+        continue;
+      }
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`API request failed: ${response.statusText}. Status: ${response.status}. Body: ${errorText}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error(`Attempt ${i + 1} failed:`, error);
+      lastError = error;
+      
+      if (i < maxRetries - 1) {
+        const waitTime = Math.min(1000 * Math.pow(2, i), 10000);
+        console.log(`Waiting ${waitTime}ms before retry...`);
+        await sleep(waitTime);
+      }
+    }
+  }
+  throw lastError;
+}
+
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
@@ -24,72 +60,55 @@ serve(async (req) => {
     const tokenAddress = 'GxHJDpqpPGjeM1n9y2WnDxjJzXzL43p593DdauEmXTkE';
     const url = `https://data.solanatracker.io/tokens/${tokenAddress}/holders`;
 
-    console.log('Making API request to:', url);
+    console.log('Making API request with retry mechanism to:', url);
     
-    const response = await fetch(url, {
+    const data = await fetchWithRetry(url, {
       headers: {
         'x-api-key': apiKey,
         'Accept': 'application/json',
       }
     });
 
-    console.log('API Response Status:', response.status)
-    console.log('API Response Headers:', Object.fromEntries(response.headers.entries()))
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('API request failed:', {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorText,
-        headers: Object.fromEntries(response.headers.entries()),
-      })
-      throw new Error(`API request failed: ${response.statusText}. Status: ${response.status}. Body: ${errorText}`)
-    }
-
-    const data = await response.json()
-    console.log('Raw API response:', JSON.stringify(data, null, 2))
-
     if (!data) {
-      console.error('Empty API response')
-      throw new Error('Empty API response')
+      console.error('Empty API response');
+      throw new Error('Empty API response');
     }
 
-    // Store data in Supabase
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    console.log('Successfully fetched data from API');
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     
     if (!supabaseUrl || !supabaseKey) {
-      console.error('Supabase credentials not found')
-      throw new Error('Supabase credentials not found')
+      console.error('Supabase credentials not found');
+      throw new Error('Supabase credentials not found');
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey)
-    console.log('Supabase client initialized')
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    console.log('Supabase client initialized');
 
-    // Transform the data first
     let holders;
     if (Array.isArray(data)) {
-      console.log('Processing array response format')
+      console.log('Processing array response format');
       holders = data.map((holder: any) => ({
         wallet_address: holder.owner,
         token_amount: holder.amount,
         percentage: (holder.amount / holder.total_supply) * 100,
-      }))
+      }));
     } else if (data.accounts && Array.isArray(data.accounts)) {
-      console.log('Processing object with accounts array format')
+      console.log('Processing object with accounts array format');
       holders = data.accounts.map((holder: any) => ({
         wallet_address: holder.wallet || holder.owner,
         token_amount: holder.amount,
         percentage: holder.percentage || (holder.amount / holder.total_supply) * 100,
-      }))
+      }));
     } else {
-      console.error('Unexpected data format:', data)
-      throw new Error('Invalid data format received from API')
+      console.error('Unexpected data format:', data);
+      throw new Error('Invalid data format received from API');
     }
 
-    console.log('Transformed data. Number of holders:', holders.length)
-    console.log('First holder example:', holders[0])
+    console.log('Transformed data. Number of holders:', holders.length);
+    console.log('First holder example:', holders[0]);
 
     // Get current wallet addresses to determine which ones to remove
     const { data: currentHolders, error: fetchError } = await supabase
@@ -153,7 +172,7 @@ serve(async (req) => {
       count: holders.length 
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    });
   } catch (error) {
     console.error('Error in fetchTokenHolders function:', error);
     return new Response(JSON.stringify({ error: error.message }), {
