@@ -34,6 +34,49 @@ const Universe = ({
   const [holderTableCollapsed, setHolderTableCollapsed] = useState(false);
   const [rewardsTableCollapsed, setRewardsTableCollapsed] = useState(false);
 
+  const handleBackToOverview = () => {
+    if (!cameraRef.current || !controlsRef.current) {
+      console.error("Camera or controls ref not available");
+      return;
+    }
+    
+    console.log("Handling back to overview");
+    
+    const targetPosition = initialCameraPosition.clone();
+    const startPosition = cameraRef.current.position.clone();
+    let startTime = Date.now();
+    const duration = 1000; // 1 second animation
+
+    const animate = () => {
+      const currentTime = Date.now();
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      if (progress < 1) {
+        // Calculate new position
+        const newPos = new THREE.Vector3(
+          startPosition.x + (targetPosition.x - startPosition.x) * progress,
+          startPosition.y + (targetPosition.y - startPosition.y) * progress,
+          startPosition.z + (targetPosition.z - startPosition.z) * progress
+        );
+        
+        cameraRef.current!.position.copy(newPos);
+        controlsRef.current!.target.copy(new THREE.Vector3(0, 0, 0));
+        controlsRef.current!.update();
+        
+        requestAnimationFrame(animate);
+      } else {
+        // Animation complete
+        console.log("Animation complete, resetting state");
+        setIsZoomedIn(false);
+        setShowTables(false);
+        onBackToOverview();
+      }
+    };
+
+    animate();
+  };
+
   const preloadTextures = async () => {
     const texturePromises = PLANET_TEXTURES.map((texturePath) => {
       return new Promise<void>((resolve) => {
@@ -281,32 +324,6 @@ const Universe = ({
 
     init();
   }, []);
-
-  const handleBackToOverview = () => {
-    if (!cameraRef.current || !controlsRef.current) return;
-    
-    console.log("Handling back to overview");
-    
-    let progress = 0;
-    const animate = () => {
-      progress += 0.02;
-      if (progress > 1) {
-        setIsZoomedIn(false);
-        setShowTables(false);
-        onBackToOverview();
-        return;
-      }
-
-      const newPos = cameraRef.current!.position.clone().lerp(initialCameraPosition, progress);
-      cameraRef.current!.position.copy(newPos);
-      controlsRef.current!.target.copy(new THREE.Vector3(0, 0, 0));
-      controlsRef.current!.update();
-
-      requestAnimationFrame(animate);
-    };
-
-    animate();
-  };
 
   return (
     <div className="relative w-full h-screen">
