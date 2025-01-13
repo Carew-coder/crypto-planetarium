@@ -1,11 +1,12 @@
 import Universe from "@/components/Universe";
 import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { Connection, PublicKey } from "@solana/web3.js";
 
 const Index = () => {
   const [searchAddress, setSearchAddress] = useState("");
@@ -20,15 +21,26 @@ const Index = () => {
 
   const handleConnectWallet = async () => {
     try {
-      // This is a placeholder for actual wallet connection logic
-      console.log("Connecting wallet...");
-      toast.info("Connecting wallet...");
+      // Check if Phantom is installed
+      const { solana } = window as any;
       
-      // Simulate wallet connection delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (!solana?.isPhantom) {
+        toast.error("Phantom wallet is not installed!");
+        // Open Phantom wallet download page
+        window.open("https://phantom.app/download", "_blank");
+        return;
+      }
+
+      console.log("Connecting to Phantom wallet...");
+      toast.info("Connecting to Phantom wallet...");
+      
+      // Connect to Phantom wallet
+      const response = await solana.connect();
+      console.log("Connected to wallet:", response.publicKey.toString());
       
       setIsWalletConnected(true);
       toast.success("Wallet connected successfully!");
+      
     } catch (error) {
       console.error("Failed to connect wallet:", error);
       toast.error("Failed to connect wallet");
