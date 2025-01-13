@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
 interface CustomisePlanetProps {
   walletAddress: string;
@@ -23,18 +24,33 @@ const CustomisePlanet = ({ walletAddress }: CustomisePlanetProps) => {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const queryClient = useQueryClient();
 
+  // Query to get current planet customization
+  const { data: currentCustomization } = useQuery({
+    queryKey: ['planetCustomization', walletAddress],
+    queryFn: async () => {
+      console.log('Fetching current planet customization for wallet:', walletAddress);
+      const { data } = await supabase
+        .from('planet_customizations')
+        .select('*')
+        .eq('wallet_address', walletAddress)
+        .single();
+      return data;
+    }
+  });
+
   const onSubmit = async (data: FormValues) => {
     try {
       setIsSubmitting(true);
       console.log('Customizing planet for wallet:', walletAddress);
 
-      let skinUrl = null;
+      // Only update skin_url if a new file is uploaded
+      let skinUrl = currentCustomization?.skin_url || null;
       if (data.skin?.[0]) {
         const file = data.skin[0];
         const fileExt = file.name.split('.').pop();
         const fileName = `${walletAddress}-${Date.now()}.${fileExt}`;
 
-        console.log('Uploading skin file:', fileName);
+        console.log('Uploading new skin file:', fileName);
         const { error: uploadError, data: uploadData } = await supabase.storage
           .from('planet_skins')
           .upload(fileName, file);
@@ -51,7 +67,7 @@ const CustomisePlanet = ({ walletAddress }: CustomisePlanetProps) => {
         skinUrl = publicUrl;
       }
 
-      console.log('Updating planet customization in database');
+      console.log('Updating planet customization in database with skin:', skinUrl);
       const { error: dbError } = await supabase
         .from('planet_customizations')
         .upsert(
