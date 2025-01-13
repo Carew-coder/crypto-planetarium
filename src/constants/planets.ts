@@ -1,16 +1,17 @@
-export const SUN_TEXTURE = '/lovable-uploads/23b2bc40-66dc-4b5a-9b64-3d91755cea67.png';
+export const SUN_TEXTURE = '/lovable-uploads/3b3451a5-34bb-48fb-91d3-427407ec33e4.png'; // Fiery texture for the sun
 
 // Array of textures that will be used for the planets
 export const PLANET_TEXTURES = [
-  '/lovable-uploads/0052a47d-d440-437c-8f29-fb5b458cb642.png',
-  '/lovable-uploads/07940f47-fc24-4197-ba10-be4390f882b2.png',
-  '/lovable-uploads/0a36d67b-b2b3-4558-aad4-6665abaca922.png',
-  '/lovable-uploads/143c45be-81e7-4bc9-8c02-5b5d749b901a.png',
-  '/lovable-uploads/1a9e1fee-d80e-4855-86e9-9fe6b4a730db.png',
-  '/lovable-uploads/1ab07e73-40b1-45f0-970a-3a546f65c396.png',
-  '/lovable-uploads/2628cfea-a949-4819-adb1-c3c393bb68d4.png',
-  '/lovable-uploads/454d5495-aee2-4eaa-b3a1-49e4cf51f279.png',
-  '/lovable-uploads/47867400-645f-4a61-adea-7da70fa41000.png',
+  '/lovable-uploads/99b14542-f4d2-44ea-a833-5034f0255bea.png',  // Green swirl
+  '/lovable-uploads/69c504e9-e9cd-46bf-bd7f-0c67c80294d9.png',  // Pastel swirl
+  '/lovable-uploads/81cbd3fb-a1c3-44c0-8b90-fd34ef5a73dd.png',  // Electric green
+  '/lovable-uploads/c8aba9c6-d59d-41f8-8735-f40fb6bb37a3.png',  // Blue swirl
+  '/lovable-uploads/e3837114-4ac9-4ff3-bc53-032aea006f0f.png',  // Earth-like
+  '/lovable-uploads/593dd3b5-1ece-4486-96c0-6bf74240795e.png',  // Ocean waves
+  '/lovable-uploads/f8de2475-536f-4ad7-a175-fefe2aa34b72.png',  // Purple nebula
+  '/lovable-uploads/98a4a118-feb5-4773-8508-8ea28b9f15ac.png',  // Golden swirl
+  '/lovable-uploads/18882195-537b-4429-ab8d-b25064f44981.png',  // Crystal cave
+  '/lovable-uploads/3a2b0bbf-5268-4126-bc25-d4ea7fec9f4e.png'   // Red plasma
 ];
 
 // Function to calculate planet size based on holding percentage with exponential scaling and a maximum cap
