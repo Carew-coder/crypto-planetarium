@@ -4,6 +4,8 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 interface Planet {
   id: string;
@@ -146,6 +148,7 @@ const Universe = () => {
   const [isZoomedIn, setIsZoomedIn] = useState(false);
   const [initialCameraPosition] = useState(new THREE.Vector3(0, 0, 100));
   const [isLoading, setIsLoading] = useState(true);
+  const [showTables, setShowTables] = useState(false);
 
   // Preload textures
   const preloadTextures = async () => {
@@ -342,6 +345,7 @@ const Universe = () => {
           const sunIntersects = raycaster.intersectObject(sunRef.current);
           if (sunIntersects.length > 0) {
             setIsZoomedIn(true);
+            setShowTables(true);
             const position = new THREE.Vector3(0, 0, 15); // Position slightly in front of the sun
 
             const currentPos = cameraRef.current.position.clone();
@@ -378,6 +382,7 @@ const Universe = () => {
 
           if (clickedPlanet) {
             setIsZoomedIn(true);
+            setShowTables(true);
             const position = new THREE.Vector3(...clickedPlanet.position);
             position.z += 5;
 
@@ -423,6 +428,7 @@ const Universe = () => {
     if (!cameraRef.current || !controlsRef.current) return;
     
     setIsZoomedIn(false);
+    setShowTables(false);
     
     let progress = 0;
     const animate = () => {
@@ -443,6 +449,7 @@ const Universe = () => {
   return (
     <div className="relative w-full h-screen">
       <div ref={containerRef} className="w-full h-screen" />
+      
       {isZoomedIn && (
         <Button
           variant="outline"
@@ -454,6 +461,71 @@ const Universe = () => {
           Back to Overview
         </Button>
       )}
+
+      {showTables && (
+        <div className="absolute top-20 inset-x-4 flex gap-4">
+          {/* Holder Information Table */}
+          <Card className="w-1/2 bg-space-lighter/80 text-white border-white/10">
+            <CardHeader>
+              <CardTitle>Holder Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-white/80">Address</TableHead>
+                    <TableHead className="text-white/80">Balance</TableHead>
+                    <TableHead className="text-white/80">Share</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell className="text-white/70">0x1234...5678</TableCell>
+                    <TableCell className="text-white/70">1,000,000</TableCell>
+                    <TableCell className="text-white/70">10%</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="text-white/70">0x8765...4321</TableCell>
+                    <TableCell className="text-white/70">500,000</TableCell>
+                    <TableCell className="text-white/70">5%</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          {/* Rewards Table */}
+          <Card className="w-1/2 bg-space-lighter/80 text-white border-white/10">
+            <CardHeader>
+              <CardTitle>Rewards</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-white/80">Type</TableHead>
+                    <TableHead className="text-white/80">Amount</TableHead>
+                    <TableHead className="text-white/80">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell className="text-white/70">Staking</TableCell>
+                    <TableCell className="text-white/70">100</TableCell>
+                    <TableCell className="text-white/70">Claimable</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="text-white/70">Trading</TableCell>
+                    <TableCell className="text-white/70">50</TableCell>
+                    <TableCell className="text-white/70">Pending</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {isLoading && (
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
           <div className="relative h-[40px] w-[40px] before:content-[''] before:absolute before:top-0 before:left-0 before:h-full before:w-full before:rounded-full before:bg-white before:animate-[pulse_1.75s_ease-in-out_infinite] before:scale-0 before:transition-colors before:ease-in-out before:duration-300 after:content-[''] after:absolute after:top-0 after:left-0 after:h-full after:w-full after:rounded-full after:bg-white after:animate-[pulse_1.75s_ease-in-out_infinite] after:scale-0 after:transition-colors after:ease-in-out after:duration-300 after:delay-[calc(1.75s/-2)]" />
