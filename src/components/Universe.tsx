@@ -391,6 +391,51 @@ const Universe = ({
     addPlanetBatch();
   };
 
+  const animateRef = useRef<() => void>();
+  const isPageVisibleRef = useRef(true);
+
+  const handleVisibilityChange = () => {
+    console.log('Visibility state changed:', document.visibilityState);
+    isPageVisibleRef.current = document.visibilityState === 'visible';
+    
+    if (isPageVisibleRef.current && rendererRef.current && cameraRef.current && sceneRef.current) {
+      console.log('Page is visible, resuming animation');
+      animateRef.current();
+    } else {
+      console.log('Page is hidden, pausing animation');
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    }
+  };
+
+  const animate = () => {
+    if (!isPageVisibleRef.current) {
+      console.log('Animation stopped - page not visible');
+      return;
+    }
+
+    if (!isZoomedIn && planetsRef.current) {
+      Object.values(planetsRef.current).forEach((planet) => {
+        planet.rotation.y += 0.005;
+      });
+
+      if (sunRef.current) {
+        sunRef.current.rotation.y += 0.001;
+      }
+    }
+
+    if (controlsRef.current) {
+      controlsRef.current.update();
+    }
+
+    if (rendererRef.current && sceneRef.current && cameraRef.current) {
+      rendererRef.current.render(sceneRef.current, cameraRef.current);
+    }
+
+    animationFrameRef.current = requestAnimationFrame(animate);
+  };
+
   useEffect(() => {
     if (!containerRef.current || !holders) {
       console.log('Container ref or holders data not ready');
@@ -480,23 +525,8 @@ const Universe = ({
       const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
       scene.add(hemisphereLight);
 
-      const animate = () => {
-        requestAnimationFrame(animate);
-        
-        if (!isZoomedIn) {
-          Object.values(planetsRef.current).forEach((planet) => {
-            planet.rotation.y += 0.005;
-          });
-
-          if (sunRef.current) {
-            sunRef.current.rotation.y += 0.001;
-          }
-        }
-
-        controls.update();
-        renderer.render(scene, camera);
-      };
-
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      animateRef.current = animate;
       animate();
 
       const handleResize = () => {
@@ -566,9 +596,16 @@ const Universe = ({
       window.addEventListener('click', handleClick);
 
       return () => {
+        console.log('Cleaning up universe component');
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+        window.removeEventListener('resize', handleResize);
         window.removeEventListener('click', handleClick);
-        cleanupAnimation();
-        renderer.dispose();
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current);
+        }
+        if (rendererRef.current) {
+          rendererRef.current.dispose();
+        }
       };
     };
 
