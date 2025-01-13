@@ -166,6 +166,48 @@ const Universe = ({
     });
   };
 
+  const handlePlanetZoom = (planetPosition: THREE.Vector3) => {
+    if (!cameraRef.current || !controlsRef.current) return;
+    
+    cleanupAnimation();
+    
+    // Calculate the target position for the camera
+    // Move back slightly on the z-axis for better view
+    const targetPosition = new THREE.Vector3(
+      planetPosition.x,
+      planetPosition.y,
+      planetPosition.z + 8
+    );
+
+    const currentPos = cameraRef.current.position.clone();
+    let progress = 0;
+    
+    const animate = () => {
+      progress += 0.02;
+      if (progress > 1) {
+        controlsRef.current!.enabled = false;
+        cleanupAnimation();
+        return;
+      }
+
+      // Smoothly move camera to new position
+      const newPos = currentPos.clone().lerp(targetPosition, progress);
+      cameraRef.current!.position.copy(newPos);
+      
+      // Update controls target to center on planet
+      controlsRef.current!.target.copy(new THREE.Vector3(
+        planetPosition.x,
+        planetPosition.y,
+        planetPosition.z
+      ));
+      controlsRef.current!.update();
+
+      animationFrameRef.current = requestAnimationFrame(animate);
+    };
+
+    animate();
+  };
+
   useEffect(() => {
     if (!containerRef.current || !holders) return;
 
@@ -298,36 +340,13 @@ const Universe = ({
         if (sunRef.current) {
           const sunIntersects = raycaster.intersectObject(sunRef.current);
           if (sunIntersects.length > 0) {
-            // Clean up any existing animation
             cleanupAnimation();
-            
             setIsZoomedIn(true);
             setSelectedHolder(null);
             onPlanetClick();
-            const position = new THREE.Vector3(-2, 0, 15);
-
-            // Disable controls and ensure they stay disabled
-            controlsRef.current.enabled = false;
-
-            const currentPos = cameraRef.current.position.clone();
-            let progress = 0;
-            const animate = () => {
-              progress += 0.02;
-              if (progress > 1) {
-                controlsRef.current!.enabled = false;
-                cleanupAnimation();
-                return;
-              }
-
-              const newPos = currentPos.clone().lerp(position, progress);
-              cameraRef.current!.position.copy(newPos);
-              controlsRef.current!.target.copy(new THREE.Vector3(-2, 0, 0));
-              controlsRef.current!.update();
-
-              animationFrameRef.current = requestAnimationFrame(animate);
-            };
-
-            animate();
+            
+            // Center the sun
+            handlePlanetZoom(new THREE.Vector3(0, 0, 0));
             return;
           }
         }
@@ -340,49 +359,16 @@ const Universe = ({
           );
 
           if (clickedPlanet) {
-            // Clean up any existing animation
             cleanupAnimation();
-            
             setIsZoomedIn(true);
             setSelectedHolder(clickedPlanet);
             onPlanetClick();
 
-            // Get the planet's position from our reference
             const planetPosition = planetPositionsRef.current[clickedPlanet.wallet_address];
             if (!planetPosition) return;
 
-            // Disable controls and ensure they stay disabled
             controlsRef.current.enabled = false;
-
-            const targetPosition = new THREE.Vector3(
-              planetPosition.x - 2,
-              planetPosition.y,
-              planetPosition.z + 5
-            );
-
-            const currentPos = cameraRef.current.position.clone();
-            let progress = 0;
-            const animate = () => {
-              progress += 0.02;
-              if (progress > 1) {
-                controlsRef.current!.enabled = false;
-                cleanupAnimation();
-                return;
-              }
-
-              const newPos = currentPos.clone().lerp(targetPosition, progress);
-              cameraRef.current!.position.copy(newPos);
-              controlsRef.current!.target.copy(new THREE.Vector3(
-                planetPosition.x - 2,
-                planetPosition.y,
-                planetPosition.z
-              ));
-              controlsRef.current!.update();
-
-              animationFrameRef.current = requestAnimationFrame(animate);
-            };
-
-            animate();
+            handlePlanetZoom(planetPosition);
           }
         }
       };
@@ -408,9 +394,7 @@ const Universe = ({
       const holder = holders?.find(h => h.wallet_address === selectedWalletAddress);
       
       if (planet && holder && cameraRef.current && controlsRef.current) {
-        // Clean up any existing animation
         cleanupAnimation();
-        
         setIsZoomedIn(true);
         setSelectedHolder(holder);
         onPlanetClick();
@@ -418,38 +402,8 @@ const Universe = ({
         const planetPosition = planetPositionsRef.current[selectedWalletAddress];
         if (!planetPosition) return;
 
-        // Disable controls
         controlsRef.current.enabled = false;
-
-        const targetPosition = new THREE.Vector3(
-          planetPosition.x - 2,
-          planetPosition.y,
-          planetPosition.z + 5
-        );
-
-        const currentPos = cameraRef.current.position.clone();
-        let progress = 0;
-        const animate = () => {
-          progress += 0.02;
-          if (progress > 1) {
-            controlsRef.current!.enabled = false;
-            cleanupAnimation();
-            return;
-          }
-
-          const newPos = currentPos.clone().lerp(targetPosition, progress);
-          cameraRef.current!.position.copy(newPos);
-          controlsRef.current!.target.copy(new THREE.Vector3(
-            planetPosition.x - 2,
-            planetPosition.y,
-            planetPosition.z
-          ));
-          controlsRef.current!.update();
-
-          animationFrameRef.current = requestAnimationFrame(animate);
-        };
-
-        animate();
+        handlePlanetZoom(planetPosition);
       }
     }
   }, [selectedWalletAddress, holders, isZoomedIn, onPlanetClick]);
