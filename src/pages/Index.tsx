@@ -5,7 +5,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Wallet, Loader2, Search, Globe } from "lucide-react";
-import { toast } from "sonner";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -53,13 +52,11 @@ const Index = () => {
       const { solana } = window as any;
       
       if (!solana?.isPhantom) {
-        toast.error("Phantom wallet is not installed!");
         window.open("https://phantom.app/download", "_blank");
         return;
       }
 
       console.log("Connecting to Phantom wallet...");
-      toast.info("Connecting to Phantom wallet...");
       
       const response = await solana.connect();
       const walletAddress = response.publicKey.toString();
@@ -67,11 +64,9 @@ const Index = () => {
       
       setIsWalletConnected(true);
       setConnectedWalletAddress(walletAddress);
-      toast.success("Wallet connected successfully!");
       
     } catch (error) {
       console.error("Failed to connect wallet:", error);
-      toast.error("Failed to connect wallet");
     }
   };
 
@@ -80,14 +75,12 @@ const Index = () => {
     console.log('Navigating to user planet:', connectedWalletAddress);
     setSelectedWallet(connectedWalletAddress);
     setIsPlanetSelected(true);
-    toast.success("Navigating to your planet!");
   };
 
   const handleWalletClick = (walletAddress: string) => {
     console.log('Wallet clicked:', walletAddress);
     setSelectedWallet(walletAddress);
     setIsPlanetSelected(true);
-    toast.success("Navigating to selected planet!");
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -102,9 +95,6 @@ const Index = () => {
       console.log('Found holder:', foundHolder);
       setSelectedWallet(foundHolder.wallet_address);
       setIsPlanetSelected(true);
-      toast.success("Planet found! Navigating to selected planet!");
-    } else {
-      toast.error("Wallet address not found");
     }
   };
 
