@@ -27,14 +27,12 @@ serve(async (req) => {
     console.log('Fetching token holders from Solana Tracker API...')
     console.log('Request URL:', url)
     
-    // Log the headers we're about to send
-    const headers = {
-      'x-api-key': apiKey,
-      'Accept': 'application/json',
-    }
-    console.log('Request headers:', Object.keys(headers))
-    
-    const response = await fetch(url, { headers })
+    const response = await fetch(url, {
+      headers: {
+        'x-api-key': apiKey,
+        'Accept': 'application/json',
+      }
+    })
 
     console.log('Response status:', response.status)
     console.log('Response headers:', Object.fromEntries(response.headers.entries()))
@@ -51,7 +49,7 @@ serve(async (req) => {
     }
 
     const data = await response.json()
-    console.log('Successfully fetched token holders data')
+    console.log('Successfully fetched token holders data. Number of accounts:', data.accounts?.length || 0)
 
     // Store data in Supabase
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
@@ -64,18 +62,26 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Clear existing data and insert new data
-    await supabase
+    // Clear existing data
+    console.log('Clearing existing token holders data...')
+    const { error: deleteError } = await supabase
       .from('token_holders')
       .delete()
       .neq('id', '00000000-0000-0000-0000-000000000000')
 
+    if (deleteError) {
+      console.error('Error deleting existing data:', deleteError)
+      throw deleteError
+    }
+
+    // Transform and insert new data
     const holders = data.accounts.map((holder: any) => ({
       wallet_address: holder.wallet,
       token_amount: holder.amount,
       percentage: holder.percentage,
     }))
 
+    console.log('Inserting new token holders data. Number of records:', holders.length)
     const { error: insertError } = await supabase
       .from('token_holders')
       .insert(holders)
@@ -87,7 +93,11 @@ serve(async (req) => {
 
     console.log('Successfully stored token holders in database')
 
-    return new Response(JSON.stringify(data), {
+    return new Response(JSON.stringify({ 
+      success: true, 
+      message: 'Token holders data updated successfully',
+      count: holders.length 
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {
