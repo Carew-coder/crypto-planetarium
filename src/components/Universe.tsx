@@ -8,6 +8,7 @@ import HolderTable from './universe/HolderTable';
 import RewardsTable from './universe/RewardsTable';
 import { SAMPLE_PLANETS, PLANET_TEXTURES, SUN_TEXTURE } from '@/constants/planets';
 import { Planet } from '@/types/universe';
+import ShootingStars from './universe/ShootingStars';
 
 const Universe = ({ 
   onPlanetClick,
@@ -372,6 +373,7 @@ const Universe = ({
   return (
     <div className="relative w-full h-screen">
       <div ref={containerRef} className="w-full h-screen" />
+      <ShootingStars />
       
       {isZoomedIn && (
         <Button
