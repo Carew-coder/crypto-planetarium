@@ -60,26 +60,45 @@ const Universe = ({
 
         while (hasMore) {
           console.log(`Fetching holders page ${currentPage + 1}`);
-          const { data, error, count } = await supabase
-            .from('token_holders')
-            .select('*', { count: 'exact' })
-            .order('percentage', { ascending: false })
-            .range(currentPage * pageSize, (currentPage + 1) * pageSize - 1);
+          try {
+            const { data, error, count } = await supabase
+              .from('token_holders')
+              .select('*', { count: 'exact' })
+              .order('percentage', { ascending: false })
+              .range(currentPage * pageSize, (currentPage + 1) * pageSize - 1);
 
-          if (error) {
-            console.error('Error fetching token holders:', error);
-            throw error;
+            if (error) {
+              if (error.code === 'PGRST103' || error.status === 416) {
+                console.log('Reached end of available holders');
+                hasMore = false;
+                break;
+              }
+              console.error('Error fetching token holders:', error);
+              throw error;
+            }
+
+            if (!data || data.length === 0) {
+              hasMore = false;
+            } else {
+              allHolders = [...allHolders, ...data];
+              if (data.length < pageSize) {
+                hasMore = false;
+              } else {
+                currentPage++;
+              }
+            }
+
+            // Add a small delay to prevent overwhelming the renderer
+            await new Promise(resolve => setTimeout(resolve, 500));
+          } catch (error) {
+            if (error.status === 416 || (error.body && error.body.includes('PGRST103'))) {
+              console.log('Reached end of available holders');
+              hasMore = false;
+            } else {
+              console.error('Error in fetchAllHolders:', error);
+              throw error;
+            }
           }
-
-          if (data.length === 0) {
-            hasMore = false;
-          } else {
-            allHolders = [...allHolders, ...data];
-            currentPage++;
-          }
-
-          // Add a small delay to prevent overwhelming the renderer
-          await new Promise(resolve => setTimeout(resolve, 500));
         }
 
         console.log('Successfully fetched all token holders:', allHolders.length);
