@@ -173,10 +173,13 @@ const Universe = ({
     
     cleanupAnimation();
     
+    // Adjust the z-axis offset based on whether it's the sun (at position 0,0,0) or a planet
+    const zOffset = planetPosition.equals(new THREE.Vector3(0, 0, 0)) ? 15 : 5;
+    
     const targetPosition = new THREE.Vector3(
       planetPosition.x,
       planetPosition.y,
-      planetPosition.z + 5
+      planetPosition.z + zOffset
     );
 
     const currentPos = cameraRef.current.position.clone();
@@ -185,18 +188,19 @@ const Universe = ({
     const animate = () => {
       progress += 0.02;
       if (progress > 1) {
-        // Instead of disabling controls, configure them for planet viewing
         if (controlsRef.current) {
           controlsRef.current.enableZoom = true;
           controlsRef.current.enableRotate = true;
           controlsRef.current.enablePan = true;
-          controlsRef.current.minDistance = 3; // Prevent zooming too close
-          controlsRef.current.maxDistance = 10; // Prevent zooming too far
-          controlsRef.current.target.copy(new THREE.Vector3(
-            planetPosition.x,
-            planetPosition.y,
-            planetPosition.z
-          ));
+          // Adjust min/max distance for sun vs planets
+          if (planetPosition.equals(new THREE.Vector3(0, 0, 0))) {
+            controlsRef.current.minDistance = 10;
+            controlsRef.current.maxDistance = 25;
+          } else {
+            controlsRef.current.minDistance = 3;
+            controlsRef.current.maxDistance = 10;
+          }
+          controlsRef.current.target.copy(planetPosition);
         }
         cleanupAnimation();
         return;
@@ -205,11 +209,7 @@ const Universe = ({
       const newPos = currentPos.clone().lerp(targetPosition, progress);
       cameraRef.current!.position.copy(newPos);
       
-      controlsRef.current!.target.copy(new THREE.Vector3(
-        planetPosition.x,
-        planetPosition.y,
-        planetPosition.z
-      ));
+      controlsRef.current!.target.copy(planetPosition);
       controlsRef.current!.update();
 
       animationFrameRef.current = requestAnimationFrame(animate);
