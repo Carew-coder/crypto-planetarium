@@ -44,7 +44,7 @@ const PlanetInformation = ({ holder, connectedWalletAddress }: PlanetInformation
     }
   });
 
-  // Query to get planet customization data
+  // Query to get planet customization data - now using maybeSingle() instead of single()
   const { data: planetCustomization } = useQuery({
     queryKey: ['planetCustomization', holder.wallet_address],
     queryFn: async () => {
@@ -54,7 +54,7 @@ const PlanetInformation = ({ holder, connectedWalletAddress }: PlanetInformation
         .from('planet_customizations')
         .select('nickname')
         .eq('wallet_address', holder.wallet_address)
-        .single();
+        .maybeSingle();
       
       return data;
     }
