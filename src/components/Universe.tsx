@@ -597,7 +597,7 @@ const Universe = ({
   }, [holders, planetCustomizations]);
 
   useEffect(() => {
-    if (selectedWalletAddress && !isZoomedIn && planetsRef.current[selectedWalletAddress]) {
+    if (selectedWalletAddress && planetsRef.current[selectedWalletAddress]) {
       console.log('Zooming to selected wallet planet:', selectedWalletAddress);
       
       const planet = planetsRef.current[selectedWalletAddress];
@@ -607,7 +607,6 @@ const Universe = ({
         cleanupAnimation();
         setIsZoomedIn(true);
         setSelectedHolder(holder);
-        onPlanetClick();
 
         const planetPosition = planetPositionsRef.current[selectedWalletAddress];
         if (!planetPosition) {
@@ -621,7 +620,7 @@ const Universe = ({
         console.error("Required references not available for zoom");
       }
     }
-  }, [selectedWalletAddress, holders, isZoomedIn, onPlanetClick]);
+  }, [selectedWalletAddress, holders]);
 
   useEffect(() => {
     return () => {
