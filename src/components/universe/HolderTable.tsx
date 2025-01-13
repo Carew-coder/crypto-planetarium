@@ -17,7 +17,7 @@ const HolderTable: React.FC<TableProps> = () => {
         </TableHeader>
         <TableBody>
           <TableRow>
-            <TableCell className="text-white/70">Mercury</TableCell>
+            <TableCell className="text-white/70">0x1234...5678</TableCell>
             <TableCell className="text-white/70">10%</TableCell>
             <TableCell className="text-white/70">1,000,000</TableCell>
             <TableCell className="text-white/70">$500</TableCell>
