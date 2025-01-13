@@ -58,16 +58,18 @@ const Index = () => {
       {/* Top Navigation Bar */}
       <div className="fixed top-0 left-0 right-0 p-4 z-50">
         <div className="container mx-auto flex justify-between items-start max-w-7xl">
-          {/* Visit Planet Search Bar (Left) */}
-          <div className="glass-panel p-4">
-            <Input
-              type="text"
-              placeholder="Search wallet address..."
-              className="w-80 bg-space-lighter/50 border-white/10 text-white placeholder:text-white/50"
-              value={searchAddress}
-              onChange={(e) => setSearchAddress(e.target.value)}
-            />
-          </div>
+          {/* Visit Planet Search Bar (Left) - Only show when planet is not selected */}
+          {!isPlanetSelected && (
+            <div className="glass-panel p-4">
+              <Input
+                type="text"
+                placeholder="Search wallet address..."
+                className="w-80 bg-space-lighter/50 border-white/10 text-white placeholder:text-white/50"
+                value={searchAddress}
+                onChange={(e) => setSearchAddress(e.target.value)}
+              />
+            </div>
+          )}
 
           {/* Solar Title (Center) */}
           <div className="absolute left-1/2 transform -translate-x-1/2">
@@ -91,6 +93,19 @@ const Index = () => {
           </div>
         </div>
       </div>
+
+      {/* Search bar below Back button when planet is selected */}
+      {isPlanetSelected && (
+        <div className="fixed top-20 left-4 glass-panel p-4 z-50">
+          <Input
+            type="text"
+            placeholder="Search wallet address..."
+            className="w-80 bg-space-lighter/50 border-white/10 text-white placeholder:text-white/50"
+            value={searchAddress}
+            onChange={(e) => setSearchAddress(e.target.value)}
+          />
+        </div>
+      )}
 
       {/* Top Holders Tab (Right Side) */}
       <div className="fixed right-4 top-20 glass-panel p-4 w-80 z-40">
