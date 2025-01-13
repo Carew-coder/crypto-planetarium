@@ -111,14 +111,16 @@ const Index = () => {
     console.error('Error fetching holders:', error);
   }
 
+  const handleBackToOverview = () => {
+    setIsPlanetSelected(false);
+    setSelectedWallet(null);
+  };
+
   return (
     <div className="relative w-full h-screen overflow-hidden">
       <Universe 
         onPlanetClick={handlePlanetClick} 
-        onBackToOverview={() => {
-          setIsPlanetSelected(false);
-          setSelectedWallet(null);
-        }}
+        onBackToOverview={handleBackToOverview}
         backButtonText="Back to the Solar System"
         selectedWalletAddress={selectedWallet}
       />
@@ -145,8 +147,11 @@ const Index = () => {
             </Button>
           </form>
 
-          {/* Solar Logo (Center) */}
-          <div className="absolute left-1/2 -translate-x-1/2 glass-panel px-4 py-2">
+          {/* Solar Logo (Center) - Now Clickable */}
+          <div 
+            onClick={handleBackToOverview}
+            className="absolute left-1/2 -translate-x-1/2 glass-panel px-4 py-2 cursor-pointer hover:bg-white/10 transition-colors"
+          >
             <img 
               src="/lovable-uploads/32b1c67e-6454-4649-b37d-dc0bae8bb0b0.png" 
               alt="Solar Logo" 
