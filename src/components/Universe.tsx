@@ -41,6 +41,9 @@ const Universe = ({
       return;
     }
 
+    // Re-enable controls when zooming out
+    controlsRef.current.enabled = true;
+
     // Ensure we're actually zooming out
     setIsZoomedIn(false);
     setShowTables(false);
@@ -208,12 +211,14 @@ const Universe = ({
       const animate = () => {
         requestAnimationFrame(animate);
         
-        Object.values(planetsRef.current).forEach((planet) => {
-          planet.rotation.y += 0.005;
-        });
+        if (!isZoomedIn) {
+          Object.values(planetsRef.current).forEach((planet) => {
+            planet.rotation.y += 0.005;
+          });
 
-        if (sunRef.current) {
-          sunRef.current.rotation.y += 0.001;
+          if (sunRef.current) {
+            sunRef.current.rotation.y += 0.001;
+          }
         }
 
         controls.update();
@@ -252,7 +257,10 @@ const Universe = ({
             setIsZoomedIn(true);
             setShowTables(true);
             onPlanetClick();
-            const position = new THREE.Vector3(-2, 0, 15); // Changed from -4 to -2
+            const position = new THREE.Vector3(-2, 0, 15);
+
+            // Disable controls when zoomed in
+            controlsRef.current.enabled = false;
 
             const currentPos = cameraRef.current.position.clone();
             let progress = 0;
@@ -264,7 +272,7 @@ const Universe = ({
 
               const newPos = currentPos.clone().lerp(position, progress);
               cameraRef.current!.position.copy(newPos);
-              controlsRef.current!.target.copy(new THREE.Vector3(-2, 0, 0)); // Changed from -4 to -2
+              controlsRef.current!.target.copy(new THREE.Vector3(-2, 0, 0));
               controlsRef.current!.update();
 
               requestAnimationFrame(animate);
@@ -286,8 +294,12 @@ const Universe = ({
             setIsZoomedIn(true);
             setShowTables(true);
             onPlanetClick();
+
+            // Disable controls when zoomed in
+            controlsRef.current.enabled = false;
+
             const position = new THREE.Vector3(
-              clickedPlanet.position[0] - 2, // Changed from -4 to -2
+              clickedPlanet.position[0] - 2,
               clickedPlanet.position[1],
               clickedPlanet.position[2] + 5
             );
@@ -303,7 +315,7 @@ const Universe = ({
               const newPos = currentPos.clone().lerp(position, progress);
               cameraRef.current!.position.copy(newPos);
               controlsRef.current!.target.copy(new THREE.Vector3(
-                clickedPlanet.position[0] - 2, // Changed from -4 to -2
+                clickedPlanet.position[0] - 2,
                 clickedPlanet.position[1],
                 clickedPlanet.position[2]
               ));
