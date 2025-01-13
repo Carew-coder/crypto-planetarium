@@ -92,7 +92,7 @@ const Index = () => {
 
       {/* Top Holders Tab (Right Side) - Only show when not zoomed in */}
       {!isPlanetSelected && (
-        <div className="fixed right-8 top-1/2 -translate-y-1/2 glass-panel p-4 w-[24rem] z-30">
+        <div className="fixed right-8 top-1/2 -translate-y-1/2 glass-panel p-4 w-[20rem] z-30">
           <h2 className="text-lg font-semibold text-white mb-4">Top Holders</h2>
           <Table>
             <TableHeader>
