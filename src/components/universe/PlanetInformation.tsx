@@ -25,7 +25,6 @@ const PlanetInformation = ({ holder, connectedWalletAddress }: PlanetInformation
 
   const isOwnPlanet = connectedWalletAddress?.toLowerCase() === holder.wallet_address.toLowerCase();
 
-  // Find the rank of the holder by fetching all holders and sorting them
   const getRank = async () => {
     const { data: holders } = await supabase
       .from('token_holders')
@@ -68,7 +67,7 @@ const PlanetInformation = ({ holder, connectedWalletAddress }: PlanetInformation
           </TableBody>
         </Table>
       </div>
-      {isOwnPlanet && <CustomisePlanet />}
+      {isOwnPlanet && <CustomisePlanet walletAddress={holder.wallet_address} />}
     </div>
   );
 };

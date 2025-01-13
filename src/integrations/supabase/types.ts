@@ -9,6 +9,38 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      planet_customizations: {
+        Row: {
+          created_at: string
+          id: string
+          nickname: string | null
+          skin_url: string | null
+          wallet_address: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nickname?: string | null
+          skin_url?: string | null
+          wallet_address: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nickname?: string | null
+          skin_url?: string | null
+          wallet_address?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planet_customizations_wallet_address_fkey"
+            columns: ["wallet_address"]
+            isOneToOne: true
+            referencedRelation: "token_holders"
+            referencedColumns: ["wallet_address"]
+          },
+        ]
+      }
       token_holders: {
         Row: {
           created_at: string
