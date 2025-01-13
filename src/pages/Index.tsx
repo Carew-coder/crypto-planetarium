@@ -3,16 +3,36 @@ import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { useState } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Wallet } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 const Index = () => {
   const [searchAddress, setSearchAddress] = useState("");
   const [isOpen, setIsOpen] = useState(true);
   const [isPlanetSelected, setIsPlanetSelected] = useState(false);
+  const [isWalletConnected, setIsWalletConnected] = useState(false);
 
   const handlePlanetClick = () => {
     setIsPlanetSelected(true);
     setIsOpen(false);
+  };
+
+  const handleConnectWallet = async () => {
+    try {
+      // This is a placeholder for actual wallet connection logic
+      console.log("Connecting wallet...");
+      toast.info("Connecting wallet...");
+      
+      // Simulate wallet connection delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setIsWalletConnected(true);
+      toast.success("Wallet connected successfully!");
+    } catch (error) {
+      console.error("Failed to connect wallet:", error);
+      toast.error("Failed to connect wallet");
+    }
   };
 
   return (
@@ -27,6 +47,20 @@ const Index = () => {
       />
       <div className="absolute top-4 left-1/2 -translate-x-1/2 glass-panel px-6 py-3">
         <h1 className="text-xl font-semibold text-white">Solar</h1>
+      </div>
+
+      {/* Connect Wallet Button */}
+      <div className="absolute top-20 left-1/2 -translate-x-1/2">
+        <Button
+          variant="outline"
+          size="lg"
+          className="glass-panel border-none hover:bg-white/10"
+          onClick={handleConnectWallet}
+          disabled={isWalletConnected}
+        >
+          <Wallet className="mr-2 h-4 w-4" />
+          {isWalletConnected ? "Connected" : "Connect Wallet"}
+        </Button>
       </div>
       
       {/* Visit Planets Table */}
