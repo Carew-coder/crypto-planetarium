@@ -8,10 +8,12 @@ import { Database } from '@/integrations/supabase/types';
 
 type TokenHolder = Database['public']['Tables']['token_holders']['Row'];
 
-const HolderTable: React.FC<TableProps> = () => {
+const HolderTable: React.FC<TableProps> = ({ collapsed, onToggle }) => {
   const { data: holders, isLoading, error } = useQuery({
     queryKey: ['tokenHolders'],
     queryFn: async () => {
+      console.log('Fetching token holders data...');
+      
       // First trigger the edge function to fetch latest data
       await supabase.functions.invoke('fetchTokenHolders')
       
@@ -22,8 +24,13 @@ const HolderTable: React.FC<TableProps> = () => {
         .order('percentage', { ascending: false })
         .limit(10)
 
-      if (error) throw error
-      return data as TokenHolder[]
+      if (error) {
+        console.error('Error fetching token holders:', error);
+        throw error;
+      }
+      
+      console.log('Successfully fetched token holders data:', data);
+      return data as TokenHolder[];
     },
     refetchInterval: 300000, // Refetch every 5 minutes
   });
@@ -34,7 +41,7 @@ const HolderTable: React.FC<TableProps> = () => {
 
   return (
     <div className="absolute left-4 top-1/2 -translate-y-1/2 glass-panel p-4 w-[32rem]">
-      <h2 className="text-lg font-semibold text-white mb-4">Holder Information</h2>
+      <h2 className="text-lg font-semibold text-white mb-4">Top Holders</h2>
       {isLoading ? (
         <div className="flex justify-center items-center p-4">
           <Loader2 className="h-6 w-6 animate-spin text-white" />

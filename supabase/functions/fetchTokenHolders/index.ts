@@ -19,7 +19,7 @@ serve(async (req) => {
     }
 
     const tokenAddress = '3KzBEUwCm3Jfs61ikr1VDAzhpkkdhzLZUKVuBacRpump'
-    const url = `https://api.solanatracker.io/v1/tokens/${tokenAddress}/holders`
+    const url = `https://data.solanatracker.io/tokens/${tokenAddress}/holders`
 
     console.log('Fetching token holders from Solana Tracker API...')
     
@@ -53,9 +53,9 @@ serve(async (req) => {
       .delete()
       .neq('id', '00000000-0000-0000-0000-000000000000')
 
-    const holders = data.holders.map((holder: any) => ({
-      wallet_address: holder.address,
-      token_amount: holder.balance,
+    const holders = data.accounts.map((holder: any) => ({
+      wallet_address: holder.wallet,
+      token_amount: holder.amount,
       percentage: holder.percentage,
     }))
 
