@@ -96,13 +96,11 @@ const Universe = ({
     }
 
     if (isAnimatingRef.current) {
-      console.log("Animation already in progress, skipping");
-      return;
+      console.log("Animation already in progress, canceling previous animation");
+      cleanupAnimation();
     }
 
-    cleanupAnimation();
     isAnimatingRef.current = true;
-
     setIsZoomedIn(false);
     setSelectedHolder(null);
     onBackToOverview();
@@ -112,14 +110,19 @@ const Universe = ({
     const startTime = Date.now();
     const duration = 1000;
 
-    controlsRef.current.enabled = false;
+    if (controlsRef.current) {
+      controlsRef.current.enabled = false;
+      controlsRef.current.enableZoom = false;
+      controlsRef.current.enableRotate = false;
+      controlsRef.current.enablePan = false;
+    }
 
     const animate = () => {
       const currentTime = Date.now();
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / duration, 1);
 
-      if (progress < 1) {
+      if (progress < 1 && cameraRef.current && controlsRef.current) {
         const easeProgress = 1 - Math.pow(1 - progress, 3);
         
         const newPos = new THREE.Vector3().lerpVectors(
@@ -128,9 +131,9 @@ const Universe = ({
           easeProgress
         );
         
-        cameraRef.current!.position.copy(newPos);
-        controlsRef.current!.target.lerp(new THREE.Vector3(0, 0, 0), easeProgress);
-        controlsRef.current!.update();
+        cameraRef.current.position.copy(newPos);
+        controlsRef.current.target.lerp(new THREE.Vector3(0, 0, 0), easeProgress);
+        controlsRef.current.update();
         
         animationFrameRef.current = requestAnimationFrame(animate);
       } else {
@@ -150,89 +153,18 @@ const Universe = ({
     animate();
   };
 
-  const preloadTextures = async () => {
-    const texturePromises = PLANET_TEXTURES.map((texturePath) => {
-      return new Promise<void>((resolve) => {
-        textureLoaderRef.current.load(
-          texturePath,
-          (texture) => {
-            loadedTexturesRef.current[texturePath] = texture;
-            resolve();
-          },
-          undefined,
-          () => resolve()
-        );
-      });
-    });
-
-    await Promise.all(texturePromises);
-  };
-
-  const addPlanetsFromHolders = (scene: THREE.Scene) => {
-    if (!holders) return;
-
-    const existingPositions: [number, number, number][] = [];
-
-    holders.forEach((holder, index) => {
-      const customization = planetCustomizations?.find(
-        pc => pc.wallet_address === holder.wallet_address
-      );
-
-      let texture;
-      if (customization?.skin_url) {
-        console.log(`Loading custom skin for wallet ${holder.wallet_address}:`, customization.skin_url);
-        textureLoaderRef.current.load(
-          customization.skin_url,
-          (loadedTexture) => {
-            console.log(`Custom skin loaded successfully for ${holder.wallet_address}`);
-            if (planetsRef.current[holder.wallet_address]) {
-              const material = planetsRef.current[holder.wallet_address].material as THREE.MeshStandardMaterial;
-              material.map = loadedTexture;
-              material.needsUpdate = true;
-            }
-          },
-          undefined,
-          (error) => {
-            console.error(`Error loading custom skin for ${holder.wallet_address}:`, error);
-            // Fallback to default texture
-            const textureIndex = index % PLANET_TEXTURES.length;
-            const texturePath = PLANET_TEXTURES[textureIndex];
-            texture = loadedTexturesRef.current[texturePath];
-          }
-        );
-      } else {
-        const textureIndex = index % PLANET_TEXTURES.length;
-        const texturePath = PLANET_TEXTURES[textureIndex];
-        texture = loadedTexturesRef.current[texturePath];
-      }
-
-      const size = calculatePlanetSize(holder.percentage);
-      const geometry = new THREE.SphereGeometry(size, 32, 32);
-      const material = new THREE.MeshStandardMaterial({
-        map: texture,
-        metalness: 0.3,
-        roughness: 0.4,
-      });
-
-      const position = generateRandomPosition(existingPositions);
-      existingPositions.push(position);
-
-      const mesh = new THREE.Mesh(geometry, material);
-      mesh.position.set(...position);
-      scene.add(mesh);
-      planetsRef.current[holder.wallet_address] = mesh;
-      planetPositionsRef.current[holder.wallet_address] = mesh.position.clone();
-    });
-  };
-
   const handlePlanetZoom = (planetPosition: THREE.Vector3, planetSize?: number) => {
-    if (!cameraRef.current || !controlsRef.current || isAnimatingRef.current) {
-      console.log("Cannot start zoom animation - camera not ready or animation in progress");
+    if (!cameraRef.current || !controlsRef.current) {
+      console.error("Cannot start zoom animation - camera not ready");
       return;
     }
     
+    if (isAnimatingRef.current) {
+      console.log("Animation already in progress, canceling previous animation");
+      cleanupAnimation();
+    }
+    
     console.log("Starting zoom to planet animation");
-    cleanupAnimation();
     isAnimatingRef.current = true;
     
     const baseZOffset = planetPosition.equals(new THREE.Vector3(0, 0, 0)) ? 15 : 5;
@@ -244,23 +176,28 @@ const Universe = ({
       planetPosition.z + zOffset
     );
 
-    const currentPos = cameraRef.current.position.clone();
+    const startPosition = cameraRef.current.position.clone();
     const startTime = Date.now();
     const duration = 1000;
     
-    controlsRef.current.enabled = false;
+    if (controlsRef.current) {
+      controlsRef.current.enabled = false;
+      controlsRef.current.enableZoom = false;
+      controlsRef.current.enableRotate = false;
+      controlsRef.current.enablePan = false;
+    }
     
     const animate = () => {
       const currentTime = Date.now();
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / duration, 1);
 
-      if (progress < 1) {
+      if (progress < 1 && cameraRef.current && controlsRef.current) {
         const easeProgress = 1 - Math.pow(1 - progress, 3);
-        const newPos = currentPos.clone().lerp(targetPosition, easeProgress);
-        cameraRef.current!.position.copy(newPos);
-        controlsRef.current!.target.lerp(planetPosition, easeProgress);
-        controlsRef.current!.update();
+        const newPos = startPosition.clone().lerp(targetPosition, easeProgress);
+        cameraRef.current.position.copy(newPos);
+        controlsRef.current.target.lerp(planetPosition, easeProgress);
+        controlsRef.current.update();
         animationFrameRef.current = requestAnimationFrame(animate);
       } else {
         console.log("Zoom to planet animation complete");
