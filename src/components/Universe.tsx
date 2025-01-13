@@ -7,7 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import { PLANET_TEXTURES, SUN_TEXTURE, calculatePlanetSize } from '@/constants/planets';
 import ShootingStars from './universe/ShootingStars';
 import PlanetInformation from './universe/PlanetInformation';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { generateRandomPosition } from '@/utils/positionUtils';
 
@@ -40,14 +40,11 @@ const Universe = ({
   const [selectedHolder, setSelectedHolder] = useState<any>(null);
   const animationFrameRef = useRef<number>();
   const isAnimatingRef = useRef(false);
-  const queryClient = useQueryClient();
 
   const { data: holders, isLoading: holdersLoading } = useQuery({
     queryKey: ['tokenHolders'],
     queryFn: async () => {
       console.log('Fetching token holders data for planets...');
-      await supabase.functions.invoke('fetchTokenHolders');
-      
       const { data, error } = await supabase
         .from('token_holders')
         .select('*')
@@ -61,8 +58,7 @@ const Universe = ({
       
       return data;
     },
-    refetchInterval: 10000, // Decreased from 300000 to 10000 (10 seconds)
-    staleTime: 5000, // Data becomes stale after 5 seconds
+    refetchInterval: 300000,
   });
 
   const { data: planetCustomizations, isLoading: customizationsLoading } = useQuery({
@@ -80,60 +76,9 @@ const Universe = ({
 
       return data;
     },
-    refetchInterval: 10000, // Decreased from 300000 to 10000 (10 seconds)
-    staleTime: 5000,
+    refetchInterval: 300000,
+    staleTime: 0, // Always fetch fresh data
   });
-
-  // Add real-time subscription for token holders
-  useEffect(() => {
-    console.log('Setting up real-time subscription for token holders...');
-    const channel = supabase
-      .channel('schema-db-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
-          schema: 'public',
-          table: 'token_holders'
-        },
-        (payload) => {
-          console.log('Received real-time update for token holders:', payload);
-          // Force a refetch when we receive real-time updates
-          void queryClient.invalidateQueries({ queryKey: ['tokenHolders'] });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      console.log('Cleaning up token holders subscription');
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  // Add real-time subscription for planet customizations
-  useEffect(() => {
-    console.log('Setting up real-time subscription for planet customizations...');
-    const channel = supabase
-      .channel('schema-db-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'planet_customizations'
-        },
-        (payload) => {
-          console.log('Received real-time update for planet customizations:', payload);
-          void queryClient.invalidateQueries({ queryKey: ['planetCustomizations'] });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      console.log('Cleaning up planet customizations subscription');
-      supabase.removeChannel(channel);
-    };
-  }, []);
 
   const cleanupAnimation = () => {
     if (animationFrameRef.current) {

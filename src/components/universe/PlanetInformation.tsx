@@ -50,18 +50,12 @@ const PlanetInformation = ({ holder, connectedWalletAddress }: PlanetInformation
     queryFn: async () => {
       console.log('Fetching planet customization for wallet:', holder.wallet_address);
       
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('planet_customizations')
         .select('nickname')
         .eq('wallet_address', holder.wallet_address)
-        .maybeSingle();
+        .single();
       
-      if (error) {
-        console.error('Error fetching planet customization:', error);
-        return null;
-      }
-      
-      console.log('Planet customization data:', data);
       return data;
     }
   });
