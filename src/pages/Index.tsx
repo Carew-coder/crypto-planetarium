@@ -147,10 +147,12 @@ const Index = () => {
             </Button>
           </form>
 
-          {/* Solar Logo (Center) - Now Clickable */}
+          {/* Solar Logo (Center) - Clickable with conditional behavior */}
           <div 
-            onClick={handleBackToOverview}
-            className="absolute left-1/2 -translate-x-1/2 glass-panel px-4 py-2 cursor-pointer hover:bg-white/10 transition-colors"
+            onClick={isPlanetSelected ? handleBackToOverview : undefined}
+            className={`absolute left-1/2 -translate-x-1/2 glass-panel px-4 py-2 ${
+              isPlanetSelected ? 'cursor-pointer hover:bg-white/10 transition-colors' : ''
+            }`}
           >
             <img 
               src="/lovable-uploads/32b1c67e-6454-4649-b37d-dc0bae8bb0b0.png" 
