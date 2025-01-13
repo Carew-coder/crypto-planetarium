@@ -38,7 +38,6 @@ const Universe = ({
   const [selectedHolder, setSelectedHolder] = useState<any>(null);
   const animationFrameRef = useRef<number>();
 
-  // Fetch token holders data
   const { data: holders } = useQuery({
     queryKey: ['tokenHolders'],
     queryFn: async () => {
@@ -56,7 +55,7 @@ const Universe = ({
       
       return data;
     },
-    refetchInterval: 300000, // Refetch every 5 minutes
+    refetchInterval: 300000,
   });
 
   const cleanupAnimation = () => {
@@ -78,7 +77,6 @@ const Universe = ({
     setSelectedHolder(null);
     onBackToOverview();
 
-    // Reset controls to default state
     controlsRef.current.enableZoom = true;
     controlsRef.current.enableRotate = true;
     controlsRef.current.enablePan = true;
@@ -88,7 +86,7 @@ const Universe = ({
     const targetPosition = initialCameraPosition.clone();
     const startPosition = cameraRef.current.position.clone();
     const startTime = Date.now();
-    const duration = 1000; // 1 second animation
+    const duration = 1000;
 
     const animate = () => {
       const currentTime = Date.now();
@@ -96,10 +94,8 @@ const Universe = ({
       const progress = Math.min(elapsed / duration, 1);
 
       if (progress < 1) {
-        // Smooth easing function
         const easeProgress = 1 - Math.pow(1 - progress, 3);
         
-        // Calculate new position
         const newPos = new THREE.Vector3().lerpVectors(
           startPosition,
           targetPosition,
@@ -112,7 +108,6 @@ const Universe = ({
         
         animationFrameRef.current = requestAnimationFrame(animate);
       } else {
-        // Animation complete
         console.log("Zoom out animation complete");
         cleanupAnimation();
       }
@@ -188,27 +183,24 @@ const Universe = ({
       progress += 0.02;
       if (progress > 1) {
         if (controlsRef.current) {
-          // Enable all controls after zoom animation
+          controlsRef.current.enabled = true;
           controlsRef.current.enableZoom = true;
           controlsRef.current.enableRotate = true;
           controlsRef.current.enablePan = true;
-          controlsRef.current.enabled = true;
           
-          // Adjust control settings for better rotation
           controlsRef.current.enableDamping = true;
           controlsRef.current.dampingFactor = 0.05;
-          controlsRef.current.rotateSpeed = 0.8;
+          controlsRef.current.rotateSpeed = 0.5;
+          controlsRef.current.zoomSpeed = 0.5;
           
-          // Set appropriate distance limits based on target
           if (planetPosition.equals(new THREE.Vector3(0, 0, 0))) {
-            controlsRef.current.minDistance = 10;
-            controlsRef.current.maxDistance = 25;
+            controlsRef.current.minDistance = 15;
+            controlsRef.current.maxDistance = 15;
           } else {
-            controlsRef.current.minDistance = 3;
-            controlsRef.current.maxDistance = 10;
+            controlsRef.current.minDistance = 5;
+            controlsRef.current.maxDistance = 5;
           }
           
-          // Set the target to the planet's position
           controlsRef.current.target.copy(planetPosition);
           controlsRef.current.update();
         }
@@ -232,11 +224,9 @@ const Universe = ({
     if (!containerRef.current || !holders) return;
 
     const init = async () => {
-      // Scene setup
       const scene = new THREE.Scene();
       sceneRef.current = scene;
 
-      // Camera setup
       const camera = new THREE.PerspectiveCamera(
         75,
         window.innerWidth / window.innerHeight,
@@ -246,7 +236,6 @@ const Universe = ({
       camera.position.z = 100;
       cameraRef.current = camera;
 
-      // Renderer setup
       const renderer = new THREE.WebGLRenderer({
         antialias: true,
         alpha: true,
@@ -257,11 +246,11 @@ const Universe = ({
       containerRef.current.appendChild(renderer.domElement);
       rendererRef.current = renderer;
 
-      // Update controls setup with enhanced rotation settings
       const controls = new OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
       controls.dampingFactor = 0.05;
-      controls.rotateSpeed = 0.8;
+      controls.rotateSpeed = 0.5;
+      controls.zoomSpeed = 0.5;
       controls.minDistance = 1;
       controls.maxDistance = 200;
       controls.enableZoom = true;
@@ -269,7 +258,6 @@ const Universe = ({
       controls.enablePan = true;
       controlsRef.current = controls;
 
-      // Add sun
       const sunGeometry = new THREE.SphereGeometry(5, 32, 32);
       const sunTexture = textureLoaderRef.current.load(SUN_TEXTURE);
       const sunMaterial = new THREE.MeshStandardMaterial({
@@ -283,7 +271,6 @@ const Universe = ({
       scene.add(sun);
       sunRef.current = sun;
 
-      // Preload textures and add planets
       await preloadTextures();
       addPlanetsFromHolders(scene);
 
@@ -308,7 +295,6 @@ const Universe = ({
       const stars = new THREE.Points(starsGeometry, starsMaterial);
       scene.add(stars);
 
-      // Lighting setup
       const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
       scene.add(ambientLight);
 
@@ -319,7 +305,6 @@ const Universe = ({
       const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
       scene.add(hemisphereLight);
 
-      // Update animation loop to include controls update
       const animate = () => {
         requestAnimationFrame(animate);
         
@@ -333,14 +318,12 @@ const Universe = ({
           }
         }
 
-        // Always update controls for smooth damping
         controls.update();
         renderer.render(scene, camera);
       };
 
       animate();
 
-      // Handle window resize
       const handleResize = () => {
         if (!cameraRef.current || !rendererRef.current) return;
         
@@ -351,7 +334,6 @@ const Universe = ({
 
       window.addEventListener('resize', handleResize);
 
-      // Handle clicks
       const raycaster = new THREE.Raycaster();
       const mouse = new THREE.Vector2();
 
@@ -363,7 +345,6 @@ const Universe = ({
 
         raycaster.setFromCamera(mouse, cameraRef.current);
         
-        // Check for sun click
         if (sunRef.current) {
           const sunIntersects = raycaster.intersectObject(sunRef.current);
           if (sunIntersects.length > 0) {
@@ -372,13 +353,11 @@ const Universe = ({
             setSelectedHolder(null);
             onPlanetClick();
             
-            // Center the sun
             handlePlanetZoom(new THREE.Vector3(0, 0, 0));
             return;
           }
         }
 
-        // Check for planet clicks
         const intersects = raycaster.intersectObjects(Object.values(planetsRef.current));
         if (intersects.length > 0) {
           const clickedPlanet = holders.find(
@@ -412,7 +391,6 @@ const Universe = ({
     init();
   }, [holders]);
 
-  // Effect to handle wallet selection from the table
   useEffect(() => {
     if (selectedWalletAddress && !isZoomedIn && planetsRef.current[selectedWalletAddress]) {
       console.log('Zooming to selected wallet planet:', selectedWalletAddress);
@@ -435,7 +413,6 @@ const Universe = ({
     }
   }, [selectedWalletAddress, holders, isZoomedIn, onPlanetClick]);
 
-  // Cleanup animations when component unmounts
   useEffect(() => {
     return () => {
       cleanupAnimation();
