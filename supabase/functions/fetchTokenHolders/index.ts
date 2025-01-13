@@ -23,7 +23,7 @@ serve(async (req) => {
 
     console.log('Retrieved Solscan API token successfully')
 
-    const tokenAddress = 'Cy1GS2FqefgaMbi45UunrUzin1rfEmTUYnomddzBpump'
+    const tokenAddress = '8PVVGVZSkrrLtxZDdH7zRonCwCff9FhY7Wk6Yh71pump'
     const url = `https://pro-api.solscan.io/v2.0/token/holders?address=${tokenAddress}&page=1&page_size=40`
 
     console.log('Making API request to Solscan:', url)
@@ -85,9 +85,6 @@ serve(async (req) => {
 
     console.log('Transformed data. Number of holders:', holders.length)
     console.log('First holder example:', holders[0])
-    console.log('Checking for specific address:', '4hKTgJdP7VN93R2gcRuFpSZAwTPSX3Lk6YbozYoqH4Nt')
-    const specificHolder = holders.find(h => h.wallet_address === '4hKTgJdP7VN93R2gcRuFpSZAwTPSX3Lk6YbozYoqH4Nt')
-    console.log('Specific holder data:', specificHolder)
 
     // First, truncate both tables to remove ALL existing data
     console.log('Removing all existing data from planet_customizations...')
