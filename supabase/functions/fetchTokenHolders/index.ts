@@ -19,7 +19,7 @@ serve(async (req) => {
       throw new Error('API key not found')
     }
 
-    console.log('Retrieved API key successfully')
+    console.log('Retrieved API key successfully:', apiKey.substring(0, 8) + '...')
 
     const tokenAddress = '3KzBEUwCm3Jfs61ikr1VDAzhpkkdhzLZUKVuBacRpump'
     const url = `https://data.solanatracker.io/tokens/${tokenAddress}/holders`
@@ -29,10 +29,13 @@ serve(async (req) => {
     
     const response = await fetch(url, {
       headers: {
-        'Authorization': apiKey, // Changed from 'Bearer ${apiKey}' to just apiKey
+        'Authorization': `Bearer ${apiKey}`,
         'Accept': 'application/json',
       },
     })
+
+    console.log('Response status:', response.status)
+    console.log('Response headers:', Object.fromEntries(response.headers.entries()))
 
     if (!response.ok) {
       const errorText = await response.text()
@@ -40,7 +43,7 @@ serve(async (req) => {
         status: response.status,
         statusText: response.statusText,
         body: errorText,
-        headers: Object.fromEntries(response.headers.entries()), // Log response headers
+        headers: Object.fromEntries(response.headers.entries()),
       })
       throw new Error(`API request failed: ${response.statusText}. Status: ${response.status}. Body: ${errorText}`)
     }
