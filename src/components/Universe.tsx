@@ -150,6 +150,8 @@ const PLANET_TEXTURES = [
   '/lovable-uploads/1a9e1fee-d80e-4855-86e9-9fe6b4a730db.png',  // Orange waves
 ];
 
+const SUN_TEXTURE = '/lovable-uploads/c2d72184-32ac-4494-afd9-68ded2b76024.png';
+
 const Universe = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -261,14 +263,15 @@ const Universe = () => {
       controls.dampingFactor = 0.05;
       controlsRef.current = controls;
 
-      // Add sun
+      // Add sun with new texture
       const sunGeometry = new THREE.SphereGeometry(5, 32, 32);
+      const sunTexture = textureLoaderRef.current.load(SUN_TEXTURE);
       const sunMaterial = new THREE.MeshStandardMaterial({
-        color: 0xffff00,
-        emissive: 0xffff00,
+        map: sunTexture,
+        emissive: 0xffa500,
         emissiveIntensity: 0.5,
         metalness: 0,
-        roughness: 0.5,
+        roughness: 0.7,
       });
       const sun = new THREE.Mesh(sunGeometry, sunMaterial);
       scene.add(sun);
@@ -552,3 +555,4 @@ const Universe = () => {
 };
 
 export default Universe;
+
