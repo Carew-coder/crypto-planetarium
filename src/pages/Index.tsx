@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Wallet, Loader2, Search, Globe } from "lucide-react";
 import { toast } from "sonner";
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
@@ -15,6 +15,7 @@ const Index = () => {
   const [isWalletConnected, setIsWalletConnected] = useState(false);
   const [connectedWalletAddress, setConnectedWalletAddress] = useState<string | null>(null);
   const [selectedWallet, setSelectedWallet] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const { data: holders, isLoading, error } = useQuery({
     queryKey: ['tokenHolders'],
@@ -63,7 +64,7 @@ const Index = () => {
       console.log('Cleaning up token holders subscription in Index');
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [queryClient]);
 
   const userHasPlanet = holders?.some(
     holder => holder.wallet_address.toLowerCase() === connectedWalletAddress?.toLowerCase()
