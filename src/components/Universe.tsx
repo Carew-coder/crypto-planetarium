@@ -259,7 +259,7 @@ const Universe = ({
             onPlanetClick();
             const position = new THREE.Vector3(-2, 0, 15);
 
-            // Disable controls when zoomed in
+            // Disable controls and ensure they stay disabled
             controlsRef.current.enabled = false;
 
             const currentPos = cameraRef.current.position.clone();
@@ -267,6 +267,7 @@ const Universe = ({
             const animate = () => {
               progress += 0.02;
               if (progress > 1) {
+                controlsRef.current!.enabled = false; // Ensure controls stay disabled after animation
                 return;
               }
 
@@ -295,7 +296,7 @@ const Universe = ({
             setShowTables(true);
             onPlanetClick();
 
-            // Disable controls when zoomed in
+            // Disable controls and ensure they stay disabled
             controlsRef.current.enabled = false;
 
             const position = new THREE.Vector3(
@@ -309,6 +310,7 @@ const Universe = ({
             const animate = () => {
               progress += 0.02;
               if (progress > 1) {
+                controlsRef.current!.enabled = false; // Ensure controls stay disabled after animation
                 return;
               }
 
