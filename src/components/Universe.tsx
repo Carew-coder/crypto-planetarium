@@ -2,156 +2,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { useToast } from "@/components/ui/use-toast";
-import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-
-interface Planet {
-  id: string;
-  name: string;
-  value: number;
-  color: string;
-  size: number;
-  position: [number, number, number];
-}
-
-const generateRandomPosition = (existingPositions: [number, number, number][]): [number, number, number] => {
-  const MIN_DISTANCE = 5; // Minimum distance between planets
-  const MAX_ATTEMPTS = 50; // Maximum attempts to find a valid position
-  let attempts = 0;
-  while (attempts < MAX_ATTEMPTS) {
-    const radius = 50;
-    const theta = Math.random() * Math.PI * 2;
-    const phi = Math.acos((Math.random() * 2) - 1);
-    
-    const x = radius * Math.sin(phi) * Math.cos(theta);
-    const y = radius * Math.sin(phi) * Math.sin(theta);
-    const z = radius * Math.cos(phi);
-    
-    const position: [number, number, number] = [x, y, z];
-    
-    // Check distance from all existing positions
-    const isTooClose = existingPositions.some(existingPos => {
-      const dx = existingPos[0] - x;
-      const dy = existingPos[1] - y;
-      const dz = existingPos[2] - z;
-      const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
-      return distance < MIN_DISTANCE;
-    });
-    
-    if (!isTooClose || attempts === MAX_ATTEMPTS - 1) {
-      return position;
-    }
-    
-    attempts++;
-  }
-  
-  // If we couldn't find a good position after MAX_ATTEMPTS, return a position further out
-  const fallbackRadius = 50 + Math.random() * 20;
-  const theta = Math.random() * Math.PI * 2;
-  const phi = Math.acos((Math.random() * 2) - 1);
-  
-  return [
-    fallbackRadius * Math.sin(phi) * Math.cos(theta),
-    fallbackRadius * Math.sin(phi) * Math.sin(theta),
-    fallbackRadius * Math.cos(phi)
-  ];
-};
-
-const generateRandomColor = () => {
-  const colors = [
-    '#8B5CF6', // Vivid Purple
-    '#D946EF', // Magenta Pink
-    '#F97316', // Bright Orange
-    '#0EA5E9', // Ocean Blue
-    '#10B981', // Emerald
-    '#EF4444', // Red
-  ];
-  return colors[Math.floor(Math.random() * colors.length)];
-};
-
-const CRYPTO_NAMES = [
-  "Bitcoin", "Ethereum", "Solana", "Cardano", "Polkadot", "Avalanche", "Chainlink",
-  "Polygon", "Cosmos", "Near", "Fantom", "Harmony", "Algorand", "Tezos", "VeChain",
-  "Hedera", "Elrond", "Zilliqa", "Icon", "Waves"
-];
-
-const SAMPLE_PLANETS: Planet[] = [
-  {
-    id: "btc",
-    name: "Bitcoin",
-    value: 45000,
-    color: "#F7931A",
-    size: 2,
-    position: [-15, 5, -10],
-  },
-  {
-    id: "eth",
-    name: "Ethereum",
-    value: 2500,
-    color: "#627EEA",
-    size: 1.5,
-    position: [20, -8, 15],
-  },
-  {
-    id: "sol",
-    name: "Solana",
-    value: 100,
-    color: "#00FFA3",
-    size: 1,
-    position: [12, 15, -18],
-  },
-  {
-    id: "ada",
-    name: "Cardano",
-    value: 1.20,
-    color: "#0033AD",
-    size: 1.2,
-    position: [-8, -12, 10],
-  },
-  {
-    id: "dot",
-    name: "Polkadot",
-    value: 15.50,
-    color: "#E6007A",
-    size: 1.1,
-    position: [5, 18, -5],
-  }
-];
-
-// Keep track of existing positions
-const existingPositions: [number, number, number][] = SAMPLE_PLANETS.map(p => p.position);
-
-// Generate additional planets with collision detection
-for (let i = 0; i < 5; i++) {
-  const position = generateRandomPosition(existingPositions);
-  existingPositions.push(position);
-  
-  SAMPLE_PLANETS.push({
-    id: `planet-${i}`,
-    name: `${CRYPTO_NAMES[i % CRYPTO_NAMES.length]} ${Math.floor(i / CRYPTO_NAMES.length) + 1}`,
-    value: Math.random() * 1000,
-    color: generateRandomColor(),
-    size: 0.3 + Math.random() * 1.2,
-    position: position,
-  });
-}
-
-const PLANET_TEXTURES = [
-  '/lovable-uploads/98244a61-a143-42a1-bc04-7400b789f28f.png',  // Red swirl
-  '/lovable-uploads/07940f47-fc24-4197-ba10-be4390f882b2.png',  // Red neon
-  '/lovable-uploads/f115cbf1-f4ec-4c06-9d95-2a208ce87fa6.png',  // Blue swirl
-  '/lovable-uploads/0a36d67b-b2b3-4558-aad4-6665abaca922.png',  // Blue neon
-  '/lovable-uploads/b6686ee5-c2dd-4297-8768-e92bc549f292.png',  // Purple swirl
-  '/lovable-uploads/49044724-9c56-41a2-b893-71327d58e78f.png',  // Earth-like
-  '/lovable-uploads/df9118f7-30aa-4077-ad6b-7e7d6ec1e835.png',  // Colorful terrain
-  '/lovable-uploads/454d5495-aee2-4eaa-b3a1-49e4cf51f279.png',  // Green waves
-  '/lovable-uploads/1a9e1fee-d80e-4855-86e9-9fe6b4a730db.png',  // Orange waves
-];
-
-const SUN_TEXTURE = '/lovable-uploads/c2d72184-32ac-4494-afd9-68ded2b76024.png';
+import HolderTable from './universe/HolderTable';
+import RewardsTable from './universe/RewardsTable';
+import { SAMPLE_PLANETS, PLANET_TEXTURES, SUN_TEXTURE } from '@/constants/planets';
+import { Planet } from '@/types/universe';
 
 const Universe = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -182,7 +38,7 @@ const Universe = () => {
             resolve();
           },
           undefined,
-          () => resolve() // Continue even if texture fails to load
+          () => resolve()
         );
       });
     });
@@ -191,44 +47,26 @@ const Universe = () => {
   };
 
   // Add planets in batches
-  const addPlanetsInBatches = (scene: THREE.Scene, planets: typeof SAMPLE_PLANETS) => {
-    const BATCH_SIZE = 50;
-    let currentIndex = 0;
+  const addPlanetsInBatches = (scene: THREE.Scene, planets: Planet[]) => {
+    planets.forEach((planet, index) => {
+      const textureIndex = index % PLANET_TEXTURES.length;
+      const texturePath = PLANET_TEXTURES[textureIndex];
+      const texture = loadedTexturesRef.current[texturePath];
 
-    const addBatch = () => {
-      const endIndex = Math.min(currentIndex + BATCH_SIZE, planets.length);
-      const batch = planets.slice(currentIndex, endIndex);
-
-      batch.forEach((planet, index) => {
-        const absoluteIndex = currentIndex + index;
-        const textureIndex = absoluteIndex % PLANET_TEXTURES.length;
-        const texturePath = PLANET_TEXTURES[textureIndex];
-        const texture = loadedTexturesRef.current[texturePath];
-
-        const geometry = new THREE.SphereGeometry(planet.size, 32, 32);
-        const material = new THREE.MeshStandardMaterial({
-          map: texture,
-          metalness: 0.3,
-          roughness: 0.4,
-        });
-
-        const mesh = new THREE.Mesh(geometry, material);
-        mesh.position.set(...planet.position);
-        scene.add(mesh);
-        planetsRef.current[planet.id] = mesh;
+      const geometry = new THREE.SphereGeometry(planet.size, 32, 32);
+      const material = new THREE.MeshStandardMaterial({
+        map: texture,
+        metalness: 0.3,
+        roughness: 0.4,
       });
 
-      currentIndex = endIndex;
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.set(...planet.position);
+      scene.add(mesh);
+      planetsRef.current[planet.id] = mesh;
+    });
 
-      if (currentIndex < planets.length) {
-        // Schedule next batch
-        setTimeout(addBatch, 100);
-      } else {
-        setIsLoading(false);
-      }
-    };
-
-    addBatch();
+    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -239,7 +77,7 @@ const Universe = () => {
       const scene = new THREE.Scene();
       sceneRef.current = scene;
 
-      // Camera setup with optimized near and far planes
+      // Camera setup
       const camera = new THREE.PerspectiveCamera(
         75,
         window.innerWidth / window.innerHeight,
@@ -249,14 +87,14 @@ const Universe = () => {
       camera.position.z = 100;
       cameraRef.current = camera;
 
-      // Renderer setup with optimized parameters
+      // Renderer setup
       const renderer = new THREE.WebGLRenderer({
         antialias: true,
         alpha: true,
         powerPreference: "high-performance"
       });
       renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limit pixel ratio for better performance
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       containerRef.current.appendChild(renderer.domElement);
       rendererRef.current = renderer;
 
@@ -266,7 +104,7 @@ const Universe = () => {
       controls.dampingFactor = 0.05;
       controlsRef.current = controls;
 
-      // Add sun with new texture
+      // Add sun
       const sunGeometry = new THREE.SphereGeometry(5, 32, 32);
       const sunTexture = textureLoaderRef.current.load(SUN_TEXTURE);
       const sunMaterial = new THREE.MeshStandardMaterial({
@@ -280,12 +118,11 @@ const Universe = () => {
       scene.add(sun);
       sunRef.current = sun;
 
-      // Preload textures before adding planets
+      // Preload textures and add planets
       await preloadTextures();
-      
-      // Add planets in batches
       addPlanetsInBatches(scene, SAMPLE_PLANETS);
 
+      // Add stars
       const starsGeometry = new THREE.BufferGeometry();
       const starsMaterial = new THREE.PointsMaterial({
         color: 0xFFFFFF,
@@ -307,7 +144,7 @@ const Universe = () => {
       const stars = new THREE.Points(starsGeometry, starsMaterial);
       scene.add(stars);
 
-      // Basic lighting setup
+      // Lighting setup
       const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
       scene.add(ambientLight);
 
@@ -315,7 +152,6 @@ const Universe = () => {
       pointLight.position.set(0, 0, 0);
       scene.add(pointLight);
 
-      // Add hemisphere light for better overall illumination
       const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
       scene.add(hemisphereLight);
 
@@ -323,12 +159,10 @@ const Universe = () => {
       const animate = () => {
         requestAnimationFrame(animate);
         
-        // Rotate planets
         Object.values(planetsRef.current).forEach((planet) => {
           planet.rotation.y += 0.005;
         });
 
-        // Rotate sun
         if (sunRef.current) {
           sunRef.current.rotation.y += 0.001;
         }
@@ -350,7 +184,7 @@ const Universe = () => {
 
       window.addEventListener('resize', handleResize);
 
-      // Handle planet and sun click
+      // Handle clicks
       const raycaster = new THREE.Raycaster();
       const mouse = new THREE.Vector2();
 
@@ -368,7 +202,7 @@ const Universe = () => {
           if (sunIntersects.length > 0) {
             setIsZoomedIn(true);
             setShowTables(true);
-            const position = new THREE.Vector3(0, 0, 15); // Position slightly in front of the sun
+            const position = new THREE.Vector3(0, 0, 15);
 
             const currentPos = cameraRef.current.position.clone();
             let progress = 0;
@@ -443,7 +277,6 @@ const Universe = () => {
     };
 
     init();
-
   }, []);
 
   const handleBackToOverview = () => {
@@ -486,93 +319,14 @@ const Universe = () => {
 
       {showTables && (
         <div className="absolute top-1/2 -translate-y-1/2 flex gap-4">
-          {/* Holder Information Table - Left side */}
-          <Card className="absolute left-4 bg-space-lighter/80 text-white border-white/10 w-64">
-            <CardHeader className="relative">
-              <CardTitle>Holder Information</CardTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="absolute top-4 right-4 p-0 h-4 hover:bg-transparent"
-                onClick={() => setHolderTableCollapsed(!holderTableCollapsed)}
-              >
-                {holderTableCollapsed ? (
-                  <ChevronUp className="h-4 w-4 text-white/70" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 text-white/70" />
-                )}
-              </Button>
-            </CardHeader>
-            {!holderTableCollapsed && (
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="text-white/80">Address</TableHead>
-                      <TableHead className="text-white/80">Balance</TableHead>
-                      <TableHead className="text-white/80">Share</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell className="text-white/70">0x1234...5678</TableCell>
-                      <TableCell className="text-white/70">1,000,000</TableCell>
-                      <TableCell className="text-white/70">10%</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="text-white/70">0x8765...4321</TableCell>
-                      <TableCell className="text-white/70">500,000</TableCell>
-                      <TableCell className="text-white/70">5%</TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </CardContent>
-            )}
-          </Card>
-
-          {/* Rewards Table - Right side */}
-          <Card className="absolute right-4 bg-space-lighter/80 text-white border-white/10 w-64">
-            <CardHeader className="relative">
-              <CardTitle>Rewards</CardTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="absolute top-4 right-4 p-0 h-4 hover:bg-transparent"
-                onClick={() => setRewardsTableCollapsed(!rewardsTableCollapsed)}
-              >
-                {rewardsTableCollapsed ? (
-                  <ChevronUp className="h-4 w-4 text-white/70" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 text-white/70" />
-                )}
-              </Button>
-            </CardHeader>
-            {!rewardsTableCollapsed && (
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="text-white/80">Type</TableHead>
-                      <TableHead className="text-white/80">Amount</TableHead>
-                      <TableHead className="text-white/80">Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell className="text-white/70">Staking</TableCell>
-                      <TableCell className="text-white/70">100</TableCell>
-                      <TableCell className="text-white/70">Claimable</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="text-white/70">Trading</TableCell>
-                      <TableCell className="text-white/70">50</TableCell>
-                      <TableCell className="text-white/70">Pending</TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </CardContent>
-            )}
-          </Card>
+          <HolderTable
+            collapsed={holderTableCollapsed}
+            onToggle={() => setHolderTableCollapsed(!holderTableCollapsed)}
+          />
+          <RewardsTable
+            collapsed={rewardsTableCollapsed}
+            onToggle={() => setRewardsTableCollapsed(!rewardsTableCollapsed)}
+          />
         </div>
       )}
 
