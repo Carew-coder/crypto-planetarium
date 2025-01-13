@@ -224,26 +224,42 @@ const Universe = ({
   };
 
   const preloadTextures = async () => {
+    console.log('Starting texture preloading...');
     const texturePromises = PLANET_TEXTURES.map((texturePath) => {
-      return new Promise<void>((resolve) => {
+      return new Promise<void>((resolve, reject) => {
         textureLoaderRef.current.load(
           texturePath,
           (texture) => {
+            console.log(`Texture loaded successfully: ${texturePath}`);
             loadedTexturesRef.current[texturePath] = texture;
             resolve();
           },
           undefined,
-          () => resolve()
+          (error) => {
+            console.error(`Error loading texture ${texturePath}:`, error);
+            reject(error);
+          }
         );
       });
     });
 
-    await Promise.all(texturePromises);
+    try {
+      await Promise.all(texturePromises);
+      console.log('All textures preloaded successfully');
+    } catch (error) {
+      console.error('Error preloading textures:', error);
+      toast({
+        title: "Error loading planet textures",
+        description: "Some planets might not display correctly",
+        variant: "destructive"
+      });
+    }
   };
 
   const addPlanetsFromHolders = (scene: THREE.Scene) => {
     if (!holders) return;
 
+    console.log('Adding planets from holders...');
     const existingPositions: [number, number, number][] = [];
 
     holders.forEach((holder, index) => {
@@ -251,9 +267,10 @@ const Universe = ({
         pc => pc.wallet_address === holder.wallet_address
       );
 
-      let texture;
+      let texture: THREE.Texture | undefined;
+      
       if (customization?.skin_url) {
-        console.log(`Loading custom skin for wallet ${holder.wallet_address}:`, customization.skin_url);
+        console.log(`Using custom skin for wallet ${holder.wallet_address}:`, customization.skin_url);
         textureLoaderRef.current.load(
           customization.skin_url,
           (loadedTexture) => {
@@ -277,6 +294,10 @@ const Universe = ({
         const textureIndex = index % PLANET_TEXTURES.length;
         const texturePath = PLANET_TEXTURES[textureIndex];
         texture = loadedTexturesRef.current[texturePath];
+        
+        if (!texture) {
+          console.error(`Texture not found for index ${textureIndex}:`, texturePath);
+        }
       }
 
       const size = calculatePlanetSize(holder.percentage);
