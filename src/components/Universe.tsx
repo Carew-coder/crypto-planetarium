@@ -209,10 +209,6 @@ const Universe = () => {
             const animate = () => {
               progress += 0.02;
               if (progress > 1) {
-                toast({
-                  title: "dev",
-                  description: "The central star of our universe",
-                });
                 return;
               }
 
