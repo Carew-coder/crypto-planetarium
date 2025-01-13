@@ -381,20 +381,19 @@ const Universe = ({
 
     console.log('Initializing universe with holders:', holders.length);
     let animationFrameId: number | null = null;
-    let isPageVisible = !document.hidden;
+    let lastVisibilityChange = Date.now();
+    const REFRESH_THRESHOLD = 5000; // 5 seconds threshold
 
     const animate = () => {
-      if (!isPageVisible) {
+      if (document.hidden) {
         console.log('Animation paused - page not visible');
+        if (animationFrameId !== null) {
+          cancelAnimationFrame(animationFrameId);
+          animationFrameId = null;
+        }
         return;
       }
 
-      if (animationFrameId !== null) {
-        cancelAnimationFrame(animationFrameId);
-      }
-
-      animationFrameId = requestAnimationFrame(animate);
-      
       if (!isZoomedIn) {
         Object.values(planetsRef.current).forEach((planet) => {
           planet.rotation.y += 0.005;
@@ -412,20 +411,36 @@ const Universe = ({
       if (rendererRef.current && sceneRef.current && cameraRef.current) {
         rendererRef.current.render(sceneRef.current, cameraRef.current);
       }
+
+      animationFrameId = requestAnimationFrame(animate);
     };
 
     const handleVisibilityChange = () => {
-      isPageVisible = !document.hidden;
-      console.log('Page visibility changed:', isPageVisible);
+      console.log('Visibility changed:', document.hidden ? 'hidden' : 'visible');
       
-      if (!isPageVisible && animationFrameId !== null) {
-        console.log('Canceling animation frame on tab hide');
-        cancelAnimationFrame(animationFrameId);
-        animationFrameId = null;
-      } else if (isPageVisible && !animationFrameId) {
-        console.log('Restarting animation loop on tab show');
-        animate();
+      if (!document.hidden) {
+        const currentTime = Date.now();
+        const timeSinceLastChange = currentTime - lastVisibilityChange;
+        
+        if (timeSinceLastChange > REFRESH_THRESHOLD) {
+          console.log('Tab was hidden for too long, refreshing page...');
+          window.location.reload();
+          return;
+        }
+        
+        console.log('Resuming animation');
+        if (animationFrameId === null) {
+          animate();
+        }
+      } else {
+        console.log('Pausing animation');
+        if (animationFrameId !== null) {
+          cancelAnimationFrame(animationFrameId);
+          animationFrameId = null;
+        }
       }
+      
+      lastVisibilityChange = Date.now();
     };
 
     const init = async () => {
