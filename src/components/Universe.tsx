@@ -10,6 +10,7 @@ import PlanetInformation from './universe/PlanetInformation';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { generateRandomPosition } from '@/utils/positionUtils';
+import { Loader2 } from "lucide-react";
 
 const Universe = ({ 
   onPlanetClick,
@@ -40,6 +41,9 @@ const Universe = ({
   const [selectedHolder, setSelectedHolder] = useState<any>(null);
   const animationFrameRef = useRef<number>();
   const isAnimatingRef = useRef(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const textureCache = useRef<Map<string, THREE.Texture>>(new Map());
 
   const { data: holders, isLoading: holdersLoading } = useQuery({
     queryKey: ['tokenHolders'],
@@ -245,28 +249,64 @@ const Universe = ({
   };
 
   const preloadTextures = async () => {
-    console.log('Starting texture preloading...');
-    const texturePromises = PLANET_TEXTURES.map((texturePath) => {
-      return new Promise<void>((resolve, reject) => {
+    console.log('Starting optimized texture preloading...');
+    const totalTextures = PLANET_TEXTURES.length + 1; // +1 for sun texture
+    let loadedCount = 0;
+
+    const loadTexture = (url: string): Promise<void> => {
+      return new Promise((resolve, reject) => {
+        // Check cache first
+        if (textureCache.current.has(url)) {
+          console.log(`Using cached texture for: ${url}`);
+          loadedTexturesRef.current[url] = textureCache.current.get(url)!;
+          loadedCount++;
+          setLoadingProgress((loadedCount / totalTextures) * 100);
+          resolve();
+          return;
+        }
+
+        // Load new texture
         textureLoaderRef.current.load(
-          texturePath,
+          url,
           (texture) => {
-            console.log(`Texture loaded successfully: ${texturePath}`);
-            loadedTexturesRef.current[texturePath] = texture;
+            console.log(`Texture loaded and compressed: ${url}`);
+            // Enable texture compression
+            texture.generateMipmaps = true;
+            texture.minFilter = THREE.LinearMipmapLinearFilter;
+            texture.magFilter = THREE.LinearFilter;
+            texture.anisotropy = 16;
+            
+            // Cache the texture
+            textureCache.current.set(url, texture);
+            loadedTexturesRef.current[url] = texture;
+            loadedCount++;
+            setLoadingProgress((loadedCount / totalTextures) * 100);
             resolve();
           },
-          undefined,
+          (progress) => {
+            console.log(`Loading progress for ${url}: ${progress.loaded / progress.total * 100}%`);
+          },
           (error) => {
-            console.error(`Error loading texture ${texturePath}:`, error);
+            console.error(`Error loading texture ${url}:`, error);
             reject(error);
           }
         );
       });
-    });
+    };
 
     try {
-      await Promise.all(texturePromises);
+      // Load sun texture first
+      await loadTexture(SUN_TEXTURE);
+
+      // Load planet textures in batches of 5
+      const batchSize = 5;
+      for (let i = 0; i < PLANET_TEXTURES.length; i += batchSize) {
+        const batch = PLANET_TEXTURES.slice(i, i + batchSize);
+        await Promise.all(batch.map(texturePath => loadTexture(texturePath)));
+      }
+
       console.log('All textures preloaded successfully');
+      setIsLoading(false);
     } catch (error) {
       console.error('Error preloading textures:', error);
       toast({
@@ -274,70 +314,81 @@ const Universe = ({
         description: "Some planets might not display correctly",
         variant: "destructive"
       });
+      setIsLoading(false);
     }
   };
 
   const addPlanetsFromHolders = (scene: THREE.Scene) => {
     if (!holders) return;
 
-    console.log('Adding planets from holders...');
+    console.log('Adding planets progressively...');
     const existingPositions: [number, number, number][] = [];
+    const batchSize = 10;
+    let currentIndex = 0;
 
-    holders.forEach((holder, index) => {
-      const customization = planetCustomizations?.find(
-        pc => pc.wallet_address === holder.wallet_address
-      );
-
-      let texture: THREE.Texture | undefined;
+    const addPlanetBatch = () => {
+      const endIndex = Math.min(currentIndex + batchSize, holders.length);
       
-      if (customization?.skin_url) {
-        console.log(`Using custom skin for wallet ${holder.wallet_address}:`, customization.skin_url);
-        textureLoaderRef.current.load(
-          customization.skin_url,
-          (loadedTexture) => {
-            console.log(`Custom skin loaded successfully for ${holder.wallet_address}`);
-            if (planetsRef.current[holder.wallet_address]) {
-              const material = planetsRef.current[holder.wallet_address].material as THREE.MeshStandardMaterial;
-              material.map = loadedTexture;
-              material.needsUpdate = true;
-            }
-          },
-          undefined,
-          (error) => {
-            console.error(`Error loading custom skin for ${holder.wallet_address}:`, error);
-            // Fallback to default texture
-            const textureIndex = index % PLANET_TEXTURES.length;
-            const texturePath = PLANET_TEXTURES[textureIndex];
-            texture = loadedTexturesRef.current[texturePath];
-          }
+      for (let i = currentIndex; i < endIndex; i++) {
+        const holder = holders[i];
+        const customization = planetCustomizations?.find(
+          pc => pc.wallet_address === holder.wallet_address
         );
-      } else {
-        const textureIndex = index % PLANET_TEXTURES.length;
-        const texturePath = PLANET_TEXTURES[textureIndex];
-        texture = loadedTexturesRef.current[texturePath];
+
+        let texture: THREE.Texture | undefined;
         
-        if (!texture) {
-          console.error(`Texture not found for index ${textureIndex}:`, texturePath);
+        if (customization?.skin_url) {
+          // Use cached texture if available
+          if (textureCache.current.has(customization.skin_url)) {
+            texture = textureCache.current.get(customization.skin_url);
+          } else {
+            textureLoaderRef.current.load(
+              customization.skin_url,
+              (loadedTexture) => {
+                if (planetsRef.current[holder.wallet_address]) {
+                  const material = planetsRef.current[holder.wallet_address].material as THREE.MeshStandardMaterial;
+                  material.map = loadedTexture;
+                  material.needsUpdate = true;
+                  // Cache the texture
+                  textureCache.current.set(customization.skin_url!, loadedTexture);
+                }
+              }
+            );
+          }
+        } else {
+          const textureIndex = i % PLANET_TEXTURES.length;
+          const texturePath = PLANET_TEXTURES[textureIndex];
+          texture = loadedTexturesRef.current[texturePath];
         }
+
+        const size = calculatePlanetSize(holder.percentage);
+        const geometry = new THREE.SphereGeometry(size, 32, 32);
+        const material = new THREE.MeshStandardMaterial({
+          map: texture,
+          metalness: 0.3,
+          roughness: 0.4,
+        });
+
+        const position = generateRandomPosition(existingPositions);
+        existingPositions.push(position);
+
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.position.set(...position);
+        scene.add(mesh);
+        planetsRef.current[holder.wallet_address] = mesh;
+        planetPositionsRef.current[holder.wallet_address] = mesh.position.clone();
       }
 
-      const size = calculatePlanetSize(holder.percentage);
-      const geometry = new THREE.SphereGeometry(size, 32, 32);
-      const material = new THREE.MeshStandardMaterial({
-        map: texture,
-        metalness: 0.3,
-        roughness: 0.4,
-      });
+      currentIndex = endIndex;
+      
+      // Continue adding planets if there are more
+      if (currentIndex < holders.length) {
+        requestAnimationFrame(addPlanetBatch);
+      }
+    };
 
-      const position = generateRandomPosition(existingPositions);
-      existingPositions.push(position);
-
-      const mesh = new THREE.Mesh(geometry, material);
-      mesh.position.set(...position);
-      scene.add(mesh);
-      planetsRef.current[holder.wallet_address] = mesh;
-      planetPositionsRef.current[holder.wallet_address] = mesh.position.clone();
-    });
+    // Start adding planets
+    addPlanetBatch();
   };
 
   useEffect(() => {
@@ -561,6 +612,15 @@ const Universe = ({
     <div className="relative w-full h-screen">
       <div ref={containerRef} className="w-full h-screen" />
       <ShootingStars />
+      
+      {isLoading && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+          <div className="text-center space-y-4">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto text-white" />
+            <p className="text-white">Loading Universe... {Math.round(loadingProgress)}%</p>
+          </div>
+        </div>
+      )}
       
       {isZoomedIn && (
         <Button
