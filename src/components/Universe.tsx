@@ -44,9 +44,10 @@ const Universe = ({
     // Re-enable controls when zooming out
     controlsRef.current.enabled = true;
 
-    // Ensure we're actually zooming out
+    // Immediately update states instead of waiting for animation completion
     setIsZoomedIn(false);
     setShowTables(false);
+    onBackToOverview();
 
     const targetPosition = initialCameraPosition.clone();
     const startPosition = cameraRef.current.position.clone();
@@ -77,9 +78,6 @@ const Universe = ({
       } else {
         // Animation complete
         console.log("Zoom out animation complete");
-        setIsZoomedIn(false);
-        setShowTables(false);
-        onBackToOverview();
       }
     };
 
