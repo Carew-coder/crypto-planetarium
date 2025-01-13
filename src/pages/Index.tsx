@@ -58,7 +58,7 @@ const Index = () => {
       </div>
 
       {/* Oldest Planets Table */}
-      <div className={`absolute right-4 ${isPlanetSelected ? 'top-4 right-[21rem]' : 'top-[calc(4rem+340px)]'} transition-all duration-300 glass-panel p-4 w-80`}>
+      <div className={`absolute right-4 ${isPlanetSelected ? 'top-[calc(4rem+80px)]' : 'top-[calc(4rem+340px)]'} transition-all duration-300 glass-panel p-4 w-80`}>
         <Collapsible open={!isPlanetSelected && isOldestOpen} onOpenChange={setIsOldestOpen}>
           <CollapsibleTrigger className="flex items-center justify-between w-full">
             <h2 className="text-lg font-semibold text-white">Oldest Planets</h2>
