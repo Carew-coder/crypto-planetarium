@@ -37,7 +37,7 @@ const Index = () => {
       console.log('Successfully fetched token holders data:', data);
       return data;
     },
-    refetchInterval: 60000, // Updated to 1 minute
+    refetchInterval: 60000,
   });
 
   const userHasPlanet = holders?.some(
@@ -87,6 +87,7 @@ const Index = () => {
     console.log('Wallet clicked:', walletAddress);
     setSelectedWallet(walletAddress);
     setIsPlanetSelected(true);
+    toast.success("Navigating to selected planet!");
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -107,10 +108,6 @@ const Index = () => {
     }
   };
 
-  if (error) {
-    console.error('Error fetching holders:', error);
-  }
-
   const handleBackToOverview = () => {
     setIsPlanetSelected(false);
     setSelectedWallet(null);
@@ -126,10 +123,8 @@ const Index = () => {
         connectedWalletAddress={connectedWalletAddress}
       />
       
-      {/* Top Navigation Bar */}
       <div className="fixed top-0 left-0 right-0 z-50">
         <div className="flex items-center w-full px-4 pt-4">
-          {/* Search Wallet Address - Left */}
           <form onSubmit={handleSearch} className="glass-panel flex gap-2">
             <Input
               type="text"
@@ -148,7 +143,6 @@ const Index = () => {
             </Button>
           </form>
 
-          {/* Solar Logo (Center) - Clickable with conditional behavior */}
           <div 
             onClick={isPlanetSelected ? handleBackToOverview : undefined}
             className={`absolute left-1/2 -translate-x-1/2 glass-panel px-4 py-2 ${
@@ -162,7 +156,6 @@ const Index = () => {
             />
           </div>
 
-          {/* Connect Wallet and My Planet Buttons (Right) */}
           <div className="ml-auto glass-panel px-4 py-2 flex gap-2">
             {isWalletConnected && userHasPlanet && (
               <Button
@@ -189,7 +182,6 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Top Holders Panel (Right Side) */}
       <div className="fixed right-8 top-1/2 -translate-y-1/2 glass-panel p-4 w-[24rem] z-30 h-[70vh]">
         <h2 className="text-lg font-semibold text-white mb-4">Top Holders</h2>
         {isLoading ? (
