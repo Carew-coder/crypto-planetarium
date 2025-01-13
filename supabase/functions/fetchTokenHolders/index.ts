@@ -1,11 +1,12 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-Deno.serve(async (req) => {
+serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -17,7 +18,8 @@ Deno.serve(async (req) => {
       throw new Error('API key not found')
     }
 
-    const tokenAddress = 'YOUR_TOKEN_ADDRESS' // Replace with actual token address
+    // The token address wasn't provided in the user message
+    const tokenAddress = '' // Please provide the token address
     const url = `https://api.solanatracker.io/v1/tokens/${tokenAddress}/holders`
 
     console.log('Fetching token holders from Solana Tracker API...')
