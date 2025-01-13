@@ -69,11 +69,18 @@ serve(async (req) => {
     console.log('Supabase client initialized')
 
     // Transform data from Solscan API response
-    const holders = data.data.items.map((holder: any) => ({
-      wallet_address: holder.owner,
-      token_amount: parseFloat(holder.amount) || 0,
-      percentage: parseFloat(holder.percentage) || 0,
-    }))
+    const totalSupply = data.data.items.reduce((acc: number, item: any) => acc + Number(item.amount), 0)
+    
+    const holders = data.data.items.map((holder: any) => {
+      const amount = Number(holder.amount) / Math.pow(10, holder.decimals)
+      const percentage = (amount / (totalSupply / Math.pow(10, holder.decimals))) * 100
+      
+      return {
+        wallet_address: holder.owner,
+        token_amount: amount,
+        percentage: percentage,
+      }
+    })
     .filter(holder => holder.token_amount > 0)
     .sort((a: any, b: any) => b.token_amount - a.token_amount)
 
