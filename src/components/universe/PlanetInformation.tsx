@@ -1,6 +1,4 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from "@/integrations/supabase/client";
 import {
   Table,
   TableBody,
@@ -25,21 +23,6 @@ const PlanetInformation = ({ holder, connectedWalletAddress }: PlanetInformation
 
   const isOwnPlanet = connectedWalletAddress?.toLowerCase() === holder.wallet_address.toLowerCase();
 
-  const getRank = async () => {
-    const { data: holders } = await supabase
-      .from('token_holders')
-      .select('percentage')
-      .gte('percentage', holder.percentage)
-      .order('percentage', { ascending: false });
-    
-    return holders?.length || 1;
-  };
-
-  const { data: rank } = useQuery({
-    queryKey: ['holderRank', holder.wallet_address],
-    queryFn: getRank
-  });
-
   return (
     <div className="absolute left-4 top-1/2 -translate-y-1/2 flex flex-col gap-4">
       <div className="glass-panel p-4 w-[32rem]">
@@ -48,13 +31,12 @@ const PlanetInformation = ({ holder, connectedWalletAddress }: PlanetInformation
           <TableHeader>
             <TableRow>
               <TableHead className="text-white/80">Property</TableHead>
-              <TableHead className="text-white/80">Value</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             <TableRow>
               <TableCell className="text-white/70">Rank</TableCell>
-              <TableCell className="text-white/70">#{rank}</TableCell>
+              <TableCell className="text-white/70">#{holder.percentage.toFixed(2)}</TableCell>
             </TableRow>
             <TableRow>
               <TableCell className="text-white/70">Wallet</TableCell>
