@@ -128,15 +128,18 @@ serve(async (req) => {
       throw truncateHoldersError
     }
 
-    // Insert new data
-    console.log('Inserting new token holders...')
-    const { error: insertError } = await supabase
+    // Insert new data using UPSERT operation
+    console.log('Upserting new token holders...')
+    const { error: upsertError } = await supabase
       .from('token_holders')
-      .insert(holders)
+      .upsert(holders, {
+        onConflict: 'wallet_address',
+        ignoreDuplicates: false
+      })
 
-    if (insertError) {
-      console.error('Error inserting new token holders:', insertError)
-      throw insertError
+    if (upsertError) {
+      console.error('Error upserting token holders:', upsertError)
+      throw upsertError
     }
 
     console.log('Successfully updated token holders database')
