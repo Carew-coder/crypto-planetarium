@@ -84,6 +84,10 @@ const PlanetInformation = ({ holder, connectedWalletAddress }: PlanetInformation
             </TableRow>
             <TableRow>
               <TableCell className="text-white/70">Percentage</TableCell>
+              <TableCell className="text-white/70">{`${holder.percentage.toFixed(2)}%`}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="text-white/70">Name</TableCell>
               <TableCell className="text-white/70">
                 {planetCustomization?.nickname || 'Connect Wallet and Customise your Planet Now!'}
               </TableCell>
