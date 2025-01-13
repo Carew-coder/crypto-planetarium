@@ -32,7 +32,7 @@ const HolderTable: React.FC<TableProps> = ({ collapsed, onToggle }) => {
       console.log('Successfully fetched token holders data:', data);
       return data as TokenHolder[];
     },
-    refetchInterval: 300000, // Refetch every 5 minutes
+    refetchInterval: 60000, // Updated to 1 minute
   });
 
   if (error) {
