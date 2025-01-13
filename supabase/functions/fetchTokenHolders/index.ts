@@ -93,34 +93,30 @@ serve(async (req) => {
     console.log('Transformed data. Number of holders:', holders.length)
     console.log('First holder example:', holders[0])
 
-    // Get list of new wallet addresses
-    const newWalletAddresses = holders.map(h => h.wallet_address)
-    
-    // First, delete planet customizations for wallets not in the new data
-    console.log('Cleaning up old planet customizations...')
-    const { error: cleanupCustomizationsError } = await supabase
+    // First, truncate both tables to remove ALL existing data
+    console.log('Removing all existing data from planet_customizations...')
+    const { error: truncateCustomizationsError } = await supabase
       .from('planet_customizations')
       .delete()
-      .not('wallet_address', 'in', `(${newWalletAddresses.map(w => `'${w}'`).join(',')})`)
+      .neq('wallet_address', 'dummy_value') // This will delete all rows
 
-    if (cleanupCustomizationsError) {
-      console.error('Error cleaning up old planet customizations:', cleanupCustomizationsError)
-      throw cleanupCustomizationsError
+    if (truncateCustomizationsError) {
+      console.error('Error truncating planet_customizations:', truncateCustomizationsError)
+      throw truncateCustomizationsError
     }
 
-    // Then, delete old token holders
-    console.log('Cleaning up old token holders...')
-    const { error: cleanupHoldersError } = await supabase
+    console.log('Removing all existing data from token_holders...')
+    const { error: truncateHoldersError } = await supabase
       .from('token_holders')
       .delete()
-      .not('wallet_address', 'in', `(${newWalletAddresses.map(w => `'${w}'`).join(',')})`)
+      .neq('wallet_address', 'dummy_value') // This will delete all rows
 
-    if (cleanupHoldersError) {
-      console.error('Error cleaning up old token holders:', cleanupHoldersError)
-      throw cleanupHoldersError
+    if (truncateHoldersError) {
+      console.error('Error truncating token_holders:', truncateHoldersError)
+      throw truncateHoldersError
     }
 
-    // Finally, insert new data
+    // Insert new data
     console.log('Inserting new token holders...')
     const { error: insertError } = await supabase
       .from('token_holders')
