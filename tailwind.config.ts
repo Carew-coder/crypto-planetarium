@@ -80,11 +80,11 @@ export default {
         },
         "shooting-star": {
           "0%": { 
-            transform: "translateX(0) translateY(0) rotate(-45deg)",
+            transform: "translate(0, 0)",
             opacity: "1"
           },
           "100%": { 
-            transform: "translateX(1000px) translateY(1000px) rotate(-45deg)",
+            transform: "translate(var(--star-end-x), var(--star-end-y))",
             opacity: "0"
           },
         },
@@ -92,7 +92,7 @@ export default {
       animation: {
         "float": "float 6s ease-in-out infinite",
         "rotate-slow": "rotate-slow 20s linear infinite",
-        "shooting-star": "shooting-star 1s ease-out forwards",
+        "shooting-star": "shooting-star 2s ease-out forwards",
       },
     },
   },
