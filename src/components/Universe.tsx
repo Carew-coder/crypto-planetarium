@@ -37,7 +37,6 @@ const Universe = ({
   const [initialCameraPosition] = useState(new THREE.Vector3(0, 0, 100));
   const [selectedHolder, setSelectedHolder] = useState<any>(null);
   const animationFrameRef = useRef<number>();
-  const [showPlanetInfo, setShowPlanetInfo] = useState(true);
 
   const { data: holders } = useQuery({
     queryKey: ['tokenHolders'],
@@ -169,6 +168,7 @@ const Universe = ({
     
     cleanupAnimation();
     
+    // Calculate zoom distance based on planet size or use default
     const baseZOffset = planetPosition.equals(new THREE.Vector3(0, 0, 0)) ? 15 : 5;
     const zOffset = planetSize ? Math.max(planetSize * 3, baseZOffset) : baseZOffset;
     
@@ -195,8 +195,10 @@ const Universe = ({
           controlsRef.current.rotateSpeed = 0.5;
           controlsRef.current.zoomSpeed = 0.5;
           
-          controlsRef.current.minDistance = 1; // Allow zooming out
-          controlsRef.current.maxDistance = 200;
+          // Set min and max distance based on planet size
+          const distance = planetSize ? Math.max(planetSize * 3, baseZOffset) : baseZOffset;
+          controlsRef.current.minDistance = distance;
+          controlsRef.current.maxDistance = distance;
           
           controlsRef.current.target.copy(planetPosition);
           controlsRef.current.update();
@@ -312,23 +314,6 @@ const Universe = ({
 
           if (sunRef.current) {
             sunRef.current.rotation.y += 0.001;
-          }
-        }
-
-        // Calculate the midpoint between min and max zoom distances
-        if (cameraRef.current && controlsRef.current && selectedHolder) {
-          const distance = cameraRef.current.position.distanceTo(controlsRef.current.target);
-          const maxDistance = 200; // Maximum zoom out distance
-          const minDistance = 1; // Minimum zoom in distance
-          const midpoint = (maxDistance - minDistance) / 2;
-          
-          console.log('Current camera distance:', distance);
-          console.log('Midpoint threshold:', midpoint);
-          
-          setShowPlanetInfo(distance < midpoint);
-          
-          if (distance > 150) {
-            handleBackToOverview();
           }
         }
 
@@ -452,7 +437,7 @@ const Universe = ({
         </Button>
       )}
 
-      {isZoomedIn && selectedHolder && showPlanetInfo && (
+      {isZoomedIn && selectedHolder && (
         <PlanetInformation holder={selectedHolder} />
       )}
     </div>
