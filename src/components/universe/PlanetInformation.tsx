@@ -69,7 +69,7 @@ const PlanetInformation = ({ holder, connectedWalletAddress }: PlanetInformation
             <TableRow>
               <TableCell className="text-white/70">Planet Name</TableCell>
               <TableCell className="text-white/70">
-                {planetCustomization?.nickname || 'Connect Wallet and Customise your Planet Now!'}
+                {planetCustomization?.nickname || `${holder.wallet_address.slice(0, 6)}...${holder.wallet_address.slice(-4)}`}
               </TableCell>
             </TableRow>
             <TableRow>
