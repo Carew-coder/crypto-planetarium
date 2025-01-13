@@ -4,7 +4,7 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 
 const HolderTable: React.FC<TableProps> = () => {
   return (
-    <div className="absolute left-4 top-1/2 -translate-y-1/2 glass-panel p-4 w-96">
+    <div className="absolute left-4 top-1/2 -translate-y-1/2 glass-panel p-4 w-[32rem]">
       <h2 className="text-lg font-semibold text-white mb-4">Holder Information</h2>
       <Table>
         <TableHeader>
