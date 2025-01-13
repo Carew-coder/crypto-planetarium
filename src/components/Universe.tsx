@@ -72,16 +72,18 @@ const Universe = ({
       return;
     }
 
-    // Clean up any existing animation
     cleanupAnimation();
 
-    // Immediately update states
     setIsZoomedIn(false);
     setSelectedHolder(null);
     onBackToOverview();
 
-    // Re-enable controls
-    controlsRef.current.enabled = true;
+    // Reset controls to default state
+    controlsRef.current.enableZoom = true;
+    controlsRef.current.enableRotate = true;
+    controlsRef.current.enablePan = true;
+    controlsRef.current.minDistance = 1;
+    controlsRef.current.maxDistance = 200;
 
     const targetPosition = initialCameraPosition.clone();
     const startPosition = cameraRef.current.position.clone();
@@ -171,8 +173,6 @@ const Universe = ({
     
     cleanupAnimation();
     
-    // Calculate the target position for the camera
-    // Reduced z-axis offset from 8 to 5 for a less aggressive zoom
     const targetPosition = new THREE.Vector3(
       planetPosition.x,
       planetPosition.y,
@@ -185,16 +185,26 @@ const Universe = ({
     const animate = () => {
       progress += 0.02;
       if (progress > 1) {
-        controlsRef.current!.enabled = false;
+        // Instead of disabling controls, configure them for planet viewing
+        if (controlsRef.current) {
+          controlsRef.current.enableZoom = true;
+          controlsRef.current.enableRotate = true;
+          controlsRef.current.enablePan = true;
+          controlsRef.current.minDistance = 3; // Prevent zooming too close
+          controlsRef.current.maxDistance = 10; // Prevent zooming too far
+          controlsRef.current.target.copy(new THREE.Vector3(
+            planetPosition.x,
+            planetPosition.y,
+            planetPosition.z
+          ));
+        }
         cleanupAnimation();
         return;
       }
 
-      // Smoothly move camera to new position
       const newPos = currentPos.clone().lerp(targetPosition, progress);
       cameraRef.current!.position.copy(newPos);
       
-      // Update controls target to center on planet
       controlsRef.current!.target.copy(new THREE.Vector3(
         planetPosition.x,
         planetPosition.y,
@@ -237,10 +247,15 @@ const Universe = ({
       containerRef.current.appendChild(renderer.domElement);
       rendererRef.current = renderer;
 
-      // Controls setup
+      // Update controls setup
       const controls = new OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
       controls.dampingFactor = 0.05;
+      controls.minDistance = 1;
+      controls.maxDistance = 200;
+      controls.enableZoom = true;
+      controls.enableRotate = true;
+      controls.enablePan = true;
       controlsRef.current = controls;
 
       // Add sun
@@ -293,7 +308,7 @@ const Universe = ({
       const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
       scene.add(hemisphereLight);
 
-      // Animation loop
+      // Update animation loop
       const animate = () => {
         requestAnimationFrame(animate);
         
