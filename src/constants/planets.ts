@@ -20,7 +20,6 @@ export const PLANET_TEXTURES = [
   '/lovable-uploads/e9932568-3394-42a3-86b5-b6e4659dfe52.png',  // Cosmic swirl
   '/lovable-uploads/09aa93e8-a49f-4f20-83cf-2e3eb67a07be.png',  // Metallic flow
   '/lovable-uploads/ac546a61-94c1-48d5-86cf-57aa0c45b8e6.png',  // Solar flare
-  '/lovable-uploads/406c7022-a3f6-4a8c-85ca-9ca72a66e8c6.png',  // Lava core
   '/lovable-uploads/b2b2500b-52f3-4a95-bf21-5d16a08765bc.png',  // Fire storm
   '/lovable-uploads/62092156-4668-4f73-934a-b7977f2f9614.png',  // Royal nebula
   '/lovable-uploads/02393287-3e3c-435f-866d-b46ebdc6e7cb.png',  // Rainbow wave
