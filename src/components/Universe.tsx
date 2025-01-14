@@ -435,6 +435,7 @@ const Universe = ({
           
           if (clickedObject === sunRef.current) {
             console.log('Sun clicked');
+            setIsZoomedIn(true); // Add this line to show the back button
             handlePlanetZoom(new THREE.Vector3(0, 0, 0));
             return;
           }
