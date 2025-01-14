@@ -21,10 +21,11 @@ serve(async (req) => {
     }
 
     console.log('Making request to Solscan API...')
-    const response = await fetch(`https://public-api.solscan.io/token/holders?tokenAddress=${tokenAddress}&offset=0&limit=1000`, {
+    const response = await fetch(`https://api.solscan.io/token/holders?token=${tokenAddress}`, {
       headers: {
         'accept': 'application/json',
         'token': apiToken,
+        'user-agent': 'Mozilla/5.0',
       }
     })
 
@@ -42,7 +43,6 @@ serve(async (req) => {
       throw new Error('Invalid response format from Solscan API')
     }
 
-    // Process all holders without filtering
     const holders = data.data.map((holder: any) => {
       const amount = parseFloat(holder.amount)
       const total = parseFloat(holder.owner.total)
@@ -57,7 +57,6 @@ serve(async (req) => {
 
     console.log('Processing all holders:', holders.length, 'total holders')
 
-    // Get Supabase connection details from environment variables
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
@@ -67,7 +66,6 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // First, clear existing data
     const { error: clearError } = await supabase
       .from('token_holders')
       .delete()
@@ -80,7 +78,6 @@ serve(async (req) => {
 
     console.log('Cleared existing token holders data')
 
-    // Also clear planet customizations since they reference token holders
     const { error: clearCustomizationsError } = await supabase
       .from('planet_customizations')
       .delete()
@@ -93,7 +90,6 @@ serve(async (req) => {
 
     console.log('Cleared existing planet customizations')
 
-    // Insert new data in batches of 100
     const batchSize = 100;
     for (let i = 0; i < holders.length; i += batchSize) {
       const batch = holders.slice(i, i + batchSize);
