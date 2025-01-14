@@ -1,7 +1,7 @@
 import Universe from "@/components/Universe";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Wallet, Loader2, Search, Globe } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
@@ -16,6 +16,7 @@ const Index = () => {
   const [connectedWalletAddress, setConnectedWalletAddress] = useState<string | null>(null);
   const [selectedWallet, setSelectedWallet] = useState<string | null>(null);
   const { toast } = useToast();
+  const activeHoldersRef = useRef<any[]>([]);
 
   const { data: holders, isLoading, error } = useQuery({
     queryKey: ['tokenHolders'],
@@ -48,16 +49,29 @@ const Index = () => {
       }
     },
     refetchInterval: 60000,
-    refetchIntervalInBackground: false, // Changed to false to prevent background updates
+    refetchIntervalInBackground: false,
     staleTime: 55000,
     placeholderData: (previousData) => previousData,
     retry: 3,
     retryDelay: 1000,
-    gcTime: Infinity, // Keep the data cached indefinitely
+    gcTime: Infinity,
   });
 
-  // Re-add the userHasPlanet check
-  const userHasPlanet = holders?.some(
+  // Update activeHoldersRef when holders data changes
+  useEffect(() => {
+    if (holders && !isLoading) {
+      // Only update if the component is mounted and not in the middle of an interaction
+      if (!isPlanetSelected) {
+        console.log('Updating active holders reference');
+        activeHoldersRef.current = holders;
+      } else {
+        console.log('Skipping holders update while planet is selected');
+      }
+    }
+  }, [holders, isLoading, isPlanetSelected]);
+
+  // Use activeHoldersRef.current instead of holders directly
+  const userHasPlanet = activeHoldersRef.current?.some(
     holder => holder.wallet_address.toLowerCase() === connectedWalletAddress?.toLowerCase()
   );
 
@@ -105,7 +119,7 @@ const Index = () => {
     e.preventDefault();
     console.log('Searching for wallet:', searchAddress);
     
-    const foundHolder = holders?.find(
+    const foundHolder = activeHoldersRef.current?.find(
       holder => holder.wallet_address.toLowerCase() === searchAddress.toLowerCase()
     );
 
@@ -192,14 +206,14 @@ const Index = () => {
 
       <div className="fixed right-8 top-[120px] glass-panel p-4 w-[24rem] z-30 h-[calc(100vh-140px)] flex flex-col">
         <h2 className="text-lg font-semibold text-white mb-4">Planet Owners (Top 500)</h2>
-        {isLoading && !holders ? (
+        {isLoading && !activeHoldersRef.current.length ? (
           <div className="flex justify-center items-center p-4">
             <Loader2 className="h-6 w-6 animate-spin text-white" />
           </div>
         ) : (
           <ScrollArea className="flex-1 pr-4 -mr-4">
             <div className="h-full w-full">
-              <HolderTable holders={holders} onWalletClick={handleWalletClick} />
+              <HolderTable holders={activeHoldersRef.current} onWalletClick={handleWalletClick} />
             </div>
           </ScrollArea>
         )}
