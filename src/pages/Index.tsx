@@ -57,18 +57,13 @@ const Index = () => {
     gcTime: Infinity,
   });
 
-  // Update activeHoldersRef when holders data changes
+  // Initialize activeHoldersRef when holders data is first loaded
   useEffect(() => {
     if (holders && !isLoading) {
-      // Only update if the component is mounted and not in the middle of an interaction
-      if (!isPlanetSelected) {
-        console.log('Updating active holders reference');
-        activeHoldersRef.current = holders;
-      } else {
-        console.log('Skipping holders update while planet is selected');
-      }
+      console.log('Updating active holders reference');
+      activeHoldersRef.current = holders;
     }
-  }, [holders, isLoading, isPlanetSelected]);
+  }, [holders, isLoading]);
 
   // Use activeHoldersRef.current instead of holders directly
   const userHasPlanet = activeHoldersRef.current?.some(
@@ -206,7 +201,7 @@ const Index = () => {
 
       <div className="fixed right-8 top-[120px] glass-panel p-4 w-[24rem] z-30 h-[calc(100vh-140px)] flex flex-col">
         <h2 className="text-lg font-semibold text-white mb-4">Planet Owners (Top 500)</h2>
-        {isLoading && !activeHoldersRef.current.length ? (
+        {isLoading ? (
           <div className="flex justify-center items-center p-4">
             <Loader2 className="h-6 w-6 animate-spin text-white" />
           </div>
