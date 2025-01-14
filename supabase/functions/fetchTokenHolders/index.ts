@@ -7,7 +7,6 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -24,38 +23,46 @@ serve(async (req) => {
     console.log('Retrieved Solscan API token successfully')
 
     const tokenAddress = '7H7Au1DETfVTd1eMRY96m6R4J65ZFTGZAVZvmmiRpump'
-    const url = `https://pro-api.solscan.io/v2.0/token/holders?address=${tokenAddress}&page=1&page_size=500`
+    const pageSize = 40 // Maximum allowed page size
+    const numberOfPages = Math.ceil(500 / pageSize) // We want 500 holders total
+    let allHolders: any[] = []
 
-    console.log('Making API request to Solscan:', url)
-    
-    const response = await fetch(url, {
-      headers: {
-        'token': apiToken,
-        'Accept': 'application/json',
-      }
-    })
+    console.log(`Fetching ${numberOfPages} pages of holders with ${pageSize} holders per page...`)
 
-    console.log('Solscan API Response Status:', response.status)
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('Solscan API request failed:', {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorText
+    for (let page = 1; page <= numberOfPages; page++) {
+      const url = `https://pro-api.solscan.io/v2.0/token/holders?address=${tokenAddress}&page=${page}&page_size=${pageSize}`
+      console.log(`Fetching page ${page} from Solscan API:`, url)
+      
+      const response = await fetch(url, {
+        headers: {
+          'token': apiToken,
+          'Accept': 'application/json',
+        }
       })
-      throw new Error(`API request failed: ${response.statusText}`)
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error(`Solscan API request failed for page ${page}:`, {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        })
+        throw new Error(`API request failed: ${response.statusText}`)
+      }
+
+      const data = await response.json()
+      
+      if (!data || !data.data || !Array.isArray(data.data.items)) {
+        console.error(`Unexpected data format from Solscan API for page ${page}:`, data)
+        throw new Error('Invalid data format received from Solscan API')
+      }
+
+      allHolders = [...allHolders, ...data.data.items]
+      console.log(`Successfully fetched page ${page}, total holders so far: ${allHolders.length}`)
     }
 
-    const data = await response.json()
-    console.log('Raw Solscan API response structure:', Object.keys(data))
+    console.log('Successfully fetched all pages. Processing data...')
 
-    if (!data || !data.data || !Array.isArray(data.data.items)) {
-      console.error('Unexpected data format from Solscan API:', data)
-      throw new Error('Invalid data format received from Solscan API')
-    }
-
-    // Store data in Supabase
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     
@@ -67,26 +74,26 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey)
     console.log('Supabase client initialized')
 
-    // Transform data from Solscan API response
     const TOTAL_SUPPLY = 1_000_000_000 // 1 billion tokens
     
-    const holders = data.data.items.map((holder: any) => {
-      const amount = Number(holder.amount) / Math.pow(10, holder.decimals)
-      const percentage = (amount / TOTAL_SUPPLY) * 100
-      
-      return {
-        wallet_address: holder.owner,
-        token_amount: amount,
-        percentage: percentage,
-      }
-    })
-    .filter(holder => holder.token_amount > 0)
-    .sort((a: any, b: any) => b.token_amount - a.token_amount)
+    const holders = allHolders
+      .map((holder: any) => {
+        const amount = Number(holder.amount) / Math.pow(10, holder.decimals)
+        const percentage = (amount / TOTAL_SUPPLY) * 100
+        
+        return {
+          wallet_address: holder.owner,
+          token_amount: amount,
+          percentage: percentage,
+        }
+      })
+      .filter(holder => holder.token_amount > 0)
+      .sort((a: any, b: any) => b.token_amount - a.token_amount)
+      .slice(0, 500) // Ensure we only take the top 500 holders
 
     console.log('Transformed data. Number of holders:', holders.length)
     console.log('First holder example:', holders[0])
 
-    // First, truncate both tables to remove ALL existing data
     console.log('Removing all existing data from planet_customizations...')
     const { error: truncateCustomizationsError } = await supabase
       .from('planet_customizations')
@@ -109,7 +116,6 @@ serve(async (req) => {
       throw truncateHoldersError
     }
 
-    // Insert new data
     console.log('Inserting new token holders...')
     const { error: insertError } = await supabase
       .from('token_holders')
