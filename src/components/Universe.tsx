@@ -44,6 +44,7 @@ const Universe = ({
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const textureCache = useRef<Map<string, THREE.Texture>>(new Map());
+  const isInitializedRef = useRef(false);
 
   const { data: holders, isLoading: holdersLoading } = useQuery({
     queryKey: ['tokenHolders'],
@@ -67,6 +68,8 @@ const Universe = ({
       return data;
     },
     refetchInterval: 60000,
+    refetchOnWindowFocus: false,
+    staleTime: 55000,
   });
 
   const { data: planetCustomizations, isLoading: customizationsLoading } = useQuery({
@@ -86,6 +89,7 @@ const Universe = ({
       return data;
     },
     refetchInterval: 300000,
+    refetchOnWindowFocus: false,
     staleTime: 0,
   });
 
@@ -241,6 +245,12 @@ const Universe = ({
   };
 
   const preloadTextures = async () => {
+    if (isInitializedRef.current) {
+      console.log('Textures already preloaded, skipping...');
+      setIsLoading(false);
+      return;
+    }
+
     console.log('Starting optimized texture preloading...');
     const totalTextures = PLANET_TEXTURES.length + 1;
     let loadedCount = 0;
@@ -292,6 +302,7 @@ const Universe = ({
       }
 
       console.log('All textures preloaded successfully');
+      isInitializedRef.current = true;
       setIsLoading(false);
     } catch (error) {
       console.error('Error preloading textures:', error);
@@ -302,6 +313,20 @@ const Universe = ({
       });
       setIsLoading(false);
     }
+  };
+
+  const updatePlanetsFromHolders = () => {
+    if (!holders || !sceneRef.current) return;
+    
+    console.log('Updating planets with new holder data...');
+    
+    holders.forEach((holder, index) => {
+      const existingPlanet = planetsRef.current[holder.wallet_address];
+      if (existingPlanet) {
+        const size = calculatePlanetSize(holder.percentage);
+        existingPlanet.scale.set(size, size, size);
+      }
+    });
   };
 
   const addPlanetsFromHolders = (scene: THREE.Scene) => {
@@ -353,14 +378,16 @@ const Universe = ({
           roughness: 0.4,
         });
 
-        const position = generateRandomPosition(existingPositions, holder.percentage);
-        existingPositions.push(position);
+        if (!planetsRef.current[holder.wallet_address]) {
+          const position = generateRandomPosition(existingPositions, holder.percentage);
+          existingPositions.push(position);
 
-        const mesh = new THREE.Mesh(geometry, material);
-        mesh.position.set(...position);
-        scene.add(mesh);
-        planetsRef.current[holder.wallet_address] = mesh;
-        planetPositionsRef.current[holder.wallet_address] = mesh.position.clone();
+          const mesh = new THREE.Mesh(geometry, material);
+          mesh.position.set(...position);
+          scene.add(mesh);
+          planetsRef.current[holder.wallet_address] = mesh;
+          planetPositionsRef.current[holder.wallet_address] = mesh.position.clone();
+        }
       }
 
       currentIndex = endIndex;
@@ -379,246 +406,178 @@ const Universe = ({
       return;
     }
 
-    console.log('Initializing universe with holders:', holders.length);
-    let animationFrameId: number | null = null;
-    let isPageVisible = true;
+    if (!isInitializedRef.current) {
+      console.log('Initializing universe with holders:', holders.length);
+      let animationFrameId: number | null = null;
+      let isPageVisible = true;
 
-    const animate = () => {
-      if (!isPageVisible) {
-        console.log('Animation paused - page not visible');
-        return;
-      }
-
-      if (!isZoomedIn) {
-        Object.values(planetsRef.current).forEach((planet) => {
-          planet.rotation.y += 0.005;
-        });
-
-        if (sunRef.current) {
-          sunRef.current.rotation.y += 0.001;
-        }
-      }
-
-      if (controlsRef.current) {
-        controlsRef.current.update();
-      }
-
-      if (rendererRef.current && sceneRef.current && cameraRef.current) {
-        rendererRef.current.render(sceneRef.current, cameraRef.current);
-      }
-
-      animationFrameId = requestAnimationFrame(animate);
-    };
-
-    const startAnimation = () => {
-      if (animationFrameId === null) {
-        console.log('Starting animation loop');
-        animate();
-      }
-    };
-
-    const stopAnimation = () => {
-      if (animationFrameId !== null) {
-        console.log('Stopping animation loop');
-        cancelAnimationFrame(animationFrameId);
-        animationFrameId = null;
-      }
-    };
-
-    const handleVisibilityChange = () => {
-      isPageVisible = !document.hidden;
-      console.log('Visibility changed:', isPageVisible ? 'visible' : 'hidden');
-      
-      if (isPageVisible) {
-        startAnimation();
-      } else {
-        stopAnimation();
-      }
-    };
-
-    const handleFocus = () => {
-      console.log('Window focused');
-      isPageVisible = true;
-      startAnimation();
-    };
-
-    const handleBlur = () => {
-      console.log('Window blurred');
-      isPageVisible = false;
-      stopAnimation();
-    };
-
-    const init = async () => {
-      const scene = new THREE.Scene();
-      sceneRef.current = scene;
-
-      const camera = new THREE.PerspectiveCamera(
-        75,
-        window.innerWidth / window.innerHeight,
-        1,
-        500
-      );
-      camera.position.z = 100;
-      cameraRef.current = camera;
-
-      const renderer = new THREE.WebGLRenderer({
-        antialias: true,
-        alpha: true,
-        powerPreference: "high-performance"
-      });
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      containerRef.current.appendChild(renderer.domElement);
-      rendererRef.current = renderer;
-
-      const controls = new OrbitControls(camera, renderer.domElement);
-      controls.enableDamping = true;
-      controls.dampingFactor = 0.05;
-      controls.rotateSpeed = 0.5;
-      controls.zoomSpeed = 2.0;
-      controls.minDistance = 1;
-      controls.maxDistance = 500;
-      controls.enableZoom = true;
-      controls.enableRotate = true;
-      controls.enablePan = true;
-      controlsRef.current = controls;
-
-      const sunGeometry = new THREE.SphereGeometry(5, 32, 32);
-      const sunTexture = textureLoaderRef.current.load(SUN_TEXTURE);
-      const sunMaterial = new THREE.MeshStandardMaterial({
-        map: sunTexture,
-        emissive: 0xffa500,
-        emissiveIntensity: 0.5,
-        metalness: 0,
-        roughness: 0.7,
-      });
-      const sun = new THREE.Mesh(sunGeometry, sunMaterial);
-      scene.add(sun);
-      sunRef.current = sun;
-
-      await preloadTextures();
-      addPlanetsFromHolders(scene);
-
-      const starsGeometry = new THREE.BufferGeometry();
-      const starsMaterial = new THREE.PointsMaterial({
-        color: 0xFFFFFF,
-        size: 0.1,
-      });
-
-      const starsVertices = [];
-      for (let i = 0; i < 5000; i++) {
-        const x = (Math.random() - 0.5) * 2000;
-        const y = (Math.random() - 0.5) * 2000;
-        const z = (Math.random() - 0.5) * 2000;
-        starsVertices.push(x, y, z);
-      }
-
-      starsGeometry.setAttribute(
-        'position',
-        new THREE.Float32BufferAttribute(starsVertices, 3)
-      );
-      const stars = new THREE.Points(starsGeometry, starsMaterial);
-      scene.add(stars);
-
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-      scene.add(ambientLight);
-
-      const pointLight = new THREE.PointLight(0xffffff, 2);
-      pointLight.position.set(0, 0, 0);
-      scene.add(pointLight);
-
-      const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
-      scene.add(hemisphereLight);
-
-      startAnimation();
-
-      const handleResize = () => {
-        if (!cameraRef.current || !rendererRef.current) return;
-        
-        cameraRef.current.aspect = window.innerWidth / window.innerHeight;
-        cameraRef.current.updateProjectionMatrix();
-        rendererRef.current.setSize(window.innerWidth, window.innerHeight);
-      };
-
-      window.addEventListener('resize', handleResize);
-
-      const raycaster = new THREE.Raycaster();
-      const mouse = new THREE.Vector2();
-
-      const handleClick = (event: MouseEvent) => {
-        if (!cameraRef.current || !sceneRef.current || !controlsRef.current) {
-          console.log("Camera, scene, or controls not ready");
+      const animate = () => {
+        if (!isPageVisible) {
+          console.log('Animation paused - page not visible');
           return;
         }
 
-        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        if (!isZoomedIn) {
+          Object.values(planetsRef.current).forEach((planet) => {
+            planet.rotation.y += 0.005;
+          });
 
-        raycaster.setFromCamera(mouse, cameraRef.current);
-        
-        if (sunRef.current) {
-          const sunIntersects = raycaster.intersectObject(sunRef.current);
-          if (sunIntersects.length > 0) {
-            console.log("Sun clicked");
-            cleanupAnimation();
-            setIsZoomedIn(true);
-            setSelectedHolder(null);
-            onPlanetClick();
-            
-            handlePlanetZoom(new THREE.Vector3(0, 0, 0));
-            return;
+          if (sunRef.current) {
+            sunRef.current.rotation.y += 0.001;
           }
         }
 
-        const intersects = raycaster.intersectObjects(Object.values(planetsRef.current));
-        if (intersects.length > 0) {
-          const clickedPlanet = holders.find(
-            (p) => planetsRef.current[p.wallet_address] === intersects[0].object
-          );
+        if (controlsRef.current) {
+          controlsRef.current.update();
+        }
 
-          if (clickedPlanet) {
-            console.log("Planet clicked:", clickedPlanet.wallet_address);
-            cleanupAnimation();
-            setIsZoomedIn(true);
-            setSelectedHolder(clickedPlanet);
-            onPlanetClick();
+        if (rendererRef.current && sceneRef.current && cameraRef.current) {
+          rendererRef.current.render(sceneRef.current, cameraRef.current);
+        }
 
-            const planetPosition = planetPositionsRef.current[clickedPlanet.wallet_address];
-            if (!planetPosition) {
-              console.error("Planet position not found");
-              return;
-            }
+        animationFrameId = requestAnimationFrame(animate);
+      };
 
-            const planetSize = calculatePlanetSize(clickedPlanet.percentage);
-            controlsRef.current.enabled = false;
-            handlePlanetZoom(planetPosition, planetSize);
-          }
+      const startAnimation = () => {
+        if (animationFrameId === null) {
+          console.log('Starting animation loop');
+          animate();
         }
       };
 
-      window.addEventListener('click', handleClick);
-      document.addEventListener('visibilitychange', handleVisibilityChange);
-      window.addEventListener('focus', handleFocus);
-      window.addEventListener('blur', handleBlur);
-
-      return () => {
-        console.log('Cleaning up universe component');
-        window.removeEventListener('click', handleClick);
-        window.removeEventListener('resize', handleResize);
-        document.removeEventListener('visibilitychange', handleVisibilityChange);
-        window.removeEventListener('focus', handleFocus);
-        window.removeEventListener('blur', handleBlur);
-        if (animationFrameId) {
+      const stopAnimation = () => {
+        if (animationFrameId !== null) {
+          console.log('Stopping animation loop');
           cancelAnimationFrame(animationFrameId);
-        }
-        if (rendererRef.current) {
-          rendererRef.current.dispose();
+          animationFrameId = null;
         }
       };
-    };
 
-    init();
-  }, [holders, planetCustomizations]);
+      const handleVisibilityChange = () => {
+        isPageVisible = !document.hidden;
+        console.log('Visibility changed:', isPageVisible ? 'visible' : 'hidden');
+        
+        if (isPageVisible) {
+          startAnimation();
+        } else {
+          stopAnimation();
+        }
+      };
+
+      const init = async () => {
+        const scene = new THREE.Scene();
+        sceneRef.current = scene;
+
+        const camera = new THREE.PerspectiveCamera(
+          75,
+          window.innerWidth / window.innerHeight,
+          1,
+          500
+        );
+        camera.position.z = 100;
+        cameraRef.current = camera;
+
+        const renderer = new THREE.WebGLRenderer({
+          antialias: true,
+          alpha: true,
+          powerPreference: "high-performance"
+        });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        containerRef.current.appendChild(renderer.domElement);
+        rendererRef.current = renderer;
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.rotateSpeed = 0.5;
+        controls.zoomSpeed = 2.0;
+        controls.minDistance = 1;
+        controls.maxDistance = 500;
+        controls.enableZoom = true;
+        controls.enableRotate = true;
+        controls.enablePan = true;
+        controlsRef.current = controls;
+
+        const sunGeometry = new THREE.SphereGeometry(5, 32, 32);
+        const sunTexture = textureLoaderRef.current.load(SUN_TEXTURE);
+        const sunMaterial = new THREE.MeshStandardMaterial({
+          map: sunTexture,
+          emissive: 0xffa500,
+          emissiveIntensity: 0.5,
+          metalness: 0,
+          roughness: 0.7,
+        });
+        const sun = new THREE.Mesh(sunGeometry, sunMaterial);
+        scene.add(sun);
+        sunRef.current = sun;
+
+        await preloadTextures();
+        addPlanetsFromHolders(scene);
+
+        const starsGeometry = new THREE.BufferGeometry();
+        const starsMaterial = new THREE.PointsMaterial({
+          color: 0xFFFFFF,
+          size: 0.1,
+        });
+
+        const starsVertices = [];
+        for (let i = 0; i < 5000; i++) {
+          const x = (Math.random() - 0.5) * 2000;
+          const y = (Math.random() - 0.5) * 2000;
+          const z = (Math.random() - 0.5) * 2000;
+          starsVertices.push(x, y, z);
+        }
+
+        starsGeometry.setAttribute(
+          'position',
+          new THREE.Float32BufferAttribute(starsVertices, 3)
+        );
+        const stars = new THREE.Points(starsGeometry, starsMaterial);
+        scene.add(stars);
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+
+        const pointLight = new THREE.PointLight(0xffffff, 2);
+        pointLight.position.set(0, 0, 0);
+        scene.add(pointLight);
+
+        const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
+        scene.add(hemisphereLight);
+
+        startAnimation();
+
+        const handleResize = () => {
+          if (!cameraRef.current || !rendererRef.current) return;
+          
+          cameraRef.current.aspect = window.innerWidth / window.innerHeight;
+          cameraRef.current.updateProjectionMatrix();
+          rendererRef.current.setSize(window.innerWidth, window.innerHeight);
+        };
+
+        window.addEventListener('resize', handleResize);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+          console.log('Cleaning up universe component');
+          window.removeEventListener('resize', handleResize);
+          document.removeEventListener('visibilitychange', handleVisibilityChange);
+          if (animationFrameId) {
+            cancelAnimationFrame(animationFrameId);
+          }
+          if (rendererRef.current) {
+            rendererRef.current.dispose();
+          }
+        };
+      };
+
+      init();
+    } else {
+      console.log('Universe already initialized, updating planets...');
+      updatePlanetsFromHolders();
+    }
+  }, [holders]);
 
   useEffect(() => {
     if (selectedWalletAddress && planetsRef.current[selectedWalletAddress]) {
