@@ -2,7 +2,7 @@ import Universe from "@/components/Universe";
 import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Wallet, Loader2, Search, Globe } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';

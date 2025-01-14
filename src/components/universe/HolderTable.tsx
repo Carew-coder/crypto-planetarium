@@ -20,7 +20,7 @@ const HolderTable: React.FC<TableProps> = ({ collapsed, onToggle }) => {
         .from('token_holders')
         .select('*')
         .order('percentage', { ascending: false })
-        .limit(500)
+        // Removed limit to fetch all holders
 
       if (error) {
         console.error('Error fetching token holders:', error);
