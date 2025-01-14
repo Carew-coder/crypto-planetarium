@@ -13,7 +13,7 @@ serve(async (req) => {
 
   try {
     console.log('Fetching token holders data...')
-    const tokenAddress = '7qa4Qxoa3JFY7S1CZMp3Ma3Du9jPUTSuSzk81ojWpump'
+    const tokenAddress = '7H7Au1DETfVTd1eMRY96m6R4J65ZFTGZAVZvmmiRpump'
     
     // Fetch all holders with a larger limit
     const response = await fetch(`https://public-api.solscan.io/token/holders?tokenAddress=${tokenAddress}&offset=0&limit=1000`, {
@@ -30,7 +30,7 @@ serve(async (req) => {
     const data = await response.json()
     console.log('Successfully fetched token holders data:', data.data.length, 'holders')
 
-    // Process holders without filtering by percentage
+    // Process all holders without filtering
     const holders = data.data.map((holder: any) => {
       const amount = parseFloat(holder.amount)
       const total = parseFloat(holder.owner.total)
@@ -67,6 +67,19 @@ serve(async (req) => {
     }
 
     console.log('Cleared existing token holders data')
+
+    // Also clear planet customizations since they reference token holders
+    const { error: clearCustomizationsError } = await supabase
+      .from('planet_customizations')
+      .delete()
+      .neq('wallet_address', '')
+
+    if (clearCustomizationsError) {
+      console.error('Error clearing existing customizations:', clearCustomizationsError)
+      throw clearCustomizationsError
+    }
+
+    console.log('Cleared existing planet customizations')
 
     // Insert new data in batches of 100
     const batchSize = 100;
