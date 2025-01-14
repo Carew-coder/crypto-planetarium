@@ -48,11 +48,12 @@ const Index = () => {
       }
     },
     refetchInterval: 60000,
-    refetchIntervalInBackground: true,
+    refetchIntervalInBackground: false, // Changed to false to prevent background updates
     staleTime: 55000,
-    placeholderData: (previousData) => previousData, // Replace keepPreviousData with placeholderData
+    placeholderData: (previousData) => previousData,
     retry: 3,
     retryDelay: 1000,
+    gcTime: Infinity, // Keep the data cached indefinitely
   });
 
   // Re-add the userHasPlanet check
