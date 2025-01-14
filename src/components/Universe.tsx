@@ -83,7 +83,10 @@ const Universe = ({
             if (!data || data.length === 0) {
               hasMore = false;
             } else {
-              allHolders = [...allHolders, ...data];
+              // Filter out holders with less than 0.01% holdings
+              const significantHolders = data.filter(holder => holder.percentage >= 0.01);
+              allHolders = [...allHolders, ...significantHolders];
+              
               if (data.length < pageSize) {
                 hasMore = false;
               } else {
@@ -103,7 +106,7 @@ const Universe = ({
           }
         }
 
-        console.log('Successfully fetched all token holders:', allHolders.length);
+        console.log('Successfully fetched significant holders:', allHolders.length);
         setTotalPlanetsCount(allHolders.length);
         return allHolders;
       };
