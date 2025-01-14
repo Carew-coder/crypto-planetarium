@@ -381,14 +381,11 @@ const Universe = ({
 
     console.log('Initializing universe with holders:', holders.length);
     let animationFrameId: number | null = null;
+    let isPageVisible = true;
 
     const animate = () => {
-      if (document.hidden) {
+      if (!isPageVisible) {
         console.log('Animation paused - page not visible');
-        if (animationFrameId !== null) {
-          cancelAnimationFrame(animationFrameId);
-          animationFrameId = null;
-        }
         return;
       }
 
@@ -413,19 +410,42 @@ const Universe = ({
       animationFrameId = requestAnimationFrame(animate);
     };
 
-    const handleVisibilityChange = () => {
-      console.log('Visibility changed:', document.hidden ? 'hidden' : 'visible');
-      
-      if (!document.hidden) {
-        console.log('Tab is visible again, refreshing page immediately');
-        window.location.reload();
-      } else {
-        console.log('Pausing animation');
-        if (animationFrameId !== null) {
-          cancelAnimationFrame(animationFrameId);
-          animationFrameId = null;
-        }
+    const startAnimation = () => {
+      if (animationFrameId === null) {
+        console.log('Starting animation loop');
+        animate();
       }
+    };
+
+    const stopAnimation = () => {
+      if (animationFrameId !== null) {
+        console.log('Stopping animation loop');
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      isPageVisible = !document.hidden;
+      console.log('Visibility changed:', isPageVisible ? 'visible' : 'hidden');
+      
+      if (isPageVisible) {
+        startAnimation();
+      } else {
+        stopAnimation();
+      }
+    };
+
+    const handleFocus = () => {
+      console.log('Window focused');
+      isPageVisible = true;
+      startAnimation();
+    };
+
+    const handleBlur = () => {
+      console.log('Window blurred');
+      isPageVisible = false;
+      stopAnimation();
     };
 
     const init = async () => {
@@ -510,7 +530,7 @@ const Universe = ({
       const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
       scene.add(hemisphereLight);
 
-      animate();
+      startAnimation();
 
       const handleResize = () => {
         if (!cameraRef.current || !rendererRef.current) return;
@@ -578,12 +598,16 @@ const Universe = ({
 
       window.addEventListener('click', handleClick);
       document.addEventListener('visibilitychange', handleVisibilityChange);
+      window.addEventListener('focus', handleFocus);
+      window.addEventListener('blur', handleBlur);
 
       return () => {
         console.log('Cleaning up universe component');
         window.removeEventListener('click', handleClick);
         window.removeEventListener('resize', handleResize);
         document.removeEventListener('visibilitychange', handleVisibilityChange);
+        window.removeEventListener('focus', handleFocus);
+        window.removeEventListener('blur', handleBlur);
         if (animationFrameId) {
           cancelAnimationFrame(animationFrameId);
         }
