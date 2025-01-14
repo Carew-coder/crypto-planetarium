@@ -22,7 +22,7 @@ serve(async (req) => {
 
     console.log('Retrieved Solscan API token successfully')
 
-    const tokenAddress = 'A6C1zM4nBf8jr8tRxQskytusNQNQT9kpkWKUUjAgpump'
+    const tokenAddress = '3yn3YHatouqj6Vuz4nQcWR5zJ4zHWrjdZuTerq3Gpump'
     const pageSize = 40 // Maximum allowed page size
     const numberOfPages = Math.ceil(500 / pageSize) // We want 500 holders total
     let allHolders: any[] = []
