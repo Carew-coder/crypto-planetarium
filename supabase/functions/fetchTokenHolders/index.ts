@@ -15,8 +15,8 @@ serve(async (req) => {
     console.log('Fetching token holders data...')
     const tokenAddress = '7H7Au1DETfVTd1eMRY96m6R4J65ZFTGZAVZvmmiRpump'
     
-    // Fetch all holders with a larger limit
-    const response = await fetch(`https://public-api.solscan.io/token/holders?tokenAddress=${tokenAddress}&offset=0&limit=1000`, {
+    // Use the correct Solscan API endpoint with proper parameters
+    const response = await fetch(`https://api.solscan.io/token/holders?token=${tokenAddress}&offset=0&limit=1000`, {
       headers: {
         'accept': 'application/json',
         'token': Deno.env.get('SOLSCAN_API_TOKEN') || '',
@@ -24,11 +24,18 @@ serve(async (req) => {
     })
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      const errorText = await response.text()
+      console.error(`Solscan API error: ${response.status} - ${errorText}`)
+      throw new Error(`Solscan API error: ${response.status} - ${errorText}`)
     }
 
     const data = await response.json()
-    console.log('Successfully fetched token holders data:', data.data.length, 'holders')
+    console.log('Successfully fetched token holders data:', data.data?.length || 0, 'holders')
+
+    if (!data.data || !Array.isArray(data.data)) {
+      console.error('Invalid response format from Solscan API:', data)
+      throw new Error('Invalid response format from Solscan API')
+    }
 
     // Process all holders without filtering
     const holders = data.data.map((holder: any) => {
