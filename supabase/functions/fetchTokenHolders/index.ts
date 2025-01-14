@@ -24,7 +24,7 @@ serve(async (req) => {
     console.log('Retrieved Solscan API token successfully')
 
     const tokenAddress = '7H7Au1DETfVTd1eMRY96m6R4J65ZFTGZAVZvmmiRpump'
-    const url = `https://api.solscan.io/token/holders?token=${tokenAddress}`
+    const url = `https://public-api.solscan.io/token/holders?tokenAddress=${tokenAddress}&limit=100&offset=0`
 
     console.log('Making API request to Solscan:', url)
     
@@ -32,7 +32,9 @@ serve(async (req) => {
       headers: {
         'token': apiToken,
         'Accept': 'application/json',
-        'User-Agent': 'Mozilla/5.0',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Origin': 'https://solscan.io',
+        'Referer': 'https://solscan.io/',
       }
     })
 
@@ -51,7 +53,7 @@ serve(async (req) => {
     const data = await response.json()
     console.log('Raw Solscan API response structure:', Object.keys(data))
 
-    if (!data || !data.data || !Array.isArray(data.data)) {
+    if (!data || !Array.isArray(data.data)) {
       console.error('Unexpected data format from Solscan API:', data)
       throw new Error('Invalid data format received from Solscan API')
     }
