@@ -4,16 +4,25 @@ export const generateRandomPosition = (existingPositions: [number, number, numbe
   let attempts = 0;
   
   while (attempts < MAX_ATTEMPTS) {
-    const radius = 50;
-    const theta = Math.random() * Math.PI * 2;
-    const phi = Math.acos((Math.random() * 2) - 1);
+    // Add variation to the radius (between 40 and 60)
+    const baseRadius = 50;
+    const radiusVariation = (Math.random() - 0.5) * 20;
+    const radius = baseRadius + radiusVariation;
     
-    const x = radius * Math.sin(phi) * Math.cos(theta);
-    const y = radius * Math.sin(phi) * Math.sin(theta);
-    const z = radius * Math.cos(phi);
+    // Generate spherical coordinates with more vertical variation
+    const theta = Math.random() * Math.PI * 2; // Horizontal angle (0 to 2π)
+    const verticalVariation = (Math.random() - 0.5) * 0.8; // More vertical spread
+    const phi = Math.acos((Math.random() * 2 - 1) * (1 - Math.abs(verticalVariation))); // Vertical angle
+    
+    // Convert to Cartesian coordinates with added noise
+    const noise = (Math.random() - 0.5) * 10; // Random noise for each coordinate
+    const x = radius * Math.sin(phi) * Math.cos(theta) + noise;
+    const y = radius * Math.sin(phi) * Math.sin(theta) + noise;
+    const z = radius * Math.cos(phi) + noise;
     
     const position: [number, number, number] = [x, y, z];
     
+    // Check if the position is too close to existing planets
     const isTooClose = existingPositions.some(existingPos => {
       const dx = existingPos[0] - x;
       const dy = existingPos[1] - y;
@@ -29,14 +38,16 @@ export const generateRandomPosition = (existingPositions: [number, number, numbe
     attempts++;
   }
   
-  const fallbackRadius = 50 + Math.random() * 20;
+  // Fallback position with more randomness
+  const fallbackRadius = 50 + Math.random() * 30;
   const theta = Math.random() * Math.PI * 2;
-  const phi = Math.acos((Math.random() * 2) - 1);
+  const phi = Math.acos((Math.random() * 2 - 1) * 0.8); // More vertical spread in fallback
+  const noise = (Math.random() - 0.5) * 10;
   
   return [
-    fallbackRadius * Math.sin(phi) * Math.cos(theta),
-    fallbackRadius * Math.sin(phi) * Math.sin(theta),
-    fallbackRadius * Math.cos(phi)
+    fallbackRadius * Math.sin(phi) * Math.cos(theta) + noise,
+    fallbackRadius * Math.sin(phi) * Math.sin(theta) + noise,
+    fallbackRadius * Math.cos(phi) + noise
   ];
 };
 
