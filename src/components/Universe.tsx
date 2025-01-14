@@ -3,15 +3,14 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Hourglass } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { PLANET_TEXTURES, SUN_TEXTURE, calculatePlanetSize } from '@/constants/planets';
 import ShootingStars from './universe/ShootingStars';
 import PlanetInformation from './universe/PlanetInformation';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { generateRandomPosition } from '@/utils/positionUtils';
-
-// ... keep existing code (component props and other imports)
+import { Loader2 } from "lucide-react";
 
 const Universe = ({ 
   onPlanetClick,
@@ -675,7 +674,7 @@ const Universe = ({
       {isLoading && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
           <div className="text-center space-y-4">
-            <Hourglass className="w-8 h-8 animate-spin mx-auto text-white" />
+            <Loader2 className="w-8 h-8 animate-spin mx-auto text-white" />
             <p className="text-white">Loading Solar System... {Math.round(loadingProgress)}%</p>
           </div>
         </div>
