@@ -1,13 +1,19 @@
-export const generateRandomPosition = (existingPositions: [number, number, number][]): [number, number, number] => {
+export const generateRandomPosition = (
+  existingPositions: [number, number, number][],
+  percentage?: number
+): [number, number, number] => {
   const MIN_DISTANCE = 5;
   const MAX_ATTEMPTS = 50;
   let attempts = 0;
   
   while (attempts < MAX_ATTEMPTS) {
-    // Add variation to the radius (between 40 and 60)
-    const baseRadius = 50;
-    const radiusVariation = (Math.random() - 0.5) * 20;
-    const radius = baseRadius + radiusVariation;
+    // Calculate radius based on percentage (inverse relationship)
+    // Higher percentage = closer to sun
+    const baseRadius = percentage 
+      ? 50 - (percentage * 20) // This will make higher % be closer
+      : 50;
+    const radiusVariation = (Math.random() - 0.5) * 10; // Reduced variation for more controlled spacing
+    const radius = Math.max(15, baseRadius + radiusVariation); // Ensure minimum distance from sun
     
     // Generate spherical coordinates with more vertical variation
     const theta = Math.random() * Math.PI * 2; // Horizontal angle (0 to 2π)
@@ -39,7 +45,9 @@ export const generateRandomPosition = (existingPositions: [number, number, numbe
   }
   
   // Fallback position with more randomness
-  const fallbackRadius = 50 + Math.random() * 30;
+  const fallbackRadius = percentage 
+    ? Math.max(15, 50 - (percentage * 20) + Math.random() * 15)
+    : 50 + Math.random() * 30;
   const theta = Math.random() * Math.PI * 2;
   const phi = Math.acos((Math.random() * 2 - 1) * 0.8); // More vertical spread in fallback
   const noise = (Math.random() - 0.5) * 10;

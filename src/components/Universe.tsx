@@ -353,7 +353,7 @@ const Universe = ({
           roughness: 0.4,
         });
 
-        const position = generateRandomPosition(existingPositions);
+        const position = generateRandomPosition(existingPositions, holder.percentage);
         existingPositions.push(position);
 
         const mesh = new THREE.Mesh(geometry, material);
