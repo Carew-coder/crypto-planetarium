@@ -84,14 +84,12 @@ serve(async (req) => {
         percentage: percentage,
       }
     })
-    .filter(holder => holder.token_amount > 0)
+    .filter(holder => holder.percentage >= 0.01) // Filter out holders with less than 0.01%
     .sort((a: any, b: any) => b.token_amount - a.token_amount)
 
-    console.log('Transformed data. Number of holders:', holders.length)
+    console.log('Transformed data. Number of significant holders:', holders.length)
     console.log('First holder example:', holders[0])
 
-    // First, truncate both tables to remove ALL existing data
-    console.log('Removing all existing data from planet_customizations...')
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     
@@ -101,41 +99,68 @@ serve(async (req) => {
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey)
-    
-    const { error: truncateCustomizationsError } = await supabase
-      .from('planet_customizations')
-      .delete()
-      .neq('wallet_address', 'dummy_value')
 
-    if (truncateCustomizationsError) {
-      console.error('Error truncating planet_customizations:', truncateCustomizationsError)
-      throw truncateCustomizationsError
-    }
-
-    console.log('Removing all existing data from token_holders...')
-    const { error: truncateHoldersError } = await supabase
+    // First, get all existing wallet addresses
+    const { data: existingHolders, error: fetchError } = await supabase
       .from('token_holders')
-      .delete()
-      .neq('wallet_address', 'dummy_value')
+      .select('wallet_address')
 
-    if (truncateHoldersError) {
-      console.error('Error truncating token_holders:', truncateHoldersError)
-      throw truncateHoldersError
+    if (fetchError) {
+      console.error('Error fetching existing holders:', fetchError)
+      throw fetchError
     }
 
-    // Insert holders in batches to avoid timeouts
-    const BATCH_SIZE = 100
-    for (let i = 0; i < holders.length; i += BATCH_SIZE) {
-      const batch = holders.slice(i, i + BATCH_SIZE)
-      console.log(`Inserting batch ${i / BATCH_SIZE + 1} of ${Math.ceil(holders.length / BATCH_SIZE)}`)
-      
+    const existingWallets = new Set(existingHolders?.map(h => h.wallet_address))
+    
+    // Separate holders into updates and inserts
+    const updates = holders.filter(h => existingWallets.has(h.wallet_address))
+    const inserts = holders.filter(h => !existingWallets.has(h.wallet_address))
+
+    console.log(`Processing ${updates.length} updates and ${inserts.length} inserts`)
+
+    // Handle updates first
+    if (updates.length > 0) {
+      for (const holder of updates) {
+        const { error: updateError } = await supabase
+          .from('token_holders')
+          .update({
+            token_amount: holder.token_amount,
+            percentage: holder.percentage
+          })
+          .eq('wallet_address', holder.wallet_address)
+
+        if (updateError) {
+          console.error(`Error updating holder ${holder.wallet_address}:`, updateError)
+          throw updateError
+        }
+      }
+    }
+
+    // Handle inserts
+    if (inserts.length > 0) {
       const { error: insertError } = await supabase
         .from('token_holders')
-        .insert(batch)
+        .insert(inserts)
 
       if (insertError) {
-        console.error(`Error inserting batch ${i / BATCH_SIZE + 1}:`, insertError)
+        console.error('Error inserting new holders:', insertError)
         throw insertError
+      }
+    }
+
+    // Delete holders that no longer exist
+    const currentWallets = new Set(holders.map(h => h.wallet_address))
+    const walletsToDelete = Array.from(existingWallets).filter(w => !currentWallets.has(w))
+
+    if (walletsToDelete.length > 0) {
+      const { error: deleteError } = await supabase
+        .from('token_holders')
+        .delete()
+        .in('wallet_address', walletsToDelete)
+
+      if (deleteError) {
+        console.error('Error deleting old holders:', deleteError)
+        throw deleteError
       }
     }
 
