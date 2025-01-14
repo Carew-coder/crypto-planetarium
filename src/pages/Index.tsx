@@ -171,7 +171,7 @@ const Index = () => {
         </div>
       </div>
 
-      <div className="fixed right-8 top-1/2 -translate-y-1/2 glass-panel p-4 w-[24rem] z-30 h-[90vh] flex flex-col">
+      <div className="fixed right-8 top-[120px] glass-panel p-4 w-[24rem] z-30 h-[calc(100vh-140px)] flex flex-col">
         <h2 className="text-lg font-semibold text-white mb-4">Planet Owners (Top 500)</h2>
         {isLoading ? (
           <div className="flex justify-center items-center p-4">
