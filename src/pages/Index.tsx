@@ -2,7 +2,7 @@ import Universe from "@/components/Universe";
 import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Wallet, Loader2, Search, Globe } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
@@ -26,7 +26,6 @@ const Index = () => {
         .from('token_holders')
         .select('*')
         .order('percentage', { ascending: false })
-        .limit(100)
 
       if (error) {
         console.error('Error fetching token holders:', error);
@@ -173,19 +172,19 @@ const Index = () => {
       </div>
 
       <div className="fixed right-8 top-1/2 -translate-y-1/2 glass-panel p-4 w-[24rem] z-30 h-[70vh]">
-        <h2 className="text-lg font-semibold text-white mb-4">Top Holders</h2>
+        <h2 className="text-lg font-semibold text-white mb-4">Top Holders ({holders?.length || 0})</h2>
         {isLoading ? (
           <div className="flex justify-center items-center p-4">
             <Loader2 className="h-6 w-6 animate-spin text-white" />
           </div>
         ) : (
-          <ScrollArea className="h-[calc(70vh-6rem)]">
+          <ScrollArea className="h-[calc(70vh-6rem)] pr-4">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-white/80">Rank</TableHead>
-                  <TableHead className="text-white/80">Wallet</TableHead>
-                  <TableHead className="text-white/80">Holding %</TableHead>
+                  <TableHead className="text-white/80 sticky top-0 bg-black/50 backdrop-blur-sm">Rank</TableHead>
+                  <TableHead className="text-white/80 sticky top-0 bg-black/50 backdrop-blur-sm">Wallet</TableHead>
+                  <TableHead className="text-white/80 sticky top-0 bg-black/50 backdrop-blur-sm">Holding %</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

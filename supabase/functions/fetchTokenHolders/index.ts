@@ -1,5 +1,5 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,15 +7,16 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
     console.log('Fetching token holders data...')
     const tokenAddress = '7qa4Qxoa3JFY7S1CZMp3Ma3Du9jPUTSuSzk81ojWpump'
-    const response = await fetch(`https://public-api.solscan.io/token/holders?tokenAddress=${tokenAddress}&offset=0&limit=50`, {
+    
+    // Fetch all holders with a larger limit
+    const response = await fetch(`https://public-api.solscan.io/token/holders?tokenAddress=${tokenAddress}&offset=0&limit=1000`, {
       headers: {
         'accept': 'application/json',
         'token': Deno.env.get('SOLSCAN_API_TOKEN') || '',
@@ -27,40 +28,34 @@ serve(async (req) => {
     }
 
     const data = await response.json()
-    console.log('Raw data fetched. Number of holders:', data.data?.length || 0)
+    console.log('Successfully fetched token holders data:', data.data.length, 'holders')
 
-    if (!data.data || !Array.isArray(data.data)) {
-      throw new Error('Invalid data format received from API')
-    }
-
-    const totalAmount = data.data.reduce((sum: number, holder: any) => {
-      return sum + (parseFloat(holder.amount) || 0)
-    }, 0)
-
-    console.log('Total amount calculated:', totalAmount)
-
+    // Process and filter holders
     const holders = data.data
+      .filter((holder: any) => {
+        const percentage = (parseFloat(holder.amount) / parseFloat(holder.owner.total)) * 100
+        return percentage >= 0.01 // Only include holders with at least 0.01%
+      })
       .map((holder: any) => {
-        const amount = parseFloat(holder.amount) || 0
-        const percentage = (amount / totalAmount) * 100
+        const amount = parseFloat(holder.amount)
+        const total = parseFloat(holder.owner.total)
+        const percentage = (amount / total) * 100
 
         return {
-          wallet_address: holder.owner,
+          wallet_address: holder.owner.address,
           token_amount: amount,
-          percentage: percentage,
+          percentage: percentage
         }
       })
-      .filter(holder => holder.percentage >= 0.01) // Filter out holders with less than 0.01%
-      .sort((a: any, b: any) => b.token_amount - a.token_amount)
 
-    console.log('Transformed data. Number of significant holders:', holders.length)
-    console.log('First holder example:', holders[0])
+    console.log('Processed holders data:', holders.length, 'significant holders')
 
+    // Get Supabase connection details from environment variables
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-    
+
     if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Missing environment variables')
+      throw new Error('Missing Supabase environment variables')
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey)
@@ -93,13 +88,12 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ message: 'Token holders data updated successfully' }),
       { 
-        headers: { 
+        headers: {
           ...corsHeaders,
-          'Content-Type': 'application/json'
-        } 
-      }
+          'Content-Type': 'application/json',
+        },
+      },
     )
-
   } catch (error) {
     console.error('Error in fetchTokenHolders function:', error)
     return new Response(
@@ -108,9 +102,9 @@ serve(async (req) => {
         status: 500,
         headers: {
           ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
-      }
+          'Content-Type': 'application/json',
+        },
+      },
     )
   }
 })
