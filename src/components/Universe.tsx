@@ -3,13 +3,14 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { PLANET_TEXTURES, SUN_TEXTURE, calculatePlanetSize } from '@/constants/planets';
 import ShootingStars from './universe/ShootingStars';
 import PlanetInformation from './universe/PlanetInformation';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { generateRandomPosition } from '@/utils/positionUtils';
+import { Loader2 } from "lucide-react";
 
 const Universe = ({ 
   onPlanetClick,
@@ -43,7 +44,6 @@ const Universe = ({
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const textureCache = useRef<Map<string, THREE.Texture>>(new Map());
-  const frameSkipRef = useRef(0);
 
   const { data: holders, isLoading: holdersLoading } = useQuery({
     queryKey: ['tokenHolders'],
@@ -52,59 +52,19 @@ const Universe = ({
       
       await supabase.functions.invoke('fetchTokenHolders');
       
-      const fetchAllHolders = async () => {
-        let allHolders: any[] = [];
-        let currentPage = 0;
-        const pageSize = 40;
-        let hasMore = true;
+      const { data, error } = await supabase
+        .from('token_holders')
+        .select('*')
+        .order('percentage', { ascending: false })
+        .limit(100);
 
-        while (hasMore) {
-          console.log(`Fetching holders page ${currentPage + 1}`);
-          try {
-            const { data, error } = await supabase
-              .from('token_holders')
-              .select('*', { count: 'exact' })
-              .order('percentage', { ascending: false })
-              .range(currentPage * pageSize, (currentPage + 1) * pageSize - 1);
-
-            if (error) {
-              if (error.code === 'PGRST103') {
-                console.log('Reached end of available holders');
-                hasMore = false;
-                break;
-              }
-              console.error('Error fetching token holders:', error);
-              throw error;
-            }
-
-            if (!data || data.length === 0) {
-              hasMore = false;
-            } else {
-              allHolders = [...allHolders, ...data];
-              if (data.length < pageSize) {
-                hasMore = false;
-              } else {
-                currentPage++;
-              }
-            }
-
-            await new Promise(resolve => setTimeout(resolve, 500));
-          } catch (error: any) {
-            if (error.code === 'PGRST103' || (error.message && error.message.includes('PGRST103'))) {
-              console.log('Reached end of available holders');
-              hasMore = false;
-            } else {
-              console.error('Error in fetchAllHolders:', error);
-              throw error;
-            }
-          }
-        }
-
-        console.log('Successfully fetched all token holders:', allHolders.length);
-        return allHolders;
-      };
-
-      return fetchAllHolders();
+      if (error) {
+        console.error('Error fetching token holders:', error);
+        throw error;
+      }
+      
+      console.log('Successfully fetched token holders data:', data);
+      return data;
     },
     refetchInterval: 60000,
   });
@@ -304,8 +264,6 @@ const Universe = ({
             texture.minFilter = THREE.LinearMipmapLinearFilter;
             texture.magFilter = THREE.LinearFilter;
             texture.anisotropy = 16;
-            texture.encoding = THREE.sRGBEncoding;
-            texture.needsUpdate = true;
             
             textureCache.current.set(url, texture);
             loadedTexturesRef.current[url] = texture;
@@ -372,8 +330,6 @@ const Universe = ({
             textureLoaderRef.current.load(
               customization.skin_url,
               (loadedTexture) => {
-                loadedTexture.encoding = THREE.sRGBEncoding;
-                loadedTexture.needsUpdate = true;
                 if (planetsRef.current[holder.wallet_address]) {
                   const material = planetsRef.current[holder.wallet_address].material as THREE.MeshStandardMaterial;
                   material.map = loadedTexture;
@@ -410,7 +366,7 @@ const Universe = ({
       currentIndex = endIndex;
       
       if (currentIndex < holders.length) {
-        setTimeout(() => requestAnimationFrame(addPlanetBatch), 50);
+        requestAnimationFrame(addPlanetBatch);
       }
     };
 
@@ -436,25 +392,22 @@ const Universe = ({
         return;
       }
 
-      frameSkipRef.current++;
-      if (frameSkipRef.current % 2 === 0) {
-        if (!isZoomedIn) {
-          Object.values(planetsRef.current).forEach((planet) => {
-            planet.rotation.y += 0.005;
-          });
+      if (!isZoomedIn) {
+        Object.values(planetsRef.current).forEach((planet) => {
+          planet.rotation.y += 0.005;
+        });
 
-          if (sunRef.current) {
-            sunRef.current.rotation.y += 0.001;
-          }
+        if (sunRef.current) {
+          sunRef.current.rotation.y += 0.001;
         }
+      }
 
-        if (controlsRef.current) {
-          controlsRef.current.update();
-        }
+      if (controlsRef.current) {
+        controlsRef.current.update();
+      }
 
-        if (rendererRef.current && sceneRef.current && cameraRef.current) {
-          rendererRef.current.render(sceneRef.current, cameraRef.current);
-        }
+      if (rendererRef.current && sceneRef.current && cameraRef.current) {
+        rendererRef.current.render(sceneRef.current, cameraRef.current);
       }
 
       animationFrameId = requestAnimationFrame(animate);
@@ -491,12 +444,10 @@ const Universe = ({
       const renderer = new THREE.WebGLRenderer({
         antialias: true,
         alpha: true,
-        powerPreference: "high-performance",
-        precision: "mediump"
+        powerPreference: "high-performance"
       });
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      renderer.outputEncoding = THREE.sRGBEncoding;
       containerRef.current.appendChild(renderer.domElement);
       rendererRef.current = renderer;
 
@@ -514,7 +465,6 @@ const Universe = ({
 
       const sunGeometry = new THREE.SphereGeometry(5, 32, 32);
       const sunTexture = textureLoaderRef.current.load(SUN_TEXTURE);
-      sunTexture.encoding = THREE.sRGBEncoding;
       const sunMaterial = new THREE.MeshStandardMaterial({
         map: sunTexture,
         emissive: 0xffa500,
@@ -533,7 +483,6 @@ const Universe = ({
       const starsMaterial = new THREE.PointsMaterial({
         color: 0xFFFFFF,
         size: 0.1,
-        sizeAttenuation: true
       });
 
       const starsVertices = [];
