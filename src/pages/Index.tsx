@@ -49,11 +49,16 @@ const Index = () => {
     },
     refetchInterval: 60000,
     refetchIntervalInBackground: true,
-    staleTime: 55000, // Consider data fresh for 55 seconds
-    keepPreviousData: true, // Keep showing previous data while fetching new data
+    staleTime: 55000,
+    placeholderData: (previousData) => previousData, // Replace keepPreviousData with placeholderData
     retry: 3,
     retryDelay: 1000,
   });
+
+  // Re-add the userHasPlanet check
+  const userHasPlanet = holders?.some(
+    holder => holder.wallet_address.toLowerCase() === connectedWalletAddress?.toLowerCase()
+  );
 
   const handlePlanetClick = () => {
     setIsPlanetSelected(true);
