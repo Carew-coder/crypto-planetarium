@@ -44,6 +44,9 @@ const Universe = ({
   const [isLoading, setIsLoading] = useState(true);
   const textureCache = useRef<Map<string, THREE.Texture>>(new Map());
   const frameSkipRef = useRef(0);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  const [loadedPlanetsCount, setLoadedPlanetsCount] = useState(0);
+  const [totalPlanetsCount, setTotalPlanetsCount] = useState(0);
 
   const { data: holders, isLoading: holdersLoading } = useQuery({
     queryKey: ['tokenHolders'],
@@ -101,6 +104,7 @@ const Universe = ({
         }
 
         console.log('Successfully fetched all token holders:', allHolders.length);
+        setTotalPlanetsCount(allHolders.length);
         return allHolders;
       };
 
@@ -351,10 +355,12 @@ const Universe = ({
 
     console.log('Adding planets progressively...');
     const existingPositions: [number, number, number][] = [];
-    const batchSize = 10;
+    const initialBatchSize = 100;
+    const subsequentBatchSize = 10;
     let currentIndex = 0;
 
     const addPlanetBatch = () => {
+      const batchSize = !initialLoadComplete ? initialBatchSize : subsequentBatchSize;
       const endIndex = Math.min(currentIndex + batchSize, holders.length);
       
       for (let i = currentIndex; i < endIndex; i++) {
@@ -405,12 +411,22 @@ const Universe = ({
         scene.add(mesh);
         planetsRef.current[holder.wallet_address] = mesh;
         planetPositionsRef.current[holder.wallet_address] = mesh.position.clone();
+        
+        setLoadedPlanetsCount(i + 1);
       }
 
       currentIndex = endIndex;
       
+      if (currentIndex >= initialBatchSize && !initialLoadComplete) {
+        console.log('Initial batch of planets loaded, enabling interaction');
+        setInitialLoadComplete(true);
+        setIsLoading(false);
+      }
+      
       if (currentIndex < holders.length) {
         setTimeout(() => requestAnimationFrame(addPlanetBatch), 50);
+      } else {
+        console.log('All planets loaded:', currentIndex);
       }
     };
 
@@ -684,12 +700,18 @@ const Universe = ({
       <div ref={containerRef} className="w-full h-screen" />
       <ShootingStars />
       
-      {isLoading && (
+      {!initialLoadComplete && isLoading && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
           <div className="text-center space-y-4">
             <Loader2 className="w-8 h-8 animate-spin mx-auto text-white" />
             <p className="text-white">Loading Solar System... {Math.round(loadingProgress)}%</p>
           </div>
+        </div>
+      )}
+
+      {initialLoadComplete && loadedPlanetsCount < totalPlanetsCount && (
+        <div className="fixed bottom-4 right-4 bg-black/50 text-white px-4 py-2 rounded-md">
+          Loading more planets: {loadedPlanetsCount}/{totalPlanetsCount}
         </div>
       )}
       
