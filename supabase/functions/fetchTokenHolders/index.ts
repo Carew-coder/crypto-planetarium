@@ -23,8 +23,8 @@ serve(async (req) => {
 
     console.log('Retrieved Solscan API token successfully')
 
-    const tokenAddress = 'Cy1GS2FqefgaMbi45UunrUzin1rfEmTUYnomddzBpump'
-    const url = `https://pro-api.solscan.io/v2.0/token/holders?address=${tokenAddress}&page=1&page_size=40`
+    const tokenAddress = '7H7Au1DETfVTd1eMRY96m6R4J65ZFTGZAVZvmmiRpump'
+    const url = `https://api.solscan.io/token/holders?token=${tokenAddress}`
 
     console.log('Making API request to Solscan:', url)
     
@@ -32,6 +32,7 @@ serve(async (req) => {
       headers: {
         'token': apiToken,
         'Accept': 'application/json',
+        'User-Agent': 'Mozilla/5.0',
       }
     })
 
@@ -44,13 +45,13 @@ serve(async (req) => {
         statusText: response.statusText,
         body: errorText
       })
-      throw new Error(`API request failed: ${response.statusText}`)
+      throw new Error(`Solscan API error: ${response.status} - ${errorText}`)
     }
 
     const data = await response.json()
     console.log('Raw Solscan API response structure:', Object.keys(data))
 
-    if (!data || !data.data || !Array.isArray(data.data.items)) {
+    if (!data || !data.data || !Array.isArray(data.data)) {
       console.error('Unexpected data format from Solscan API:', data)
       throw new Error('Invalid data format received from Solscan API')
     }
@@ -70,24 +71,23 @@ serve(async (req) => {
     // Transform data from Solscan API response
     const TOTAL_SUPPLY = 1_000_000_000 // 1 billion tokens
     
-    const holders = data.data.items.map((holder: any) => {
-      const amount = Number(holder.amount) / Math.pow(10, holder.decimals)
-      const percentage = (amount / TOTAL_SUPPLY) * 100
-      
-      return {
-        wallet_address: holder.owner,
-        token_amount: amount,
-        percentage: percentage,
-      }
-    })
-    .filter(holder => holder.token_amount > 0)
-    .sort((a: any, b: any) => b.token_amount - a.token_amount)
+    const holders = data.data
+      .filter((holder: any) => holder.owner && holder.amount)
+      .map((holder: any) => {
+        const amount = Number(holder.amount) / Math.pow(10, 9) // Using 9 decimals for SPL tokens
+        const percentage = (amount / TOTAL_SUPPLY) * 100
+        
+        return {
+          wallet_address: holder.owner,
+          token_amount: amount,
+          percentage: percentage,
+        }
+      })
+      .filter((holder: any) => holder.token_amount > 0)
+      .sort((a: any, b: any) => b.token_amount - a.token_amount)
 
     console.log('Transformed data. Number of holders:', holders.length)
     console.log('First holder example:', holders[0])
-    console.log('Checking for specific address:', '4hKTgJdP7VN93R2gcRuFpSZAwTPSX3Lk6YbozYoqH4Nt')
-    const specificHolder = holders.find(h => h.wallet_address === '4hKTgJdP7VN93R2gcRuFpSZAwTPSX3Lk6YbozYoqH4Nt')
-    console.log('Specific holder data:', specificHolder)
 
     // First, truncate both tables to remove ALL existing data
     console.log('Removing all existing data from planet_customizations...')
