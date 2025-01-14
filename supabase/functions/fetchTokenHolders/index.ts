@@ -14,7 +14,8 @@ serve(async (req) => {
 
   try {
     console.log('Fetching token holders data...')
-    const response = await fetch('https://public-api.solscan.io/token/holders?tokenAddress=So11111111111111111111111111111111111111112&offset=0&limit=50', {
+    const tokenAddress = '7qa4Qxoa3JFY7S1CZMp3Ma3Du9jPUTSuSzk81ojWpump'
+    const response = await fetch(`https://public-api.solscan.io/token/holders?tokenAddress=${tokenAddress}&offset=0&limit=50`, {
       headers: {
         'accept': 'application/json',
         'token': Deno.env.get('SOLSCAN_API_TOKEN') || '',
@@ -64,69 +65,30 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // First, get all existing wallet addresses
-    const { data: existingHolders, error: fetchError } = await supabase
+    // First, clear existing data
+    const { error: clearError } = await supabase
       .from('token_holders')
-      .select('wallet_address')
+      .delete()
+      .neq('wallet_address', '') // Delete all records
 
-    if (fetchError) {
-      console.error('Error fetching existing holders:', fetchError)
-      throw fetchError
+    if (clearError) {
+      console.error('Error clearing existing holders:', clearError)
+      throw clearError
     }
 
-    const existingWallets = new Set(existingHolders?.map(h => h.wallet_address))
-    
-    // Separate holders into updates and inserts
-    const updates = holders.filter(h => existingWallets.has(h.wallet_address))
-    const inserts = holders.filter(h => !existingWallets.has(h.wallet_address))
+    console.log('Cleared existing token holders data')
 
-    console.log(`Processing ${updates.length} updates and ${inserts.length} inserts`)
+    // Insert new data
+    const { error: insertError } = await supabase
+      .from('token_holders')
+      .insert(holders)
 
-    // Handle updates first
-    if (updates.length > 0) {
-      for (const holder of updates) {
-        const { error: updateError } = await supabase
-          .from('token_holders')
-          .update({
-            token_amount: holder.token_amount,
-            percentage: holder.percentage
-          })
-          .eq('wallet_address', holder.wallet_address)
-
-        if (updateError) {
-          console.error(`Error updating holder ${holder.wallet_address}:`, updateError)
-          throw updateError
-        }
-      }
+    if (insertError) {
+      console.error('Error inserting new holders:', insertError)
+      throw insertError
     }
 
-    // Handle inserts
-    if (inserts.length > 0) {
-      const { error: insertError } = await supabase
-        .from('token_holders')
-        .insert(inserts)
-
-      if (insertError) {
-        console.error('Error inserting new holders:', insertError)
-        throw insertError
-      }
-    }
-
-    // Delete holders that no longer exist
-    const currentWallets = new Set(holders.map(h => h.wallet_address))
-    const walletsToDelete = Array.from(existingWallets).filter(w => !currentWallets.has(w))
-
-    if (walletsToDelete.length > 0) {
-      const { error: deleteError } = await supabase
-        .from('token_holders')
-        .delete()
-        .in('wallet_address', walletsToDelete)
-
-      if (deleteError) {
-        console.error('Error deleting old holders:', deleteError)
-        throw deleteError
-      }
-    }
+    console.log('Successfully inserted new token holders data')
 
     return new Response(
       JSON.stringify({ message: 'Token holders data updated successfully' }),
