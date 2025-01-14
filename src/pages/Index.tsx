@@ -59,11 +59,11 @@ const Index = () => {
 
   // Initialize activeHoldersRef when holders data is first loaded
   useEffect(() => {
-    if (holders && !isLoading) {
-      console.log('Updating active holders reference');
+    if (holders) {
+      console.log('Updating active holders reference with', holders.length, 'holders');
       activeHoldersRef.current = holders;
     }
-  }, [holders, isLoading]);
+  }, [holders]);
 
   // Use activeHoldersRef.current instead of holders directly
   const userHasPlanet = activeHoldersRef.current?.some(
@@ -201,7 +201,7 @@ const Index = () => {
 
       <div className="fixed right-8 top-[120px] glass-panel p-4 w-[24rem] z-30 h-[calc(100vh-140px)] flex flex-col">
         <h2 className="text-lg font-semibold text-white mb-4">Planet Owners (Top 500)</h2>
-        {isLoading ? (
+        {isLoading && !holders ? (
           <div className="flex justify-center items-center p-4">
             <Loader2 className="h-6 w-6 animate-spin text-white" />
           </div>
