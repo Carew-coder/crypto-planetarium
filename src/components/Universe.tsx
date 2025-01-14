@@ -674,7 +674,7 @@ const Universe = ({
       {isLoading && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
           <div className="text-center space-y-4">
-            <Hourglass className="w-8 h-8 animate-spin mx-auto text-white" />
+            <Hourglass className="w-8 h-8 mx-auto text-white" />
             <p className="text-white">Loading Solar System... {Math.round(loadingProgress)}%</p>
           </div>
         </div>
