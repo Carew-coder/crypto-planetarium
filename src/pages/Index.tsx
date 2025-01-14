@@ -25,6 +25,7 @@ const Index = () => {
       const { data, error } = await supabase
         .from('token_holders')
         .select('*')
+        .gte('percentage', 0.02)  // Only get holders with 0.02% or more
         .order('percentage', { ascending: false });
 
       if (error) {
