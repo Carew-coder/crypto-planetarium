@@ -26,7 +26,7 @@ const Index = () => {
         .from('token_holders')
         .select('*')
         .order('percentage', { ascending: false })
-        .limit(500) // Updated to fetch 500 holders
+        // Removed the limit to fetch all holders
 
       if (error) {
         console.error('Error fetching token holders:', error);
