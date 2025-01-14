@@ -56,7 +56,7 @@ const Universe = ({
         .from('token_holders')
         .select('*')
         .order('percentage', { ascending: false })
-        .limit(100);
+        .limit(500);
 
       if (error) {
         console.error('Error fetching token holders:', error);
