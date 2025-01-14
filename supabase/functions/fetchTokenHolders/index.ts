@@ -24,60 +24,36 @@ serve(async (req) => {
     console.log('Retrieved Solscan API token successfully')
 
     const tokenAddress = 'Cy1GS2FqefgaMbi45UunrUzin1rfEmTUYnomddzBpump'
-    console.log('Fetching data for token address:', tokenAddress)
+    const url = `https://pro-api.solscan.io/v2.0/token/holders?address=${tokenAddress}&page=1&page_size=40`
+
+    console.log('Making API request to Solscan:', url)
     
-    const PAGE_SIZE = 40 // Maximum allowed by Solscan API
-    let allHolders: any[] = []
-    let currentPage = 1
-    let hasMorePages = true
+    const response = await fetch(url, {
+      headers: {
+        'token': apiToken,
+        'Accept': 'application/json',
+      }
+    })
 
-    while (hasMorePages) {
-      const url = `https://pro-api.solscan.io/v2.0/token/holders?address=${tokenAddress}&page=${currentPage}&page_size=${PAGE_SIZE}`
-      console.log(`Fetching page ${currentPage} from Solscan API URL:`, url)
-      
-      const response = await fetch(url, {
-        headers: {
-          'token': apiToken,
-          'Accept': 'application/json',
-        }
+    console.log('Solscan API Response Status:', response.status)
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('Solscan API request failed:', {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorText
       })
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error('Solscan API request failed:', {
-          status: response.status,
-          statusText: response.statusText,
-          body: errorText
-        })
-        throw new Error(`Solscan API error: ${response.status} - ${errorText}`)
-      }
-
-      const data = await response.json()
-      console.log(`Raw API response for page ${currentPage}:`, JSON.stringify(data, null, 2))
-      
-      if (!data || !data.data || !Array.isArray(data.data.items)) {
-        console.error('Unexpected data format from Solscan API:', data)
-        throw new Error('Invalid data format received from Solscan API')
-      }
-
-      allHolders = [...allHolders, ...data.data.items]
-      console.log(`Retrieved ${data.data.items.length} holders from page ${currentPage}`)
-      console.log('Sample holder data:', JSON.stringify(data.data.items[0], null, 2))
-
-      // Check if we've reached the end
-      if (data.data.items.length < PAGE_SIZE) {
-        hasMorePages = false
-        console.log('Reached last page of holders')
-      } else {
-        currentPage++
-      }
-
-      // Add a small delay to avoid rate limiting
-      await new Promise(resolve => setTimeout(resolve, 500))
+      throw new Error(`API request failed: ${response.statusText}`)
     }
 
-    console.log(`Total holders fetched: ${allHolders.length}`)
-    console.log('First 5 holders:', JSON.stringify(allHolders.slice(0, 5), null, 2))
+    const data = await response.json()
+    console.log('Raw Solscan API response structure:', Object.keys(data))
+
+    if (!data || !data.data || !Array.isArray(data.data.items)) {
+      console.error('Unexpected data format from Solscan API:', data)
+      throw new Error('Invalid data format received from Solscan API')
+    }
 
     // Store data in Supabase
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
@@ -94,7 +70,7 @@ serve(async (req) => {
     // Transform data from Solscan API response
     const TOTAL_SUPPLY = 1_000_000_000 // 1 billion tokens
     
-    const holders = allHolders.map((holder: any) => {
+    const holders = data.data.items.map((holder: any) => {
       const amount = Number(holder.amount) / Math.pow(10, holder.decimals)
       const percentage = (amount / TOTAL_SUPPLY) * 100
       
@@ -109,6 +85,9 @@ serve(async (req) => {
 
     console.log('Transformed data. Number of holders:', holders.length)
     console.log('First holder example:', holders[0])
+    console.log('Checking for specific address:', '4hKTgJdP7VN93R2gcRuFpSZAwTPSX3Lk6YbozYoqH4Nt')
+    const specificHolder = holders.find(h => h.wallet_address === '4hKTgJdP7VN93R2gcRuFpSZAwTPSX3Lk6YbozYoqH4Nt')
+    console.log('Specific holder data:', specificHolder)
 
     // First, truncate both tables to remove ALL existing data
     console.log('Removing all existing data from planet_customizations...')
