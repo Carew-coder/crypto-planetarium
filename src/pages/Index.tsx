@@ -7,6 +7,7 @@ import { Wallet, Loader2, Search, Globe } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import HolderTable from "@/components/universe/HolderTable";
+import { useToast } from "@/components/ui/use-toast";
 
 const Index = () => {
   const [searchAddress, setSearchAddress] = useState("");
@@ -14,33 +15,45 @@ const Index = () => {
   const [isWalletConnected, setIsWalletConnected] = useState(false);
   const [connectedWalletAddress, setConnectedWalletAddress] = useState<string | null>(null);
   const [selectedWallet, setSelectedWallet] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const { data: holders, isLoading, error } = useQuery({
     queryKey: ['tokenHolders'],
     queryFn: async () => {
       console.log('Fetching all token holders data...');
       
-      await supabase.functions.invoke('fetchTokenHolders');
-      
-      const { data, error } = await supabase
-        .from('token_holders')
-        .select('*')
-        .order('percentage', { ascending: false });
+      try {
+        await supabase.functions.invoke('fetchTokenHolders');
+        
+        const { data, error } = await supabase
+          .from('token_holders')
+          .select('*')
+          .order('percentage', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching token holders:', error);
+        if (error) {
+          console.error('Error fetching token holders:', error);
+          throw error;
+        }
+        
+        console.log('Successfully fetched token holders data:', data?.length);
+        return data;
+      } catch (error) {
+        console.error('Failed to fetch token holders:', error);
+        toast({
+          title: "Error refreshing data",
+          description: "Current data will be maintained",
+          variant: "destructive"
+        });
         throw error;
       }
-      
-      console.log('Successfully fetched token holders data:', data?.length);
-      return data;
     },
     refetchInterval: 60000,
+    refetchIntervalInBackground: true,
+    staleTime: 55000, // Consider data fresh for 55 seconds
+    keepPreviousData: true, // Keep showing previous data while fetching new data
+    retry: 3,
+    retryDelay: 1000,
   });
-
-  const userHasPlanet = holders?.some(
-    holder => holder.wallet_address.toLowerCase() === connectedWalletAddress?.toLowerCase()
-  );
 
   const handlePlanetClick = () => {
     setIsPlanetSelected(true);
@@ -173,7 +186,7 @@ const Index = () => {
 
       <div className="fixed right-8 top-[120px] glass-panel p-4 w-[24rem] z-30 h-[calc(100vh-140px)] flex flex-col">
         <h2 className="text-lg font-semibold text-white mb-4">Planet Owners (Top 500)</h2>
-        {isLoading ? (
+        {isLoading && !holders ? (
           <div className="flex justify-center items-center p-4">
             <Loader2 className="h-6 w-6 animate-spin text-white" />
           </div>
