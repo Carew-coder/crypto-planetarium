@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Starting fetchTokenHolders function using Solscan API...')
+    console.log('Starting fetchTokenHolders function using Solscan API v2...')
     
     const apiToken = Deno.env.get('SOLSCAN_API_TOKEN')
     if (!apiToken) {
@@ -23,8 +23,8 @@ serve(async (req) => {
 
     console.log('Retrieved Solscan API token successfully')
 
-    const tokenAddress = '7H7Au1DETfVTd1eMRY96m6R4J65ZFTGZAVZvmmiRpump'
-    const url = `https://public-api.solscan.io/token/holders?tokenAddress=${tokenAddress}&limit=100&offset=0`
+    const tokenAddress = 'Cy1GS2FqefgaMbi45UunrUzin1rfEmTUYnomddzBpump'
+    const url = `https://pro-api.solscan.io/v2.0/token/holders?address=${tokenAddress}&page=1&page_size=100`
 
     console.log('Making API request to Solscan:', url)
     
@@ -32,9 +32,6 @@ serve(async (req) => {
       headers: {
         'token': apiToken,
         'Accept': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'Origin': 'https://solscan.io',
-        'Referer': 'https://solscan.io/',
       }
     })
 
@@ -53,7 +50,7 @@ serve(async (req) => {
     const data = await response.json()
     console.log('Raw Solscan API response structure:', Object.keys(data))
 
-    if (!data || !Array.isArray(data.data)) {
+    if (!data.success || !data.data || !Array.isArray(data.data.items)) {
       console.error('Unexpected data format from Solscan API:', data)
       throw new Error('Invalid data format received from Solscan API')
     }
@@ -73,10 +70,10 @@ serve(async (req) => {
     // Transform data from Solscan API response
     const TOTAL_SUPPLY = 1_000_000_000 // 1 billion tokens
     
-    const holders = data.data
+    const holders = data.data.items
       .filter((holder: any) => holder.owner && holder.amount)
       .map((holder: any) => {
-        const amount = Number(holder.amount) / Math.pow(10, 9) // Using 9 decimals for SPL tokens
+        const amount = Number(holder.amount) / Math.pow(10, holder.decimals)
         const percentage = (amount / TOTAL_SUPPLY) * 100
         
         return {
