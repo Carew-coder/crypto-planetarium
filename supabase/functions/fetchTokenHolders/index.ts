@@ -24,6 +24,8 @@ serve(async (req) => {
     console.log('Retrieved Solscan API token successfully')
 
     const tokenAddress = 'Cy1GS2FqefgaMbi45UunrUzin1rfEmTUYnomddzBpump'
+    console.log('Fetching data for token address:', tokenAddress)
+    
     const PAGE_SIZE = 40 // Maximum allowed by Solscan API
     let allHolders: any[] = []
     let currentPage = 1
@@ -31,7 +33,7 @@ serve(async (req) => {
 
     while (hasMorePages) {
       const url = `https://pro-api.solscan.io/v2.0/token/holders?address=${tokenAddress}&page=${currentPage}&page_size=${PAGE_SIZE}`
-      console.log(`Fetching page ${currentPage} from Solscan API...`)
+      console.log(`Fetching page ${currentPage} from Solscan API URL:`, url)
       
       const response = await fetch(url, {
         headers: {
@@ -47,10 +49,11 @@ serve(async (req) => {
           statusText: response.statusText,
           body: errorText
         })
-        throw new Error(`API request failed: ${response.statusText}`)
+        throw new Error(`Solscan API error: ${response.status} - ${errorText}`)
       }
 
       const data = await response.json()
+      console.log(`Raw API response for page ${currentPage}:`, JSON.stringify(data, null, 2))
       
       if (!data || !data.data || !Array.isArray(data.data.items)) {
         console.error('Unexpected data format from Solscan API:', data)
@@ -59,6 +62,7 @@ serve(async (req) => {
 
       allHolders = [...allHolders, ...data.data.items]
       console.log(`Retrieved ${data.data.items.length} holders from page ${currentPage}`)
+      console.log('Sample holder data:', JSON.stringify(data.data.items[0], null, 2))
 
       // Check if we've reached the end
       if (data.data.items.length < PAGE_SIZE) {
@@ -73,6 +77,7 @@ serve(async (req) => {
     }
 
     console.log(`Total holders fetched: ${allHolders.length}`)
+    console.log('First 5 holders:', JSON.stringify(allHolders.slice(0, 5), null, 2))
 
     // Store data in Supabase
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
