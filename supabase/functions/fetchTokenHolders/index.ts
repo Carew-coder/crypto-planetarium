@@ -15,11 +15,12 @@ serve(async (req) => {
     console.log('Fetching token holders data...')
     const tokenAddress = '7H7Au1DETfVTd1eMRY96m6R4J65ZFTGZAVZvmmiRpump'
     
-    // Use the correct Solscan API endpoint with proper parameters
-    const response = await fetch(`https://api.solscan.io/token/holders?token=${tokenAddress}&offset=0&limit=1000`, {
+    // Use the official Solscan API endpoint with proper headers
+    const response = await fetch(`https://pro-api.solscan.io/v2/token/holders?token=${tokenAddress}&offset=0&limit=1000`, {
       headers: {
         'accept': 'application/json',
         'token': Deno.env.get('SOLSCAN_API_TOKEN') || '',
+        'user-agent': 'Solscan/1.0',
       }
     })
 
