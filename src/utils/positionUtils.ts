@@ -1,13 +1,10 @@
 export const generateRandomPosition = (existingPositions: [number, number, number][]): [number, number, number] => {
-  const MIN_DISTANCE = 3; // Reduced minimum distance between planets
-  const MAX_ATTEMPTS = 30;
+  const MIN_DISTANCE = 5;
+  const MAX_ATTEMPTS = 50;
   let attempts = 0;
   
   while (attempts < MAX_ATTEMPTS) {
-    // Increased radius range to spread planets more
-    const minRadius = 30;
-    const maxRadius = 150;
-    const radius = minRadius + Math.random() * (maxRadius - minRadius);
+    const radius = 50;
     const theta = Math.random() * Math.PI * 2;
     const phi = Math.acos((Math.random() * 2) - 1);
     
@@ -17,9 +14,7 @@ export const generateRandomPosition = (existingPositions: [number, number, numbe
     
     const position: [number, number, number] = [x, y, z];
     
-    // Only check distance against nearest 50 planets to improve performance
-    const nearestPlanets = existingPositions.slice(-50);
-    const isTooClose = nearestPlanets.some(existingPos => {
+    const isTooClose = existingPositions.some(existingPos => {
       const dx = existingPos[0] - x;
       const dy = existingPos[1] - y;
       const dz = existingPos[2] - z;
@@ -34,8 +29,7 @@ export const generateRandomPosition = (existingPositions: [number, number, numbe
     attempts++;
   }
   
-  // Fallback position with increased radius range
-  const fallbackRadius = 30 + Math.random() * 120;
+  const fallbackRadius = 50 + Math.random() * 20;
   const theta = Math.random() * Math.PI * 2;
   const phi = Math.acos((Math.random() * 2) - 1);
   
