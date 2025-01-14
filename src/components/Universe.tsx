@@ -320,11 +320,14 @@ const Universe = ({
     
     console.log('Updating planets with new holder data...');
     
-    holders.forEach((holder, index) => {
+    holders.forEach((holder) => {
       const existingPlanet = planetsRef.current[holder.wallet_address];
       if (existingPlanet) {
         const size = calculatePlanetSize(holder.percentage);
-        existingPlanet.scale.set(size, size, size);
+        // Reset scale before applying new size to prevent cumulative scaling
+        existingPlanet.scale.set(1, 1, 1);
+        // Apply new size
+        existingPlanet.geometry = new THREE.SphereGeometry(size, 32, 32);
       }
     });
   };
