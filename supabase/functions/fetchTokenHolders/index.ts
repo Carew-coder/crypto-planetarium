@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Starting fetchTokenHolders function using Solscan API v2...')
+    console.log('Starting fetchTokenHolders function using Solscan API...')
     
     const apiToken = Deno.env.get('SOLSCAN_API_TOKEN')
     if (!apiToken) {
@@ -24,36 +24,55 @@ serve(async (req) => {
     console.log('Retrieved Solscan API token successfully')
 
     const tokenAddress = 'Cy1GS2FqefgaMbi45UunrUzin1rfEmTUYnomddzBpump'
-    const url = `https://pro-api.solscan.io/v2.0/token/holders?address=${tokenAddress}&page=1&page_size=100`
+    const PAGE_SIZE = 40 // Maximum allowed by Solscan API
+    let allHolders: any[] = []
+    let currentPage = 1
+    let hasMorePages = true
 
-    console.log('Making API request to Solscan:', url)
-    
-    const response = await fetch(url, {
-      headers: {
-        'token': apiToken,
-        'Accept': 'application/json',
-      }
-    })
-
-    console.log('Solscan API Response Status:', response.status)
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('Solscan API request failed:', {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorText
+    while (hasMorePages) {
+      const url = `https://pro-api.solscan.io/v2.0/token/holders?address=${tokenAddress}&page=${currentPage}&page_size=${PAGE_SIZE}`
+      console.log(`Fetching page ${currentPage} from Solscan API...`)
+      
+      const response = await fetch(url, {
+        headers: {
+          'token': apiToken,
+          'Accept': 'application/json',
+        }
       })
-      throw new Error(`Solscan API error: ${response.status} - ${errorText}`)
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Solscan API request failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        })
+        throw new Error(`API request failed: ${response.statusText}`)
+      }
+
+      const data = await response.json()
+      
+      if (!data || !data.data || !Array.isArray(data.data.items)) {
+        console.error('Unexpected data format from Solscan API:', data)
+        throw new Error('Invalid data format received from Solscan API')
+      }
+
+      allHolders = [...allHolders, ...data.data.items]
+      console.log(`Retrieved ${data.data.items.length} holders from page ${currentPage}`)
+
+      // Check if we've reached the end
+      if (data.data.items.length < PAGE_SIZE) {
+        hasMorePages = false
+        console.log('Reached last page of holders')
+      } else {
+        currentPage++
+      }
+
+      // Add a small delay to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 500))
     }
 
-    const data = await response.json()
-    console.log('Raw Solscan API response structure:', Object.keys(data))
-
-    if (!data.success || !data.data || !Array.isArray(data.data.items)) {
-      console.error('Unexpected data format from Solscan API:', data)
-      throw new Error('Invalid data format received from Solscan API')
-    }
+    console.log(`Total holders fetched: ${allHolders.length}`)
 
     // Store data in Supabase
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
@@ -70,20 +89,18 @@ serve(async (req) => {
     // Transform data from Solscan API response
     const TOTAL_SUPPLY = 1_000_000_000 // 1 billion tokens
     
-    const holders = data.data.items
-      .filter((holder: any) => holder.owner && holder.amount)
-      .map((holder: any) => {
-        const amount = Number(holder.amount) / Math.pow(10, holder.decimals)
-        const percentage = (amount / TOTAL_SUPPLY) * 100
-        
-        return {
-          wallet_address: holder.owner,
-          token_amount: amount,
-          percentage: percentage,
-        }
-      })
-      .filter((holder: any) => holder.token_amount > 0)
-      .sort((a: any, b: any) => b.token_amount - a.token_amount)
+    const holders = allHolders.map((holder: any) => {
+      const amount = Number(holder.amount) / Math.pow(10, holder.decimals)
+      const percentage = (amount / TOTAL_SUPPLY) * 100
+      
+      return {
+        wallet_address: holder.owner,
+        token_amount: amount,
+        percentage: percentage,
+      }
+    })
+    .filter(holder => holder.token_amount > 0)
+    .sort((a: any, b: any) => b.token_amount - a.token_amount)
 
     console.log('Transformed data. Number of holders:', holders.length)
     console.log('First holder example:', holders[0])
