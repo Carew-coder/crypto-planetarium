@@ -10,11 +10,11 @@ interface HolderTableProps {
 }
 
 const HolderTable: React.FC<HolderTableProps> = ({ holders, onWalletClick }) => {
-  console.log('Rendering HolderTable with holders:', holders?.length);
+  console.log('Rendering HolderTable with all holders:', holders?.length);
   
   return (
     <Table>
-      <TableHeader>
+      <TableHeader className="sticky top-0 bg-black/50 backdrop-blur-sm">
         <TableRow>
           <TableHead className="text-white/80">Rank</TableHead>
           <TableHead className="text-white/80">Wallet</TableHead>
