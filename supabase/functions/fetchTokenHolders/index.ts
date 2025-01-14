@@ -76,17 +76,33 @@ serve(async (req) => {
 
     const TOTAL_SUPPLY = 1_000_000_000 // 1 billion tokens
     
-    const holders = allHolders
-      .map((holder: any) => {
-        const amount = Number(holder.amount) / Math.pow(10, holder.decimals)
-        const percentage = (amount / TOTAL_SUPPLY) * 100
-        
-        return {
-          wallet_address: holder.owner,
+    // Remove duplicates by using a Map with wallet_address as key
+    const holdersMap = new Map()
+    
+    allHolders.forEach((holder: any) => {
+      const amount = Number(holder.amount) / Math.pow(10, holder.decimals)
+      const percentage = (amount / TOTAL_SUPPLY) * 100
+      const walletAddress = holder.owner
+      
+      // If this wallet already exists in our map, add the amounts
+      if (holdersMap.has(walletAddress)) {
+        const existing = holdersMap.get(walletAddress)
+        holdersMap.set(walletAddress, {
+          wallet_address: walletAddress,
+          token_amount: existing.token_amount + amount,
+          percentage: existing.percentage + percentage,
+        })
+      } else {
+        holdersMap.set(walletAddress, {
+          wallet_address: walletAddress,
           token_amount: amount,
           percentage: percentage,
-        }
-      })
+        })
+      }
+    })
+    
+    // Convert map to array and sort by token amount
+    const holders = Array.from(holdersMap.values())
       .filter(holder => holder.token_amount > 0)
       .sort((a: any, b: any) => b.token_amount - a.token_amount)
       .slice(0, 500) // Ensure we only take the top 500 holders
