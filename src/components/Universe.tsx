@@ -10,10 +10,10 @@ import PlanetInformation from './universe/PlanetInformation';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { generateRandomPosition } from '@/utils/positionUtils';
-import { ping } from 'ldrs';
+import { pulsar } from 'ldrs';
 
-// Register the ping loader
-ping.register();
+// Register the pulsar loader
+pulsar.register();
 
 const Universe = ({ 
   onPlanetClick,
@@ -677,11 +677,11 @@ const Universe = ({
       {isLoading && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
           <div className="text-center space-y-4">
-            <l-ping
-              size="45"
-              speed="2" 
+            <l-pulsar
+              size="40"
+              speed="1.75" 
               color="white"
-            ></l-ping>
+            ></l-pulsar>
             <p className="text-white">Loading Solar System... {Math.round(loadingProgress)}%</p>
           </div>
         </div>
