@@ -384,6 +384,7 @@ const Universe = ({
 
           const mesh = new THREE.Mesh(geometry, material);
           mesh.position.set(...position);
+          mesh.userData = { walletAddress: holder.wallet_address }; // Add wallet address to mesh userData
           scene.add(mesh);
           planetsRef.current[holder.wallet_address] = mesh;
           planetPositionsRef.current[holder.wallet_address] = mesh.position.clone();
@@ -410,6 +411,48 @@ const Universe = ({
       console.log('Initializing universe with holders:', holders.length);
       let animationFrameId: number | null = null;
       let isPageVisible = true;
+
+      const raycaster = new THREE.Raycaster();
+      const mouse = new THREE.Vector2();
+
+      const handleClick = (event: MouseEvent) => {
+        if (!sceneRef.current || !cameraRef.current) return;
+
+        const rect = containerRef.current?.getBoundingClientRect();
+        if (!rect) return;
+
+        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, cameraRef.current);
+        const intersects = raycaster.intersectObjects(sceneRef.current.children);
+
+        if (intersects.length > 0) {
+          const clickedObject = intersects[0].object;
+          
+          if (clickedObject === sunRef.current) {
+            console.log('Sun clicked');
+            handlePlanetZoom(new THREE.Vector3(0, 0, 0));
+            return;
+          }
+
+          const walletAddress = clickedObject.userData?.walletAddress;
+          if (walletAddress) {
+            console.log('Planet clicked:', walletAddress);
+            const holder = holders.find(h => h.wallet_address === walletAddress);
+            if (holder) {
+              setSelectedHolder(holder);
+              setIsZoomedIn(true);
+              onPlanetClick();
+              const planetPosition = planetPositionsRef.current[walletAddress];
+              if (planetPosition) {
+                const planetSize = calculatePlanetSize(holder.percentage);
+                handlePlanetZoom(planetPosition, planetSize);
+              }
+            }
+          }
+        }
+      };
 
       const animate = () => {
         if (!isPageVisible) {
@@ -558,11 +601,13 @@ const Universe = ({
 
         window.addEventListener('resize', handleResize);
         document.addEventListener('visibilitychange', handleVisibilityChange);
+        containerRef.current.addEventListener('click', handleClick);
 
         return () => {
           console.log('Cleaning up universe component');
           window.removeEventListener('resize', handleResize);
           document.removeEventListener('visibilitychange', handleVisibilityChange);
+          containerRef.current?.removeEventListener('click', handleClick);
           if (animationFrameId) {
             cancelAnimationFrame(animationFrameId);
           }
