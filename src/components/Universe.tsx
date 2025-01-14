@@ -435,7 +435,13 @@ const Universe = ({
           
           if (clickedObject === sunRef.current) {
             console.log('Sun clicked');
-            setIsZoomedIn(true); // Add this line to show the back button
+            setIsZoomedIn(true);
+            setSelectedHolder({
+              wallet_address: 'sun',
+              token_amount: 0,
+              percentage: 100,
+            });
+            onPlanetClick();
             handlePlanetZoom(new THREE.Vector3(0, 0, 0));
             return;
           }
