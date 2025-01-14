@@ -1,6 +1,5 @@
-export const SUN_TEXTURE = '/lovable-uploads/3b3451a5-34bb-48fb-91d3-427407ec33e4.png'; // Fiery texture for the sun
+export const SUN_TEXTURE = '/lovable-uploads/3b3451a5-34bb-48fb-91d3-427407ec33e4.png';
 
-// Array of textures that will be used for the planets
 export const PLANET_TEXTURES = [
   '/lovable-uploads/99b14542-f4d2-44ea-a833-5034f0255bea.png',  // Green swirl
   '/lovable-uploads/69c504e9-e9cd-46bf-bd7f-0c67c80294d9.png',  // Pastel swirl
@@ -26,16 +25,14 @@ export const PLANET_TEXTURES = [
   '/lovable-uploads/0a64a3c5-ee2b-4aa5-bef0-52892071647d.png'   // Yellow energy
 ];
 
-// Function to calculate planet size based on holding percentage with exponential scaling and a maximum cap
 export const calculatePlanetSize = (percentage: number): number => {
-  // Base size for smallest planets (0.1% holdings)
-  const minSize = 0.5;
-  // Maximum size for largest planets (now capped much lower)
-  const maxSize = 4; // Dramatically reduced from 50 to keep planets reasonably sized
+  // Base size for smallest planets (even tiny holdings)
+  const minSize = 0.3;
+  // Maximum size for largest planets (now capped lower to accommodate more planets)
+  const maxSize = 3;
   
-  // Apply exponential scaling but with a gentler curve
-  // Using a power of 0.5 to make the size differences more gradual
-  const normalizedPercentage = Math.pow(percentage / 100, 0.5);
+  // Using log scale to better handle wide range of percentages
+  const normalizedPercentage = Math.log10(1 + percentage) / Math.log10(101);
   
   // Scale the percentage to a size between minSize and maxSize
   return minSize + normalizedPercentage * (maxSize - minSize);
