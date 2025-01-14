@@ -24,7 +24,7 @@ serve(async (req) => {
     console.log('Retrieved Solscan API token successfully')
 
     const tokenAddress = '7H7Au1DETfVTd1eMRY96m6R4J65ZFTGZAVZvmmiRpump'
-    const url = `https://pro-api.solscan.io/v2.0/token/holders?address=${tokenAddress}&page=1&page_size=40`
+    const url = `https://pro-api.solscan.io/v2.0/token/holders?address=${tokenAddress}&page=1&page_size=500`
 
     console.log('Making API request to Solscan:', url)
     
