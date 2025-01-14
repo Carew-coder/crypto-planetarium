@@ -12,6 +12,11 @@ interface HolderTableProps {
 const HolderTable: React.FC<HolderTableProps> = ({ holders, onWalletClick }) => {
   console.log('Rendering HolderTable with all holders:', holders?.length);
   
+  if (!holders?.length) {
+    console.log('No holders data available');
+    return null;
+  }
+  
   return (
     <Table>
       <TableHeader className="sticky top-0 bg-black/50 backdrop-blur-sm">
@@ -22,7 +27,7 @@ const HolderTable: React.FC<HolderTableProps> = ({ holders, onWalletClick }) => 
         </TableRow>
       </TableHeader>
       <TableBody>
-        {holders?.map((holder, index) => (
+        {holders.map((holder, index) => (
           <TableRow 
             key={holder.wallet_address}
             className="cursor-pointer hover:bg-white/10 transition-colors"

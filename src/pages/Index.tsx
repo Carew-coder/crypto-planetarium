@@ -18,7 +18,7 @@ const Index = () => {
   const { toast } = useToast();
   const activeHoldersRef = useRef<any[]>([]);
 
-  const { data: holders, isLoading, error } = useQuery({
+  const { data: holders, isLoading } = useQuery({
     queryKey: ['tokenHolders'],
     queryFn: async () => {
       console.log('Fetching all token holders data...');
@@ -208,7 +208,10 @@ const Index = () => {
         ) : (
           <ScrollArea className="flex-1 pr-4 -mr-4">
             <div className="h-full w-full">
-              <HolderTable holders={activeHoldersRef.current} onWalletClick={handleWalletClick} />
+              <HolderTable 
+                holders={holders} 
+                onWalletClick={handleWalletClick} 
+              />
             </div>
           </ScrollArea>
         )}
