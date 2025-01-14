@@ -1,12 +1,12 @@
 import Universe from "@/components/Universe";
 import { Input } from "@/components/ui/input";
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Wallet, Loader2, Search, Globe } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
+import HolderTable from "@/components/universe/HolderTable";
 
 const Index = () => {
   const [searchAddress, setSearchAddress] = useState("");
@@ -18,22 +18,21 @@ const Index = () => {
   const { data: holders, isLoading, error } = useQuery({
     queryKey: ['tokenHolders'],
     queryFn: async () => {
-      console.log('Fetching token holders data...');
+      console.log('Fetching all token holders data...');
       
-      await supabase.functions.invoke('fetchTokenHolders')
+      await supabase.functions.invoke('fetchTokenHolders');
       
       const { data, error } = await supabase
         .from('token_holders')
         .select('*')
-        .order('percentage', { ascending: false })
-        // Removed the limit to fetch all holders
+        .order('percentage', { ascending: false });
 
       if (error) {
         console.error('Error fetching token holders:', error);
         throw error;
       }
       
-      console.log('Successfully fetched token holders data:', data);
+      console.log('Successfully fetched token holders data:', data?.length);
       return data;
     },
     refetchInterval: 60000,
@@ -180,34 +179,7 @@ const Index = () => {
           </div>
         ) : (
           <ScrollArea className="h-[calc(70vh-6rem)] pr-4">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-white/80">Rank</TableHead>
-                  <TableHead className="text-white/80">Wallet</TableHead>
-                  <TableHead className="text-white/80">Holding %</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {holders?.map((holder, index) => (
-                  <TableRow 
-                    key={holder.wallet_address}
-                    className="cursor-pointer hover:bg-white/10 transition-colors"
-                    onClick={() => handleWalletClick(holder.wallet_address)}
-                  >
-                    <TableCell className="text-white/70">
-                      {index + 1}
-                    </TableCell>
-                    <TableCell className="text-white/70">
-                      {holder.wallet_address.slice(0, 6)}...{holder.wallet_address.slice(-4)}
-                    </TableCell>
-                    <TableCell className="text-white/70">
-                      {Number(holder.percentage).toFixed(2)}%
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <HolderTable holders={holders} onWalletClick={handleWalletClick} />
           </ScrollArea>
         )}
       </div>
